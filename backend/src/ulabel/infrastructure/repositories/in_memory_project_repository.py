@@ -1,5 +1,6 @@
 from uuid import UUID
 
+from ulabel.domain.pagination import PaginatedResult
 from ulabel.domain.ports.project_repository import ProjectRepository
 from ulabel.domain.projects import Project
 
@@ -14,6 +15,17 @@ class InMemoryProjectRepository(ProjectRepository):
 
     async def get_by_labeler_id(self, labeler_id: UUID) -> list[Project]:
         return [p for p in self._projects.values() if labeler_id in p.labeler_ids]
+
+    async def get_all(self, limit: int, offset: int) -> PaginatedResult[Project]:
+        all_projects = sorted(
+            self._projects.values(),
+            key=lambda p: p.created_at,
+            reverse=True,
+        )
+        return PaginatedResult(
+            items=all_projects[offset:offset + limit],
+            total=len(all_projects),
+        )
 
     async def save(self, project: Project) -> None:
         self._projects[project.id] = project

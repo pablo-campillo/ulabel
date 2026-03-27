@@ -1,15 +1,53 @@
 from uuid import UUID
 
 from dependency_injector.wiring import Provide, inject
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
-from ulabel.api.schemas.projects import AddLabelerRequest, CreateProjectRequest, ProjectResponse
+from ulabel.api.schemas.projects import (
+    AddLabelerRequest,
+    CreateProjectRequest,
+    PaginatedProjectResponse,
+    ProjectResponse,
+)
 from ulabel.application.add_labeler_to_project import AddLabelerToProjectUseCase, ProjectNotFound
 from ulabel.application.create_project import CreateProjectUseCase, Unauthorized
+from ulabel.application.list_projects import ListProjectsUseCase
 from ulabel.application.login import UserNotFound
 from ulabel.container import Container
 
 router = APIRouter()
+
+
+@router.get(
+    "",
+    response_model=PaginatedProjectResponse,
+    summary="List all projects",
+    description="Returns a paginated list of all projects, ordered by creation date (newest first).",
+    responses={200: {"description": "Paginated list of projects."}},
+)
+@inject
+async def list_projects(
+    limit: int = Query(default=20, ge=1, le=100, description="Max items per page."),
+    offset: int = Query(default=0, ge=0, description="Number of items to skip."),
+    use_case: ListProjectsUseCase = Depends(Provide[Container.list_projects_use_case]),
+):
+    result = await use_case.execute(limit=limit, offset=offset)
+    return PaginatedProjectResponse(
+        items=[
+            ProjectResponse(
+                id=p.id,
+                owner_id=p.owner.id,
+                name=p.name,
+                description=p.description,
+                labels=p.labels,
+                created_at=p.created_at,
+            )
+            for p in result.items
+        ],
+        total=result.total,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @router.post(

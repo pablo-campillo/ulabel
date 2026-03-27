@@ -1,10 +1,11 @@
 from uuid import UUID
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from sqlalchemy.orm import joinedload, selectinload
 
+from ulabel.domain.pagination import PaginatedResult
 from ulabel.domain.ports.project_repository import ProjectRepository
 from ulabel.domain.projects import Project
 from ulabel.infrastructure.models.project import ProjectLabelModel, ProjectLabelerModel, ProjectModel
@@ -42,6 +43,23 @@ class SqlAlchemyProjectRepository(ProjectRepository):
                 .options(*_load_options())
             )
             return [row.to_domain() for row in result.unique().scalars()]
+
+    async def get_all(self, limit: int, offset: int) -> PaginatedResult[Project]:
+        async with self._sessionmaker() as session:
+            count_result = await session.execute(
+                select(func.count()).select_from(ProjectModel)
+            )
+            total = count_result.scalar_one()
+
+            result = await session.execute(
+                select(ProjectModel)
+                .options(*_load_options())
+                .order_by(ProjectModel.created_at.desc())
+                .limit(limit)
+                .offset(offset)
+            )
+            items = [row.to_domain() for row in result.unique().scalars()]
+            return PaginatedResult(items=items, total=total)
 
     async def save(self, project: Project) -> None:
         async with self._sessionmaker() as session:

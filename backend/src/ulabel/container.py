@@ -10,6 +10,7 @@ from ulabel.application.add_labeler_to_project import AddLabelerToProjectUseCase
 from ulabel.application.create_project import CreateProjectUseCase
 from ulabel.application.expire_images_task import ExpireImagesTask
 from ulabel.application.get_labeler_projects import GetLabelerProjectsUseCase
+from ulabel.application.list_projects import ListProjectsUseCase
 from ulabel.application.get_next_image import GetNextImageUseCase
 from ulabel.application.login import LoginUseCase
 from ulabel.application.export_labels import ExportLabelsUseCase
@@ -66,6 +67,11 @@ class Container(containers.DeclarativeContainer):
     create_project_use_case = providers.Factory(
         CreateProjectUseCase,
         user_repository=user_repository,
+        project_repository=project_repository,
+    )
+
+    list_projects_use_case = providers.Factory(
+        ListProjectsUseCase,
         project_repository=project_repository,
     )
 

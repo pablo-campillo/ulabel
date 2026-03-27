@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from uuid import UUID
 
+from ulabel.domain.pagination import PaginatedResult
 from ulabel.domain.projects import Project
 
 
@@ -12,6 +13,10 @@ class ProjectRepository(ABC):
 
     @abstractmethod
     async def get_by_labeler_id(self, labeler_id: UUID) -> list[Project]:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_all(self, limit: int, offset: int) -> PaginatedResult[Project]:
         raise NotImplementedError
 
     @abstractmethod

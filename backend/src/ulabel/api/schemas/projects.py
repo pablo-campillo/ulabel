@@ -3,6 +3,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
+from ulabel.api.schemas.pagination import PaginatedResponse
+
 
 class CreateProjectRequest(BaseModel):
     owner_id: UUID = Field(..., description="ID of the `admin` user who will own the project.")
@@ -51,3 +53,7 @@ class ProjectResponse(BaseModel):
             }
         }
     }
+
+
+class PaginatedProjectResponse(PaginatedResponse[ProjectResponse]):
+    pass

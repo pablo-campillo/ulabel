@@ -1,4 +1,5 @@
 import pytest
+from datetime import datetime, timezone
 from uuid import uuid4
 from fastapi.testclient import TestClient
 
@@ -112,3 +113,66 @@ def test_add_labeler_returns_403_when_user_is_not_labeler(client_with_project, p
         "labeler_id": str(admin.id),
     })
     assert response.status_code == 403
+
+
+# --- list projects ---
+
+def test_list_projects_returns_empty_list(client):
+    response = client.get("/v1/projects")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["items"] == []
+    assert body["total"] == 0
+    assert body["limit"] == 20
+    assert body["offset"] == 0
+
+
+def test_list_projects_returns_all_projects(admin):
+    p1 = Project.create(id=uuid4(), owner=admin, name="P1", description="d1", labels={"a"})
+    p2 = Project.create(id=uuid4(), owner=admin, name="P2", description="d2", labels={"b"})
+    user_ctx, project_ctx, test_client = make_client(users=[admin], projects=[p1, p2])
+    with user_ctx, project_ctx:
+        response = test_client.get("/v1/projects")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["total"] == 2
+    assert len(body["items"]) == 2
+    names = {item["name"] for item in body["items"]}
+    assert names == {"P1", "P2"}
+
+
+def test_list_projects_pagination(admin):
+    projects = [
+        Project.create(
+            id=uuid4(), owner=admin, name=f"P{i}", description="d", labels={"a"},
+            created_at=datetime(2024, 1, i + 1, tzinfo=timezone.utc),
+        )
+        for i in range(3)
+    ]
+    user_ctx, project_ctx, test_client = make_client(users=[admin], projects=projects)
+    with user_ctx, project_ctx:
+        response = test_client.get("/v1/projects", params={"limit": 2, "offset": 0})
+        body = response.json()
+        assert body["total"] == 3
+        assert len(body["items"]) == 2
+        assert body["items"][0]["name"] == "P2"
+        assert body["items"][1]["name"] == "P1"
+
+        response = test_client.get("/v1/projects", params={"limit": 2, "offset": 2})
+        body = response.json()
+        assert body["total"] == 3
+        assert len(body["items"]) == 1
+        assert body["items"][0]["name"] == "P0"
+
+
+def test_list_projects_invalid_limit(client):
+    response = client.get("/v1/projects", params={"limit": 0})
+    assert response.status_code == 422
+
+    response = client.get("/v1/projects", params={"limit": 200})
+    assert response.status_code == 422
+
+
+def test_list_projects_invalid_offset(client):
+    response = client.get("/v1/projects", params={"offset": -1})
+    assert response.status_code == 422
