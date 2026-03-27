@@ -1,0 +1,70 @@
+from uuid import UUID
+
+from sqlalchemy import ForeignKey, String
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from ulabel.domain.projects import Project
+from ulabel.infrastructure.models.base import Base
+from ulabel.infrastructure.models.user import UserModel
+
+
+class ProjectLabelModel(Base):
+    __tablename__ = "project_labels"
+
+    project_id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), primary_key=True
+    )
+    label: Mapped[str] = mapped_column(String(255), primary_key=True)
+
+
+class ProjectLabelerModel(Base):
+    __tablename__ = "project_labelers"
+
+    project_id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), primary_key=True
+    )
+    labeler_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True)
+
+
+class ProjectModel(Base):
+    __tablename__ = "projects"
+
+    id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True)
+    owner_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(String, nullable=False)
+
+    owner: Mapped[UserModel] = relationship("UserModel", lazy="joined")
+    label_entries: Mapped[list[ProjectLabelModel]] = relationship(
+        cascade="all, delete-orphan", lazy="selectin"
+    )
+    labeler_entries: Mapped[list[ProjectLabelerModel]] = relationship(
+        cascade="all, delete-orphan", lazy="selectin"
+    )
+
+    def to_domain(self) -> Project:
+        return Project(
+            id=self.id,
+            owner=self.owner.to_domain(),
+            name=self.name,
+            description=self.description,
+            labels={e.label for e in self.label_entries},
+            labeler_ids={e.labeler_id for e in self.labeler_entries},
+        )
+
+    @classmethod
+    def from_domain(cls, project: Project) -> "ProjectModel":
+        model = cls(
+            id=project.id,
+            owner_id=project.owner.id,
+            name=project.name,
+            description=project.description,
+        )
+        model.label_entries = [
+            ProjectLabelModel(project_id=project.id, label=label) for label in project.labels
+        ]
+        model.labeler_entries = [
+            ProjectLabelerModel(project_id=project.id, labeler_id=lid) for lid in project.labeler_ids
+        ]
+        return model

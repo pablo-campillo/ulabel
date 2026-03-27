@@ -1,0 +1,127 @@
+IMAGE     := ulabel-backend
+DEV_IMAGE := $(IMAGE)-dev
+SRC       := src
+TESTS     := tests
+
+-include .env
+export
+
+DATASET_URL        := https://huggingface.co/datasets/IABD12/Perros_gatos/resolve/main/dogs-vs-cats.zip
+DATASET_TMP        := /tmp/ulabel-dataset
+STORAGE_ENDPOINT   ?= http://localhost:9000
+STORAGE_ACCESS_KEY ?= minioadmin
+STORAGE_SECRET_KEY ?= minioadmin
+STORAGE_BUCKET     ?= ulabel
+
+.PHONY: help setup install pre-commit-install test test-integration format lint lint-fix typecheck check build run dev shell migrate migrate-create migrate-down seed-dataset
+
+help:                ## Show this help
+	@grep -E '^[a-zA-Z_-]+:.*##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*##"}; {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
+
+# ── Environment ──────────────────────────────────────────────────────────────
+
+setup:               ## Build the dev Docker image
+	docker build --target dev -t $(DEV_IMAGE) .
+
+install:             ## Sync all dependencies (including dev) into local .venv
+	uv sync
+
+pre-commit-install:  ## Install pre-commit hooks into .git/hooks
+	uv run --group dev pre-commit install
+
+dev:                 ## Start dev server locally with hot reload (no Docker)
+	uv run uvicorn ulabel.api.main:app --reload --host 0.0.0.0 --port 8000
+
+shell:               ## Open an interactive shell inside the dev container
+	docker run --rm -it \
+		-v $(PWD)/$(SRC):/app/$(SRC) \
+		-v $(PWD)/$(TESTS):/app/$(TESTS) \
+		$(DEV_IMAGE) bash
+
+# ── Quality ──────────────────────────────────────────────────────────────────
+
+test:                ## Run unit tests inside the dev container
+	docker run --rm $(DEV_IMAGE) uv run --group dev pytest tests/application tests/api -v
+
+test-cov:            ## Run all tests with coverage report (shows missing lines per file)
+	docker run --rm \
+		--network host \
+		-e TEST_DATABASE_URL=$(TEST_DATABASE_URL) \
+		$(DEV_IMAGE) uv run --group dev pytest tests/ --cov=ulabel --cov-report=term-missing -v
+
+test-integration:    ## Run integration tests (requires TEST_DATABASE_URL)
+	docker run --rm \
+		--network host \
+		-e TEST_DATABASE_URL=$(TEST_DATABASE_URL) \
+		$(DEV_IMAGE) uv run --group dev pytest tests/integration -v
+
+format:              ## Format code with ruff (edits files on host via volume mount)
+	docker run --rm \
+		-v $(PWD)/$(SRC):/app/$(SRC) \
+		-v $(PWD)/$(TESTS):/app/$(TESTS) \
+		$(DEV_IMAGE) uv run --group dev ruff format $(SRC)/ $(TESTS)/
+
+lint:                ## Lint code with ruff
+	docker run --rm \
+		-v $(PWD)/$(SRC):/app/$(SRC) \
+		-v $(PWD)/$(TESTS):/app/$(TESTS) \
+		$(DEV_IMAGE) uv run --group dev ruff check $(SRC)/ $(TESTS)/
+
+lint-fix:            ## Lint and auto-fix with ruff
+	docker run --rm \
+		-v $(PWD)/$(SRC):/app/$(SRC) \
+		-v $(PWD)/$(TESTS):/app/$(TESTS) \
+		$(DEV_IMAGE) uv run --group dev ruff check --fix $(SRC)/ $(TESTS)/
+
+typecheck:           ## Type-check with mypy
+	docker run --rm \
+		-v $(PWD)/$(SRC):/app/$(SRC) \
+		$(DEV_IMAGE) uv run --group dev mypy $(SRC)/
+
+check: format lint typecheck test  ## Run all quality checks in order
+
+# ── Docker ───────────────────────────────────────────────────────────────────
+
+build:               ## Build the production runtime image
+	docker build --target runtime -t $(IMAGE) .
+
+run:                 ## Start the app with docker compose
+	docker compose up app
+
+# ── Migrations ────────────────────────────────────────────────────────────────
+
+migrate:             ## Apply all pending migrations
+	uv run alembic upgrade head
+
+migrate-create:      ## Create a new migration (usage: make migrate-create msg="description")
+	uv run alembic revision --autogenerate -m "$(msg)"
+
+migrate-down:        ## Rollback the last migration
+	uv run alembic downgrade -1
+
+# ── Dataset ───────────────────────────────────────────────────────────────────
+
+seed-dataset:        ## Download dogs-vs-cats dataset and upload to MinIO under datasets/
+	@mkdir -p $(DATASET_TMP)
+	@echo "→ Downloading $(DATASET_URL)..."
+	@wget -q --show-progress -O $(DATASET_TMP)/dogs-vs-cats.zip $(DATASET_URL)
+	@echo "→ Extracting dogs-vs-cats.zip..."
+	@unzip -q -o $(DATASET_TMP)/dogs-vs-cats.zip -d $(DATASET_TMP)
+	@echo "→ Extracting train.zip..."
+	@unzip -q -o $(DATASET_TMP)/train.zip  -d $(DATASET_TMP)
+	@echo "→ Extracting test1.zip..."
+	@unzip -q -o $(DATASET_TMP)/test1.zip  -d $(DATASET_TMP)
+	@echo "→ Uploading to $(STORAGE_ENDPOINT)/$(STORAGE_BUCKET)/datasets/ ..."
+	@docker run --rm --network host \
+		-v $(DATASET_TMP):/data:ro \
+		rclone/rclone sync /data/ :s3:$(STORAGE_BUCKET)/datasets \
+		  --s3-no-check-bucket \
+		  --s3-provider Minio \
+		  --s3-endpoint $(STORAGE_ENDPOINT) \
+		  --s3-access-key-id $(STORAGE_ACCESS_KEY) \
+		  --s3-secret-access-key $(STORAGE_SECRET_KEY) \
+		  --s3-region us-east-1 \
+		  --exclude "*.zip" \
+		  --transfers 32 \
+		  --progress
+	@echo "✓ Dataset available at $(STORAGE_BUCKET)/datasets/"

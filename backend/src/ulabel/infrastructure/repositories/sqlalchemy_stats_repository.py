@@ -1,0 +1,90 @@
+from uuid import UUID
+
+from sqlalchemy import case, cast, Date, func, select
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+
+from ulabel.domain.ports.stats_repository import (
+    DailyLabelRow,
+    ImageCounts,
+    LabelerClassRow,
+    StatsRepository,
+)
+from ulabel.infrastructure.models.image import ImageModel
+from ulabel.infrastructure.models.label import LabelRecordModel
+from ulabel.infrastructure.models.user import UserModel
+
+
+class SqlAlchemyStatsRepository(StatsRepository):
+
+    def __init__(self, sessionmaker: async_sessionmaker[AsyncSession]):
+        self._sessionmaker = sessionmaker
+
+    async def get_image_counts(self, project_id: UUID) -> ImageCounts:
+        async with self._sessionmaker() as session:
+            stmt = select(
+                func.count().label("total"),
+                func.count(case((ImageModel.status == "done", 1))).label("labeled"),
+            ).where(ImageModel.project_id == project_id)
+            row = (await session.execute(stmt)).one()
+            return ImageCounts(total=row.total, labeled=row.labeled)
+
+    async def get_labeler_class_counts(self, project_id: UUID) -> list[LabelerClassRow]:
+        async with self._sessionmaker() as session:
+            stmt = (
+                select(
+                    LabelRecordModel.labeler_id,
+                    UserModel.username,
+                    LabelRecordModel.label,
+                    func.count().label("cnt"),
+                )
+                .join(UserModel, LabelRecordModel.labeler_id == UserModel.id)
+                .where(LabelRecordModel.project_id == project_id)
+                .group_by(
+                    LabelRecordModel.labeler_id,
+                    UserModel.username,
+                    LabelRecordModel.label,
+                )
+            )
+            rows = (await session.execute(stmt)).all()
+            return [
+                LabelerClassRow(
+                    labeler_id=r.labeler_id,
+                    username=r.username,
+                    label=r.label,
+                    count=r.cnt,
+                )
+                for r in rows
+            ]
+
+    async def get_daily_label_counts(self, project_id: UUID) -> list[DailyLabelRow]:
+        async with self._sessionmaker() as session:
+            day_col = cast(LabelRecordModel.created_at, Date).label("day")
+            stmt = (
+                select(
+                    LabelRecordModel.labeler_id,
+                    UserModel.username,
+                    day_col,
+                    LabelRecordModel.label,
+                    func.count().label("cnt"),
+                )
+                .join(UserModel, LabelRecordModel.labeler_id == UserModel.id)
+                .where(LabelRecordModel.project_id == project_id)
+                .group_by(
+                    LabelRecordModel.labeler_id,
+                    UserModel.username,
+                    day_col,
+                    LabelRecordModel.label,
+                )
+                .order_by(day_col)
+            )
+            rows = (await session.execute(stmt)).all()
+            return [
+                DailyLabelRow(
+                    labeler_id=r.labeler_id,
+                    username=r.username,
+                    day=r.day,
+                    label=r.label,
+                    count=r.cnt,
+                )
+                for r in rows
+            ]
