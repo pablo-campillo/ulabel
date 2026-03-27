@@ -15,3 +15,16 @@ class InMemoryUserRepository(UserRepository):
 
     async def get_by_id(self, user_id: UUID) -> User | None:
         return self._by_id.get(user_id)
+
+    async def search_by_username_prefix(
+        self, prefix: str, *, role: str | None = None, limit: int = 10
+    ) -> list[User]:
+        prefix_lower = prefix.lower()
+        results = [
+            u
+            for u in self._by_username.values()
+            if u.username.lower().startswith(prefix_lower)
+            and (role is None or u.role == role)
+        ]
+        results.sort(key=lambda u: u.username)
+        return results[:limit]

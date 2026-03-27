@@ -15,6 +15,7 @@ from ulabel.application.get_next_image import GetNextImageUseCase
 from ulabel.application.login import LoginUseCase
 from ulabel.application.export_labels import ExportLabelsUseCase
 from ulabel.application.get_project_stats import GetProjectStatsUseCase
+from ulabel.application.search_labelers import SearchLabelersUseCase
 from ulabel.application.submit_label import SubmitLabelUseCase
 from ulabel.infrastructure.database import build_engine, build_sessionmaker
 from ulabel.infrastructure.repositories.sqlalchemy_image_repository import SqlAlchemyImageRepository
@@ -126,6 +127,11 @@ class Container(containers.DeclarativeContainer):
         project_repository=project_repository,
         label_repository=label_repository,
         storage_service=storage_service,
+    )
+
+    search_labelers_use_case = providers.Factory(
+        SearchLabelersUseCase,
+        user_repository=user_repository,
     )
 
     get_project_stats_use_case = providers.Factory(

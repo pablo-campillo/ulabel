@@ -30,6 +30,17 @@ class SqlAlchemyUserRepository(UserRepository):
             model = result.scalar_one_or_none()
             return model.to_domain() if model else None
 
+    async def search_by_username_prefix(
+        self, prefix: str, *, role: str | None = None, limit: int = 10
+    ) -> list[User]:
+        async with self._sessionmaker() as session:
+            stmt = select(UserModel).where(UserModel.username.ilike(f"{prefix}%"))
+            if role is not None:
+                stmt = stmt.where(UserModel.role == role)
+            stmt = stmt.order_by(UserModel.username).limit(limit)
+            result = await session.execute(stmt)
+            return [row.to_domain() for row in result.scalars()]
+
     async def save(self, user: User) -> None:
         async with self._sessionmaker() as session:
             stmt = (

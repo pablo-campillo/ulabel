@@ -1,15 +1,38 @@
 from uuid import UUID
 
 from dependency_injector.wiring import Provide, inject
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from pydantic import BaseModel
 
 from ulabel.api.schemas.projects import ProjectResponse
 from ulabel.application.create_project import Unauthorized
 from ulabel.application.get_labeler_projects import GetLabelerProjectsUseCase
 from ulabel.application.login import UserNotFound
+from ulabel.application.search_labelers import SearchLabelersUseCase
 from ulabel.container import Container
 
 router = APIRouter()
+
+
+class LabelerAutocompleteItem(BaseModel):
+    id: UUID
+    username: str
+
+
+@router.get(
+    "/autocomplete",
+    response_model=list[LabelerAutocompleteItem],
+    summary="Autocomplete labeler usernames",
+    description="Search labelers by username prefix. Returns up to `limit` matches.",
+)
+@inject
+async def autocomplete_labelers(
+    q: str = Query(min_length=1, description="Username prefix to search for"),
+    limit: int = Query(default=10, ge=1, le=50),
+    use_case: SearchLabelersUseCase = Depends(Provide[Container.search_labelers_use_case]),
+):
+    results = await use_case.execute(prefix=q, limit=limit)
+    return [LabelerAutocompleteItem(id=u.id, username=u.username) for u in results]
 
 
 @router.get(

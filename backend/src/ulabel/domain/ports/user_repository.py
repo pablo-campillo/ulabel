@@ -13,3 +13,9 @@ class UserRepository(ABC):
     @abstractmethod
     async def get_by_id(self, user_id: UUID) -> User | None:
         raise NotImplementedError
+
+    @abstractmethod
+    async def search_by_username_prefix(
+        self, prefix: str, *, role: str | None = None, limit: int = 10
+    ) -> list[User]:
+        raise NotImplementedError
