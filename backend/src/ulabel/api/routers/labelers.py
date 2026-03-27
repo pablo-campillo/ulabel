@@ -55,6 +55,7 @@ async def get_labeler_projects(
             name=p.name,
             description=p.description,
             labels=p.labels,
+            created_at=p.created_at,
         )
         for p in projects
     ]

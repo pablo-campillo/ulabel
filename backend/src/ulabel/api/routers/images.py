@@ -4,7 +4,7 @@ from uuid import UUID
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, UploadFile, status
 
-from ulabel.api.schemas.images import AddImageRequest, AssignedImageResponse, ImageResponse, ImportImagesRequest, ImportJobResponse, LabelRecordResponse, SubmitLabelRequest
+from ulabel.api.schemas.images import AddImageRequest, AssignedImageResponse, ImageResponse, ImportImagesRequest, ImportJobResponse, LabelRecordResponse, SubmitLabelRequest, SubmitLabelResponse
 from ulabel.application.add_image_to_project import AddImageToProjectUseCase
 from ulabel.application.add_labeler_to_project import ProjectNotFound
 from ulabel.application.get_next_image import GetNextImageUseCase, LabelerNotInProject, NoImageAvailable
@@ -245,7 +245,7 @@ async def get_next_image(
 
 @router.post(
     "/{project_id}/images/{image_id}/label",
-    response_model=LabelRecordResponse,
+    response_model=SubmitLabelResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Submit label for an image",
     description="""
@@ -285,7 +285,7 @@ async def submit_label(
     use_case: SubmitLabelUseCase = Depends(Provide[Container.submit_label_use_case]),
 ):
     try:
-        label_record = await use_case.execute(
+        label_record, stats = await use_case.execute(
             project_id=project_id,
             image_id=image_id,
             labeler_id=request.labeler_id,
@@ -306,10 +306,13 @@ async def submit_label(
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="Invalid label"
         )
-    return LabelRecordResponse(
+    return SubmitLabelResponse(
         id=label_record.id,
         project_id=label_record.project_id,
         image_id=label_record.image_id,
         labeler_id=label_record.labeler_id,
         label=label_record.label,
+        labeler_count=stats.labeler_count,
+        ranking=stats.ranking,
+        total_labelers=stats.total_labelers,
     )

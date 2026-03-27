@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from uuid import UUID, uuid4
 
 from ulabel.application.login import UserNotFound
@@ -24,6 +25,6 @@ class CreateProjectUseCase:
         if owner.role != UserRole.ADMIN:
             raise Unauthorized(f"User '{owner.username}' is not an admin")
 
-        project = Project.create(id=uuid4(), owner=owner, name=name, description=description, labels=labels)
+        project = Project.create(id=uuid4(), owner=owner, name=name, description=description, labels=labels, created_at=datetime.now(timezone.utc))
         await self.project_repository.save(project)
         return project

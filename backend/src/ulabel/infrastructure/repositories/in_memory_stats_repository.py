@@ -2,7 +2,7 @@ from collections import defaultdict
 from uuid import UUID
 
 from ulabel.domain.images import Image, ImageStatus
-from ulabel.domain.labels import LabelRecord
+from ulabel.domain.labels import LabelRecord, LabelerSubmitStats
 from ulabel.domain.ports.stats_repository import (
     DailyLabelRow,
     ImageCounts,
@@ -48,3 +48,18 @@ class InMemoryStatsRepository(StatsRepository):
     async def get_daily_label_counts(self, project_id: UUID) -> list[DailyLabelRow]:
         # In-memory labels don't have created_at, so this returns an empty list.
         return []
+
+    async def get_labeler_ranking(self, project_id: UUID, labeler_id: UUID) -> LabelerSubmitStats:
+        counts: dict[UUID, int] = defaultdict(int)
+        for lr in self._labels:
+            if lr.project_id == project_id:
+                counts[lr.labeler_id] += 1
+        labeler_count = counts.get(labeler_id, 0)
+        total_labelers = len(counts)
+        above = sum(1 for c in counts.values() if c > labeler_count)
+        ranking = above + 1
+        return LabelerSubmitStats(
+            labeler_count=labeler_count,
+            ranking=ranking,
+            total_labelers=total_labelers,
+        )

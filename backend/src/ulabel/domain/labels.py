@@ -24,3 +24,10 @@ class LabelExportRow:
     image_id: UUID
     storage_key: str
     value: str
+
+
+@dataclass
+class LabelerSubmitStats:
+    labeler_count: int
+    ranking: int
+    total_labelers: int

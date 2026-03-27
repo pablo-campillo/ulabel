@@ -117,6 +117,32 @@ class LabelRecordResponse(BaseModel):
     }
 
 
+class SubmitLabelResponse(BaseModel):
+    id: UUID = Field(..., description="Unique label record identifier.")
+    project_id: UUID = Field(..., description="ID of the project.")
+    image_id: UUID = Field(..., description="ID of the labelled image.")
+    labeler_id: UUID = Field(..., description="ID of the labeler who submitted the label.")
+    label: str = Field(..., description="The assigned label.")
+    labeler_count: int = Field(..., description="Total number of labels submitted by this labeler in this project.")
+    ranking: int = Field(..., description="Labeler's ranking position in this project (1 = most labels).")
+    total_labelers: int = Field(..., description="Total number of labelers who have submitted at least one label in this project.")
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "id": "aaa11111-e89b-12d3-a456-426614174010",
+                "project_id": "789e0123-e89b-12d3-a456-426614174002",
+                "image_id": "abc12345-e89b-12d3-a456-426614174003",
+                "labeler_id": "abc12345-e89b-12d3-a456-426614174001",
+                "label": "cat",
+                "labeler_count": 42,
+                "ranking": 1,
+                "total_labelers": 5,
+            }
+        }
+    }
+
+
 class ImportImagesRequest(BaseModel):
     prefix: str = Field(
         ...,

@@ -10,6 +10,7 @@ from ulabel.domain.users import User
 from ulabel.infrastructure.repositories.in_memory_image_repository import InMemoryImageRepository
 from ulabel.infrastructure.repositories.in_memory_label_repository import InMemoryLabelRepository
 from ulabel.infrastructure.repositories.in_memory_project_repository import InMemoryProjectRepository
+from ulabel.infrastructure.repositories.in_memory_stats_repository import InMemoryStatsRepository
 
 FIXED_NOW = datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
 
@@ -41,15 +42,20 @@ def assigned_image(project, labeler):
 
 
 @pytest.fixture
-def client(project, assigned_image):
+def client(project, assigned_image, labeler):
+    images = [assigned_image]
+    labels = []
     with (
         app.container.project_repository.override(
             InMemoryProjectRepository(projects=[project])
         ),
         app.container.image_repository.override(
-            InMemoryImageRepository(images=[assigned_image])
+            InMemoryImageRepository(images=images)
         ),
         app.container.label_repository.override(InMemoryLabelRepository()),
+        app.container.stats_repository.override(
+            InMemoryStatsRepository(images=images, labels=labels, usernames={labeler.id: labeler.username})
+        ),
     ):
         yield TestClient(app)
 
@@ -77,6 +83,9 @@ def test_submit_label_returns_201(client, project, assigned_image, labeler):
     assert body["image_id"] == str(assigned_image.id)
     assert body["labeler_id"] == str(labeler.id)
     assert body["label"] == "cat"
+    assert "labeler_count" in body
+    assert "ranking" in body
+    assert "total_labelers" in body
 
 
 def test_submit_label_returns_404_when_project_not_found(client, assigned_image, labeler):
@@ -105,6 +114,9 @@ def test_submit_label_returns_409_when_image_not_in_progress(project, labeler):
             InMemoryImageRepository(images=[pending_image])
         ),
         app.container.label_repository.override(InMemoryLabelRepository()),
+        app.container.stats_repository.override(
+            InMemoryStatsRepository(images=[pending_image], labels=[], usernames={})
+        ),
     ):
         response = TestClient(app).post(
             _url(project.id, pending_image.id),

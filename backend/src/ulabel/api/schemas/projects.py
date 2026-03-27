@@ -1,3 +1,4 @@
+from datetime import datetime
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -37,6 +38,7 @@ class ProjectResponse(BaseModel):
     name: str = Field(..., description="Project name.")
     description: str = Field(..., description="Project description.")
     labels: set[str] = Field(..., description="Labels available in the project.")
+    created_at: datetime = Field(..., description="Timestamp when the project was created.")
 
     model_config = {
         "json_schema_extra": {

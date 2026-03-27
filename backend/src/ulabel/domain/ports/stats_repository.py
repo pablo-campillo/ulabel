@@ -3,6 +3,8 @@ from dataclasses import dataclass
 from datetime import date
 from uuid import UUID
 
+from ulabel.domain.labels import LabelerSubmitStats
+
 
 @dataclass
 class ImageCounts:
@@ -39,4 +41,8 @@ class StatsRepository(ABC):
 
     @abstractmethod
     async def get_daily_label_counts(self, project_id: UUID) -> list[DailyLabelRow]:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_labeler_ranking(self, project_id: UUID, labeler_id: UUID) -> LabelerSubmitStats:
         raise NotImplementedError

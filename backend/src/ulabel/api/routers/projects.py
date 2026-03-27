@@ -58,6 +58,7 @@ async def create_project(
         name=project.name,
         description=project.description,
         labels=project.labels,
+        created_at=project.created_at,
     )
 
 
@@ -111,4 +112,5 @@ async def add_labeler(
         name=project.name,
         description=project.description,
         labels=project.labels,
+        created_at=project.created_at,
     )

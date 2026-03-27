@@ -1,8 +1,10 @@
 from uuid import UUID
 
-from sqlalchemy import ForeignKey, String
+from sqlalchemy import DateTime, ForeignKey, String, func
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from datetime import datetime
 
 from ulabel.domain.projects import Project
 from ulabel.infrastructure.models.base import Base
@@ -34,6 +36,9 @@ class ProjectModel(Base):
     owner_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str] = mapped_column(String, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
 
     owner: Mapped[UserModel] = relationship("UserModel", lazy="joined")
     label_entries: Mapped[list[ProjectLabelModel]] = relationship(
@@ -50,6 +55,7 @@ class ProjectModel(Base):
             name=self.name,
             description=self.description,
             labels={e.label for e in self.label_entries},
+            created_at=self.created_at,
             labeler_ids={e.labeler_id for e in self.labeler_entries},
         )
 
@@ -60,6 +66,7 @@ class ProjectModel(Base):
             owner_id=project.owner.id,
             name=project.name,
             description=project.description,
+            created_at=project.created_at,
         )
         model.label_entries = [
             ProjectLabelModel(project_id=project.id, label=label) for label in project.labels

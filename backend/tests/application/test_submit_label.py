@@ -17,6 +17,7 @@ from ulabel.domain.users import User
 from ulabel.infrastructure.repositories.in_memory_image_repository import InMemoryImageRepository
 from ulabel.infrastructure.repositories.in_memory_label_repository import InMemoryLabelRepository
 from ulabel.infrastructure.repositories.in_memory_project_repository import InMemoryProjectRepository
+from ulabel.infrastructure.repositories.in_memory_stats_repository import InMemoryStatsRepository
 
 FIXED_NOW = datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
 
@@ -48,16 +49,23 @@ def assigned_image(project, labeler):
 
 
 @pytest.fixture
-def use_case(project, assigned_image):
+def use_case(project, assigned_image, labeler):
+    images = [assigned_image]
+    labels = []
     return SubmitLabelUseCase(
         project_repository=InMemoryProjectRepository(projects=[project]),
-        image_repository=InMemoryImageRepository(images=[assigned_image]),
+        image_repository=InMemoryImageRepository(images=images),
         label_repository=InMemoryLabelRepository(),
+        stats_repository=InMemoryStatsRepository(
+            images=images,
+            labels=labels,
+            usernames={labeler.id: labeler.username},
+        ),
     )
 
 
 async def test_submit_label_creates_record(use_case, project, assigned_image, labeler):
-    record = await use_case.execute(
+    record, stats = await use_case.execute(
         project_id=project.id,
         image_id=assigned_image.id,
         labeler_id=labeler.id,
@@ -68,10 +76,11 @@ async def test_submit_label_creates_record(use_case, project, assigned_image, la
     assert record.image_id == assigned_image.id
     assert record.labeler_id == labeler.id
     assert record.label == "cat"
+    assert stats.ranking >= 1
 
 
 async def test_submit_label_marks_image_done(use_case, project, assigned_image, labeler):
-    await use_case.execute(
+    _ = await use_case.execute(
         project_id=project.id,
         image_id=assigned_image.id,
         labeler_id=labeler.id,
@@ -110,6 +119,7 @@ async def test_raises_when_image_not_in_project(project, labeler):
         project_repository=InMemoryProjectRepository(projects=[project]),
         image_repository=InMemoryImageRepository(images=[other_image]),
         label_repository=InMemoryLabelRepository(),
+        stats_repository=InMemoryStatsRepository(images=[other_image], labels=[], usernames={}),
     )
     with pytest.raises(ImageNotFound):
         await use_case.execute(
@@ -127,6 +137,7 @@ async def test_raises_when_image_is_pending(project, labeler):
         project_repository=InMemoryProjectRepository(projects=[project]),
         image_repository=InMemoryImageRepository(images=[pending_image]),
         label_repository=InMemoryLabelRepository(),
+        stats_repository=InMemoryStatsRepository(images=[pending_image], labels=[], usernames={}),
     )
     with pytest.raises(ImageNotInProgress):
         await use_case.execute(
@@ -146,6 +157,7 @@ async def test_raises_when_image_already_done(project, labeler):
         project_repository=InMemoryProjectRepository(projects=[project]),
         image_repository=InMemoryImageRepository(images=[done_image]),
         label_repository=InMemoryLabelRepository(),
+        stats_repository=InMemoryStatsRepository(images=[done_image], labels=[], usernames={}),
     )
     with pytest.raises(ImageNotInProgress):
         await use_case.execute(

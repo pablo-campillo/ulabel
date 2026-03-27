@@ -3,6 +3,7 @@ from uuid import UUID
 from sqlalchemy import case, cast, Date, func, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from ulabel.domain.labels import LabelerSubmitStats
 from ulabel.domain.ports.stats_repository import (
     DailyLabelRow,
     ImageCounts,
@@ -88,3 +89,35 @@ class SqlAlchemyStatsRepository(StatsRepository):
                 )
                 for r in rows
             ]
+
+    async def get_labeler_ranking(self, project_id: UUID, labeler_id: UUID) -> LabelerSubmitStats:
+        async with self._sessionmaker() as session:
+            # Subquery: count per labeler in this project
+            counts_sq = (
+                select(
+                    LabelRecordModel.labeler_id,
+                    func.count().label("cnt"),
+                )
+                .where(LabelRecordModel.project_id == project_id)
+                .group_by(LabelRecordModel.labeler_id)
+                .subquery()
+            )
+
+            # Get total labelers who have submitted at least one label
+            total_stmt = select(func.count()).select_from(counts_sq)
+            total_labelers = (await session.execute(total_stmt)).scalar_one()
+
+            # Get this labeler's count
+            labeler_cnt_stmt = select(counts_sq.c.cnt).where(counts_sq.c.labeler_id == labeler_id)
+            labeler_count = (await session.execute(labeler_cnt_stmt)).scalar_one_or_none() or 0
+
+            # Ranking: how many labelers have strictly more labels than this one
+            ranking_stmt = select(func.count()).select_from(counts_sq).where(counts_sq.c.cnt > labeler_count)
+            above = (await session.execute(ranking_stmt)).scalar_one()
+            ranking = above + 1
+
+            return LabelerSubmitStats(
+                labeler_count=labeler_count,
+                ranking=ranking,
+                total_labelers=total_labelers,
+            )

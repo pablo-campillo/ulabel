@@ -112,6 +112,7 @@ class Container(containers.DeclarativeContainer):
         project_repository=project_repository,
         image_repository=image_repository,
         label_repository=label_repository,
+        stats_repository=stats_repository,
     )
 
     export_labels_use_case = providers.Factory(
