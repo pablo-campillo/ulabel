@@ -220,3 +220,66 @@ def test_list_projects_invalid_limit(client):
 def test_list_projects_invalid_offset(client):
     response = client.get("/v1/projects", params={"offset": -1})
     assert response.status_code == 422
+
+
+# --- filter by name ---
+
+def test_list_projects_filter_by_name(admin):
+    p1 = Project.create(id=uuid4(), owner=admin, name="Alpha Project", description="d", labels={"a"})
+    p2 = Project.create(id=uuid4(), owner=admin, name="Beta Project", description="d", labels={"a"})
+    p3 = Project.create(id=uuid4(), owner=admin, name="Gamma", description="d", labels={"a"})
+    user_ctx, project_ctx, test_client = make_client(users=[admin], projects=[p1, p2, p3])
+    with user_ctx, project_ctx:
+        response = test_client.get("/v1/projects", params={"name": "alpha"})
+    body = response.json()
+    assert body["total"] == 1
+    assert body["items"][0]["name"] == "Alpha Project"
+
+
+def test_list_projects_filter_by_name_case_insensitive(admin):
+    p1 = Project.create(id=uuid4(), owner=admin, name="Alpha Project", description="d", labels={"a"})
+    user_ctx, project_ctx, test_client = make_client(users=[admin], projects=[p1])
+    with user_ctx, project_ctx:
+        response = test_client.get("/v1/projects", params={"name": "ALPHA"})
+    body = response.json()
+    assert body["total"] == 1
+    assert body["items"][0]["name"] == "Alpha Project"
+
+
+def test_list_projects_filter_by_name_contains(admin):
+    p1 = Project.create(id=uuid4(), owner=admin, name="Alpha Project", description="d", labels={"a"})
+    p2 = Project.create(id=uuid4(), owner=admin, name="Beta Project", description="d", labels={"a"})
+    p3 = Project.create(id=uuid4(), owner=admin, name="Gamma", description="d", labels={"a"})
+    user_ctx, project_ctx, test_client = make_client(users=[admin], projects=[p1, p2, p3])
+    with user_ctx, project_ctx:
+        response = test_client.get("/v1/projects", params={"name": "Project"})
+    body = response.json()
+    assert body["total"] == 2
+    names = {item["name"] for item in body["items"]}
+    assert names == {"Alpha Project", "Beta Project"}
+
+
+def test_list_projects_filter_by_name_no_match(admin):
+    p1 = Project.create(id=uuid4(), owner=admin, name="Alpha", description="d", labels={"a"})
+    user_ctx, project_ctx, test_client = make_client(users=[admin], projects=[p1])
+    with user_ctx, project_ctx:
+        response = test_client.get("/v1/projects", params={"name": "nonexistent"})
+    body = response.json()
+    assert body["total"] == 0
+    assert body["items"] == []
+
+
+def test_list_projects_filter_by_name_with_pagination(admin):
+    projects = [
+        Project.create(
+            id=uuid4(), owner=admin, name=f"Test {i}", description="d", labels={"a"},
+            created_at=datetime(2024, 1, i + 1, tzinfo=timezone.utc),
+        )
+        for i in range(3)
+    ]
+    user_ctx, project_ctx, test_client = make_client(users=[admin], projects=projects)
+    with user_ctx, project_ctx:
+        response = test_client.get("/v1/projects", params={"name": "Test", "limit": 2})
+    body = response.json()
+    assert body["total"] == 3
+    assert len(body["items"]) == 2

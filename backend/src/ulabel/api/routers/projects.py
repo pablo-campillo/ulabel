@@ -58,10 +58,11 @@ async def _to_response(project: Project, user_repo: UserRepository) -> ProjectRe
 async def list_projects(
     limit: int = Query(default=20, ge=1, le=100, description="Max items per page."),
     offset: int = Query(default=0, ge=0, description="Number of items to skip."),
+    name: str | None = Query(default=None, description="Filter projects by name (case-insensitive, contains match)."),
     use_case: ListProjectsUseCase = Depends(Provide[Container.list_projects_use_case]),
     user_repo: UserRepository = Depends(Provide[Container.user_repository]),
 ):
-    result = await use_case.execute(limit=limit, offset=offset)
+    result = await use_case.execute(limit=limit, offset=offset, name=name)
     items = [await _to_response(p, user_repo) for p in result.items]
     return PaginatedProjectResponse(
         items=items,

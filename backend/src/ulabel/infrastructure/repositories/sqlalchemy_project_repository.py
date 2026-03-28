@@ -44,15 +44,20 @@ class SqlAlchemyProjectRepository(ProjectRepository):
             )
             return [row.to_domain() for row in result.unique().scalars()]
 
-    async def get_all(self, limit: int, offset: int) -> PaginatedResult[Project]:
+    async def get_all(self, limit: int, offset: int, *, name: str | None = None) -> PaginatedResult[Project]:
         async with self._sessionmaker() as session:
+            filters = []
+            if name is not None:
+                filters.append(ProjectModel.name.ilike(f"%{name}%"))
+
             count_result = await session.execute(
-                select(func.count()).select_from(ProjectModel)
+                select(func.count()).select_from(ProjectModel).where(*filters)
             )
             total = count_result.scalar_one()
 
             result = await session.execute(
                 select(ProjectModel)
+                .where(*filters)
                 .options(*_load_options())
                 .order_by(ProjectModel.created_at.desc())
                 .limit(limit)
