@@ -12,7 +12,7 @@ from ulabel.api.schemas.projects import (
     UpdateProjectRequest,
 )
 from ulabel.application.add_labeler_to_project import AddLabelerToProjectUseCase, ProjectNotFound
-from ulabel.application.create_project import CreateProjectUseCase, Unauthorized
+from ulabel.application.create_project import CreateProjectUseCase, ProjectNameAlreadyExists, Unauthorized
 from ulabel.application.list_projects import ListProjectsUseCase
 from ulabel.application.login import UserNotFound
 from ulabel.application.update_project import UpdateProjectUseCase
@@ -94,6 +94,10 @@ changed after the project is created.
             "description": "No user found with the given `owner_id`.",
             "content": {"application/json": {"example": {"detail": "Owner not found"}}},
         },
+        409: {
+            "description": "A project with the same name already exists.",
+            "content": {"application/json": {"example": {"detail": "Project name already exists"}}},
+        },
     },
 )
 @inject
@@ -113,6 +117,8 @@ async def create_project(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Owner not found")
     except Unauthorized:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Owner is not an admin")
+    except ProjectNameAlreadyExists:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Project name already exists")
     return await _to_response(project, user_repo)
 
 
@@ -167,6 +173,8 @@ async def update_project(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Labeler not found")
     except Unauthorized:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User is not a labeler")
+    except ProjectNameAlreadyExists:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Project name already exists")
     return await _to_response(project, user_repo)
 
 

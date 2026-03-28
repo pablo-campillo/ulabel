@@ -12,6 +12,10 @@ class ProjectRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    async def get_by_name(self, name: str) -> Project | None:
+        raise NotImplementedError
+
+    @abstractmethod
     async def get_by_labeler_id(self, labeler_id: UUID) -> list[Project]:
         raise NotImplementedError
 

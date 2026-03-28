@@ -12,6 +12,10 @@ class Unauthorized(Exception):
     pass
 
 
+class ProjectNameAlreadyExists(Exception):
+    pass
+
+
 class CreateProjectUseCase:
 
     def __init__(self, user_repository: UserRepository, project_repository: ProjectRepository):
@@ -24,6 +28,10 @@ class CreateProjectUseCase:
             raise UserNotFound(f"User '{owner_id}' not found")
         if owner.role != UserRole.ADMIN:
             raise Unauthorized(f"User '{owner.username}' is not an admin")
+
+        existing = await self.project_repository.get_by_name(name)
+        if existing is not None:
+            raise ProjectNameAlreadyExists(f"A project named '{name}' already exists")
 
         project = Project.create(id=uuid4(), owner=owner, name=name, description=description, labels=labels, created_at=datetime.now(timezone.utc))
         await self.project_repository.save(project)

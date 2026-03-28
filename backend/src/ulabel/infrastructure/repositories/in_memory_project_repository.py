@@ -13,6 +13,12 @@ class InMemoryProjectRepository(ProjectRepository):
     async def get_by_id(self, project_id: UUID) -> Project | None:
         return self._projects.get(project_id)
 
+    async def get_by_name(self, name: str) -> Project | None:
+        for p in self._projects.values():
+            if p.name == name:
+                return p
+        return None
+
     async def get_by_labeler_id(self, labeler_id: UUID) -> list[Project]:
         return [p for p in self._projects.values() if labeler_id in p.labeler_ids]
 

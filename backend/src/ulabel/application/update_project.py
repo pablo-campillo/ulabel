@@ -1,7 +1,7 @@
 from uuid import UUID
 
 from ulabel.application.add_labeler_to_project import ProjectNotFound
-from ulabel.application.create_project import Unauthorized
+from ulabel.application.create_project import ProjectNameAlreadyExists, Unauthorized
 from ulabel.application.login import UserNotFound
 from ulabel.domain.ports.project_repository import ProjectRepository
 from ulabel.domain.ports.user_repository import UserRepository
@@ -26,6 +26,11 @@ class UpdateProjectUseCase:
         project = await self.project_repository.get_by_id(project_id)
         if project is None:
             raise ProjectNotFound(f"Project '{project_id}' not found")
+
+        if name is not None and name != project.name:
+            existing = await self.project_repository.get_by_name(name)
+            if existing is not None:
+                raise ProjectNameAlreadyExists(f"A project named '{name}' already exists")
 
         project.update(name=name, description=description)
 

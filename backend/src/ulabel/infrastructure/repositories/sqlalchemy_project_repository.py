@@ -34,6 +34,16 @@ class SqlAlchemyProjectRepository(ProjectRepository):
             model = result.unique().scalar_one_or_none()
             return model.to_domain() if model else None
 
+    async def get_by_name(self, name: str) -> Project | None:
+        async with self._sessionmaker() as session:
+            result = await session.execute(
+                select(ProjectModel)
+                .where(ProjectModel.name == name)
+                .options(*_load_options())
+            )
+            model = result.unique().scalar_one_or_none()
+            return model.to_domain() if model else None
+
     async def get_by_labeler_id(self, labeler_id: UUID) -> list[Project]:
         async with self._sessionmaker() as session:
             result = await session.execute(
