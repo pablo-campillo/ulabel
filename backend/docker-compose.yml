@@ -12,8 +12,6 @@ services:
       - STORAGE_ENDPOINT=storage:9000
       - STORAGE_ACCESS_KEY=minioadmin
       - STORAGE_SECRET_KEY=minioadmin
-      - STORAGE_BUCKET=ulabel
-      - STORAGE_SECURE=false
     depends_on:
       db:
         condition: service_healthy

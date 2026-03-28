@@ -14,7 +14,7 @@ requires-python = ">=3.12"
 dependencies = [
     "alembic>=1.18.4",
     "asyncpg>=0.31.0",
-    "dependency-injector>=4.49.0",
+    "dependency-injector[yaml]>=4.49.0",
     "fastapi>=0.115.0",
     "aioboto3>=13.0.0",
     "types-aiobotocore-s3>=2.0.0",

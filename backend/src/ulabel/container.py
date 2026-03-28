@@ -1,5 +1,5 @@
-import os
 from datetime import timedelta
+from pathlib import Path
 
 from dependency_injector import containers, providers
 
@@ -26,6 +26,8 @@ from ulabel.infrastructure.repositories.sqlalchemy_stats_repository import SqlAl
 from ulabel.infrastructure.repositories.sqlalchemy_user_repository import SqlAlchemyUserRepository
 from ulabel.infrastructure.storage.s3_storage_service import S3StorageService
 
+CONFIG_PATH = Path(__file__).resolve().parent.parent.parent / "config.yml"
+
 
 class Container(containers.DeclarativeContainer):
 
@@ -40,11 +42,14 @@ class Container(containers.DeclarativeContainer):
         ]
     )
 
+    config = providers.Configuration(yaml_files=[str(CONFIG_PATH)])
+
     engine = providers.Singleton(
         build_engine,
-        database_url=providers.Object(
-            os.getenv("DATABASE_URL", "postgresql+asyncpg://ulabel:secret@localhost:5432/ulabel")
-        ),
+        database_url=config.database.url,
+        pool_size=config.database.pool_size.as_int(),
+        max_overflow=config.database.max_overflow.as_int(),
+        pool_recycle=config.database.pool_recycle.as_int(),
     )
 
     sessionmaker = providers.Singleton(build_sessionmaker, engine=engine)
@@ -57,12 +62,12 @@ class Container(containers.DeclarativeContainer):
 
     storage_service = providers.Singleton(
         S3StorageService,
-        endpoint=providers.Object(os.getenv("STORAGE_ENDPOINT", "localhost:9000")),
-        access_key=providers.Object(os.getenv("STORAGE_ACCESS_KEY", "minioadmin")),
-        secret_key=providers.Object(os.getenv("STORAGE_SECRET_KEY", "minioadmin")),
-        bucket=providers.Object(os.getenv("STORAGE_BUCKET", "ulabel")),
-        secure=providers.Object(os.getenv("STORAGE_SECURE", "false").lower() == "true"),
-        public_endpoint=providers.Object(os.getenv("STORAGE_PUBLIC_ENDPOINT", "")),
+        endpoint=config.storage.endpoint,
+        access_key=config.storage.access_key,
+        secret_key=config.storage.secret_key,
+        bucket=config.storage.bucket,
+        secure=config.storage.secure,
+        public_endpoint=config.storage.public_endpoint,
     )
 
     login_use_case = providers.Factory(LoginUseCase, user_repository=user_repository)
@@ -151,6 +156,10 @@ class Container(containers.DeclarativeContainer):
     expire_images_task = providers.Factory(
         ExpireImagesTask,
         image_repository=image_repository,
-        timeout=providers.Object(timedelta(minutes=30)),
-        interval=providers.Object(timedelta(minutes=5)),
+        timeout=config.tasks.image_assignment_timeout_seconds.as_(
+            lambda s: timedelta(seconds=int(s))
+        ),
+        interval=config.tasks.image_expiry_interval_seconds.as_(
+            lambda s: timedelta(seconds=int(s))
+        ),
     )
