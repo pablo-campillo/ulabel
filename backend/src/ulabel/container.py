@@ -16,6 +16,7 @@ from ulabel.application.login import LoginUseCase
 from ulabel.application.export_labels import ExportLabelsUseCase
 from ulabel.application.get_project_stats import GetProjectStatsUseCase
 from ulabel.application.search_labelers import SearchLabelersUseCase
+from ulabel.application.update_project import UpdateProjectUseCase
 from ulabel.application.submit_label import SubmitLabelUseCase
 from ulabel.infrastructure.database import build_engine, build_sessionmaker
 from ulabel.infrastructure.repositories.sqlalchemy_image_repository import SqlAlchemyImageRepository
@@ -61,6 +62,7 @@ class Container(containers.DeclarativeContainer):
         secret_key=providers.Object(os.getenv("STORAGE_SECRET_KEY", "minioadmin")),
         bucket=providers.Object(os.getenv("STORAGE_BUCKET", "ulabel")),
         secure=providers.Object(os.getenv("STORAGE_SECURE", "false").lower() == "true"),
+        public_endpoint=providers.Object(os.getenv("STORAGE_PUBLIC_ENDPOINT", "")),
     )
 
     login_use_case = providers.Factory(LoginUseCase, user_repository=user_repository)
@@ -127,6 +129,12 @@ class Container(containers.DeclarativeContainer):
         project_repository=project_repository,
         label_repository=label_repository,
         storage_service=storage_service,
+    )
+
+    update_project_use_case = providers.Factory(
+        UpdateProjectUseCase,
+        user_repository=user_repository,
+        project_repository=project_repository,
     )
 
     search_labelers_use_case = providers.Factory(

@@ -117,6 +117,50 @@ def test_add_labeler_returns_403_when_user_is_not_labeler(client_with_project, p
 
 # --- list projects ---
 
+# --- update project ---
+
+def test_update_project_name_returns_200(client_with_project, project):
+    response = client_with_project.patch(f"/v1/projects/{project.id}", json={"name": "Updated"})
+    assert response.status_code == 200
+    assert response.json()["name"] == "Updated"
+    assert response.json()["description"] == "desc"
+
+
+def test_update_project_description_returns_200(client_with_project, project):
+    response = client_with_project.patch(f"/v1/projects/{project.id}", json={"description": "New desc"})
+    assert response.status_code == 200
+    assert response.json()["description"] == "New desc"
+    assert response.json()["name"] == "My Project"
+
+
+def test_update_project_labelers_returns_200(client_with_project, project, labeler):
+    response = client_with_project.patch(f"/v1/projects/{project.id}", json={
+        "labeler_ids": [str(labeler.id)],
+    })
+    assert response.status_code == 200
+
+
+def test_update_project_returns_404_when_project_not_found(client_with_project):
+    response = client_with_project.patch(f"/v1/projects/{uuid4()}", json={"name": "x"})
+    assert response.status_code == 404
+
+
+def test_update_project_returns_404_when_labeler_not_found(client_with_project, project):
+    response = client_with_project.patch(f"/v1/projects/{project.id}", json={
+        "labeler_ids": [str(uuid4())],
+    })
+    assert response.status_code == 404
+
+
+def test_update_project_returns_403_when_user_is_not_labeler(client_with_project, project, admin):
+    response = client_with_project.patch(f"/v1/projects/{project.id}", json={
+        "labeler_ids": [str(admin.id)],
+    })
+    assert response.status_code == 403
+
+
+# --- list projects ---
+
 def test_list_projects_returns_empty_list(client):
     response = client.get("/v1/projects")
     assert response.status_code == 200

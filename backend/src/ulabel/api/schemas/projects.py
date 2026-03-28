@@ -34,12 +34,34 @@ class AddLabelerRequest(BaseModel):
     }
 
 
+class UpdateProjectRequest(BaseModel):
+    name: str | None = Field(None, description="New project name.")
+    description: str | None = Field(None, description="New project description.")
+    labeler_ids: list[UUID] | None = Field(None, description="Full list of labeler IDs to assign.")
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "name": "Updated name",
+                "description": "Updated description",
+                "labeler_ids": ["456e7890-e89b-12d3-a456-426614174001"],
+            }
+        }
+    }
+
+
+class LabelerInfo(BaseModel):
+    id: UUID = Field(..., description="Labeler user ID.")
+    username: str = Field(..., description="Labeler username.")
+
+
 class ProjectResponse(BaseModel):
     id: UUID = Field(..., description="Unique project identifier.")
     owner_id: UUID = Field(..., description="ID of the admin owner.")
     name: str = Field(..., description="Project name.")
     description: str = Field(..., description="Project description.")
     labels: set[str] = Field(..., description="Labels available in the project.")
+    labelers: list[LabelerInfo] = Field(default_factory=list, description="Assigned labelers.")
     created_at: datetime = Field(..., description="Timestamp when the project was created.")
 
     model_config = {
@@ -50,6 +72,7 @@ class ProjectResponse(BaseModel):
                 "name": "Vehicle classification",
                 "description": "Annotate urban traffic images indicating the type of vehicle present.",
                 "labels": ["car", "truck", "motorcycle", "bicycle"],
+                "labelers": [{"id": "456e7890-e89b-12d3-a456-426614174001", "username": "labeler1"}],
             }
         }
     }

@@ -23,3 +23,12 @@ class Project:
 
     def add_labeler(self, labeler_id: UUID) -> None:
         self.labeler_ids.add(labeler_id)
+
+    def update(self, *, name: str | None = None, description: str | None = None) -> None:
+        if name is not None:
+            self.name = name
+        if description is not None:
+            self.description = description
+
+    def set_labelers(self, labeler_ids: set[UUID]) -> None:
+        self.labeler_ids = labeler_ids

@@ -12,7 +12,13 @@ from ulabel.domain.ports.storage_service import StorageService
 class S3StorageService(StorageService):
 
     def __init__(
-        self, endpoint: str, access_key: str, secret_key: str, bucket: str, secure: bool = False
+        self,
+        endpoint: str,
+        access_key: str,
+        secret_key: str,
+        bucket: str,
+        secure: bool = False,
+        public_endpoint: str | None = None,
     ):
         self._session = aioboto3.Session(
             aws_access_key_id=access_key,
@@ -22,6 +28,14 @@ class S3StorageService(StorageService):
         self._endpoint_url = (
             endpoint if endpoint.startswith(("http://", "https://")) else f"{scheme}://{endpoint}"
         )
+        if public_endpoint:
+            self._public_endpoint_url = (
+                public_endpoint
+                if public_endpoint.startswith(("http://", "https://"))
+                else f"{scheme}://{public_endpoint}"
+            )
+        else:
+            self._public_endpoint_url = self._endpoint_url
         self._bucket = bucket
 
     @asynccontextmanager
@@ -30,7 +44,7 @@ class S3StorageService(StorageService):
             yield client
 
     async def get_presigned_url(self, storage_key: str, expires_in: timedelta) -> str:
-        async with self._client() as client:
+        async with self._session.client("s3", endpoint_url=self._public_endpoint_url) as client:
             url: str = await client.generate_presigned_url(
                 "get_object",
                 Params={"Bucket": self._bucket, "Key": storage_key},
