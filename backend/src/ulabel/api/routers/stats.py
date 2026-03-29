@@ -1,7 +1,7 @@
 from uuid import UUID
 
 from dependency_injector.wiring import Provide, inject
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 
 from ulabel.api.schemas.stats import (
     DailyCountSchema,
@@ -11,7 +11,7 @@ from ulabel.api.schemas.stats import (
     LabelerDailyActivitySchema,
     ProjectStatsResponse,
 )
-from ulabel.application.get_project_stats import GetProjectStatsUseCase, ProjectNotFound
+from ulabel.application.get_project_stats import GetProjectStatsUseCase
 from ulabel.container import Container
 
 router = APIRouter()
@@ -28,7 +28,7 @@ class distribution, per-labeler breakdowns, and daily activity.
     responses={
         404: {
             "description": "Project not found.",
-            "content": {"application/json": {"example": {"detail": "Project not found"}}},
+            "content": {"application/json": {"example": {"error": {"code": "PROJECT_NOT_FOUND", "message": "Project not found", "details": []}}}},
         },
     },
 )
@@ -37,10 +37,7 @@ async def get_project_stats(
     project_id: UUID,
     use_case: GetProjectStatsUseCase = Depends(Provide[Container.get_project_stats_use_case]),
 ):
-    try:
-        stats = await use_case.execute(project_id=project_id)
-    except ProjectNotFound:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
+    stats = await use_case.execute(project_id=project_id)
 
     return ProjectStatsResponse(
         total_images=stats.total_images,

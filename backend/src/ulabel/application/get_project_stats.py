@@ -4,12 +4,9 @@ from dataclasses import dataclass
 from datetime import date
 from uuid import UUID
 
+from ulabel.application.add_labeler_to_project import ProjectNotFound
 from ulabel.domain.ports.project_repository import ProjectRepository
 from ulabel.domain.ports.stats_repository import StatsRepository
-
-
-class ProjectNotFound(Exception):
-    pass
 
 
 @dataclass
@@ -68,7 +65,7 @@ class GetProjectStatsUseCase:
     async def execute(self, project_id: UUID) -> ProjectStats:
         project = await self._project_repository.get_by_id(project_id)
         if project is None:
-            raise ProjectNotFound(f"Project '{project_id}' not found")
+            raise ProjectNotFound("Project not found")
 
         image_counts, labeler_class_rows, daily_rows = await asyncio.gather(
             self._stats_repository.get_image_counts(project_id),

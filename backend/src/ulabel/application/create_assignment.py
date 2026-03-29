@@ -3,20 +3,21 @@ from typing import Callable
 from uuid import UUID
 
 from ulabel.application.add_labeler_to_project import ProjectNotFound
+from ulabel.domain.errors import DomainError
 from ulabel.domain.images import Image
 from ulabel.domain.ports.image_repository import ImageRepository
 from ulabel.domain.ports.project_repository import ProjectRepository
 
 
-class LabelerNotInProject(Exception):
+class LabelerNotInProject(DomainError):
     pass
 
 
-class NoImageAvailable(Exception):
+class NoImageAvailable(DomainError):
     pass
 
 
-class GetNextImageUseCase:
+class CreateAssignmentUseCase:
 
     def __init__(
         self,
@@ -31,13 +32,13 @@ class GetNextImageUseCase:
     async def execute(self, project_id: UUID, labeler_id: UUID) -> Image:
         project = await self.project_repository.get_by_id(project_id)
         if project is None:
-            raise ProjectNotFound(f"Project '{project_id}' not found")
+            raise ProjectNotFound("Project not found")
         if labeler_id not in project.labeler_ids:
-            raise LabelerNotInProject(f"Labeler '{labeler_id}' is not in project '{project_id}'")
+            raise LabelerNotInProject("Labeler is not in this project")
 
         image = await self.image_repository.get_next_pending(project_id)
         if image is None:
-            raise NoImageAvailable(f"No pending images in project '{project_id}'")
+            raise NoImageAvailable("No pending images available")
 
         image.assign(labeler_id=labeler_id, assigned_at=self.now())
         await self.image_repository.save(image)

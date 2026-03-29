@@ -1,7 +1,7 @@
 from uuid import UUID
 
 from dependency_injector.wiring import Provide, inject
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Query, status
 
 from ulabel.api.schemas.projects import (
     AddLabelerRequest,
@@ -11,10 +11,9 @@ from ulabel.api.schemas.projects import (
     ProjectResponse,
     UpdateProjectRequest,
 )
-from ulabel.application.add_labeler_to_project import AddLabelerToProjectUseCase, ProjectNotFound
-from ulabel.application.create_project import CreateProjectUseCase, ProjectNameAlreadyExists, Unauthorized
+from ulabel.application.add_labeler_to_project import AddLabelerToProjectUseCase
+from ulabel.application.create_project import CreateProjectUseCase
 from ulabel.application.list_projects import ListProjectsUseCase
-from ulabel.application.login import UserNotFound
 from ulabel.application.update_project import UpdateProjectUseCase
 from ulabel.container import Container
 from ulabel.domain.projects import Project
@@ -88,15 +87,15 @@ changed after the project is created.
         201: {"description": "Project created successfully."},
         403: {
             "description": "The specified owner does not have the `admin` role.",
-            "content": {"application/json": {"example": {"detail": "Owner is not an admin"}}},
+            "content": {"application/json": {"example": {"error": {"code": "UNAUTHORIZED", "message": "Owner is not an admin", "details": []}}}},
         },
         404: {
             "description": "No user found with the given `owner_id`.",
-            "content": {"application/json": {"example": {"detail": "Owner not found"}}},
+            "content": {"application/json": {"example": {"error": {"code": "USER_NOT_FOUND", "message": "Owner not found", "details": []}}}},
         },
         409: {
             "description": "A project with the same name already exists.",
-            "content": {"application/json": {"example": {"detail": "Project name already exists"}}},
+            "content": {"application/json": {"example": {"error": {"code": "PROJECT_NAME_ALREADY_EXISTS", "message": "Project name already exists", "details": []}}}},
         },
     },
 )
@@ -106,19 +105,12 @@ async def create_project(
     use_case: CreateProjectUseCase = Depends(Provide[Container.create_project_use_case]),
     user_repo: UserRepository = Depends(Provide[Container.user_repository]),
 ):
-    try:
-        project = await use_case.execute(
-            owner_id=request.owner_id,
-            name=request.name,
-            description=request.description,
-            labels=request.labels,
-        )
-    except UserNotFound:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Owner not found")
-    except Unauthorized:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Owner is not an admin")
-    except ProjectNameAlreadyExists:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Project name already exists")
+    project = await use_case.execute(
+        owner_id=request.owner_id,
+        name=request.name,
+        description=request.description,
+        labels=request.labels,
+    )
     return await _to_response(project, user_repo)
 
 
@@ -138,15 +130,15 @@ role.
         200: {"description": "Project updated successfully."},
         403: {
             "description": "One of the provided labeler IDs does not have the `labeler` role.",
-            "content": {"application/json": {"example": {"detail": "User is not a labeler"}}},
+            "content": {"application/json": {"example": {"error": {"code": "UNAUTHORIZED", "message": "User is not a labeler", "details": []}}}},
         },
         404: {
             "description": "Project or labeler not found.",
             "content": {
                 "application/json": {
                     "examples": {
-                        "project_not_found": {"value": {"detail": "Project not found"}},
-                        "labeler_not_found": {"value": {"detail": "Labeler not found"}},
+                        "project_not_found": {"value": {"error": {"code": "PROJECT_NOT_FOUND", "message": "Project not found", "details": []}}},
+                        "labeler_not_found": {"value": {"error": {"code": "USER_NOT_FOUND", "message": "Labeler not found", "details": []}}},
                     }
                 }
             },
@@ -160,21 +152,12 @@ async def update_project(
     use_case: UpdateProjectUseCase = Depends(Provide[Container.update_project_use_case]),
     user_repo: UserRepository = Depends(Provide[Container.user_repository]),
 ):
-    try:
-        project = await use_case.execute(
-            project_id=project_id,
-            name=request.name,
-            description=request.description,
-            labeler_ids=set(request.labeler_ids) if request.labeler_ids is not None else None,
-        )
-    except ProjectNotFound:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
-    except UserNotFound:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Labeler not found")
-    except Unauthorized:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User is not a labeler")
-    except ProjectNameAlreadyExists:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Project name already exists")
+    project = await use_case.execute(
+        project_id=project_id,
+        name=request.name,
+        description=request.description,
+        labeler_ids=set(request.labeler_ids) if request.labeler_ids is not None else None,
+    )
     return await _to_response(project, user_repo)
 
 
@@ -193,15 +176,15 @@ a 403 is returned.
         200: {"description": "Labeler added. Returns the updated project."},
         403: {
             "description": "The specified user does not have the `labeler` role.",
-            "content": {"application/json": {"example": {"detail": "User is not a labeler"}}},
+            "content": {"application/json": {"example": {"error": {"code": "UNAUTHORIZED", "message": "User is not a labeler", "details": []}}}},
         },
         404: {
             "description": "Project or labeler not found.",
             "content": {
                 "application/json": {
                     "examples": {
-                        "project_not_found": {"value": {"detail": "Project not found"}},
-                        "labeler_not_found": {"value": {"detail": "Labeler not found"}},
+                        "project_not_found": {"value": {"error": {"code": "PROJECT_NOT_FOUND", "message": "Project not found", "details": []}}},
+                        "labeler_not_found": {"value": {"error": {"code": "USER_NOT_FOUND", "message": "Labeler not found", "details": []}}},
                     }
                 }
             },
@@ -215,12 +198,5 @@ async def add_labeler(
     use_case: AddLabelerToProjectUseCase = Depends(Provide[Container.add_labeler_to_project_use_case]),
     user_repo: UserRepository = Depends(Provide[Container.user_repository]),
 ):
-    try:
-        project = await use_case.execute(project_id=project_id, labeler_id=request.labeler_id)
-    except ProjectNotFound:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
-    except UserNotFound:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Labeler not found")
-    except Unauthorized:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User is not a labeler")
+    project = await use_case.execute(project_id=project_id, labeler_id=request.labeler_id)
     return await _to_response(project, user_repo)

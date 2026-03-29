@@ -1,11 +1,10 @@
 from uuid import UUID
 
 from dependency_injector.wiring import Provide, inject
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Query, status
 from fastapi.responses import RedirectResponse
 
-from ulabel.application.add_labeler_to_project import ProjectNotFound
-from ulabel.application.export_labels import ExportFormat, ExportLabelsUseCase, NoLabelsFound
+from ulabel.application.export_labels import ExportFormat, ExportLabelsUseCase
 from ulabel.container import Container
 
 router = APIRouter()
@@ -26,7 +25,7 @@ the cached version unless new labels have been submitted.
         307: {"description": "Redirect to presigned download URL."},
         404: {
             "description": "Project not found or no labels exist yet.",
-            "content": {"application/json": {"example": {"detail": "Project not found"}}},
+            "content": {"application/json": {"example": {"error": {"code": "PROJECT_NOT_FOUND", "message": "Project not found", "details": []}}}},
         },
     },
 )
@@ -36,10 +35,5 @@ async def export_labels(
     fmt: ExportFormat = Query(default=ExportFormat.JSON, alias="format"),
     use_case: ExportLabelsUseCase = Depends(Provide[Container.export_labels_use_case]),
 ) -> RedirectResponse:
-    try:
-        presigned_url = await use_case.execute(project_id=project_id, fmt=fmt)
-    except ProjectNotFound:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
-    except NoLabelsFound:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No labels to export")
+    presigned_url = await use_case.execute(project_id=project_id, fmt=fmt)
     return RedirectResponse(url=presigned_url, status_code=status.HTTP_307_TEMPORARY_REDIRECT)

@@ -1,0 +1,32 @@
+# uLabel backend configuration
+# Secrets use ${ENV_VAR} interpolation — set them in .env or your environment.
+
+database:
+  url: "${DATABASE_URL:postgresql+asyncpg://ulabel:secret@localhost:5432/ulabel}"
+  pool_size: 10
+  max_overflow: 20
+  pool_recycle: 3600
+
+storage:
+  endpoint: "${STORAGE_ENDPOINT:localhost:9000}"
+  access_key: "${STORAGE_ACCESS_KEY}"
+  secret_key: "${STORAGE_SECRET_KEY}"
+  bucket: ulabel
+  secure: false
+  public_endpoint: "${STORAGE_PUBLIC_ENDPOINT:}"
+
+tasks:
+  image_assignment_timeout_seconds: 1800
+  image_expiry_interval_seconds: 300
+
+observability:
+  service_name: "ulabel-backend"
+  log_level: "${LOG_LEVEL:INFO}"
+  log_format: "json"
+  tracing:
+    enabled: "${OTEL_TRACING_ENABLED:false}"
+    endpoint: "${OTEL_EXPORTER_OTLP_ENDPOINT:http://tempo:4317}"
+    sample_ratio: "${OTEL_TRACES_SAMPLE_RATIO:1.0}"
+    force_trace_header: "X-Force-Trace"
+  metrics:
+    enabled: "${OTEL_METRICS_ENABLED:false}"

@@ -30,6 +30,7 @@ WORKDIR /app
 
 COPY --from=builder /app/.venv /app/.venv
 COPY --from=builder /app/src   /app/src
+COPY config.yml  ./
 COPY alembic.ini ./
 COPY alembic/    ./alembic/
 
@@ -48,6 +49,7 @@ FROM builder AS dev
 
 RUN uv sync --frozen
 
+COPY config.yml ./
 COPY tests/ ./tests/
 
 CMD ["uv", "run", "--group", "dev", "pytest", "tests/", "-v"]

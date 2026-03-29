@@ -1,13 +1,11 @@
 from uuid import UUID
 
 from dependency_injector.wiring import Provide, inject
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 
 from ulabel.api.schemas.projects import ProjectResponse
-from ulabel.application.create_project import Unauthorized
 from ulabel.application.get_labeler_projects import GetLabelerProjectsUseCase
-from ulabel.application.login import UserNotFound
 from ulabel.application.search_labelers import SearchLabelersUseCase
 from ulabel.container import Container
 
@@ -52,11 +50,11 @@ labels are available in each one.
         200: {"description": "List of projects assigned to the labeler."},
         403: {
             "description": "The user does not have the `labeler` role.",
-            "content": {"application/json": {"example": {"detail": "User is not a labeler"}}},
+            "content": {"application/json": {"example": {"error": {"code": "UNAUTHORIZED", "message": "User is not a labeler", "details": []}}}},
         },
         404: {
             "description": "Labeler not found.",
-            "content": {"application/json": {"example": {"detail": "Labeler not found"}}},
+            "content": {"application/json": {"example": {"error": {"code": "USER_NOT_FOUND", "message": "Labeler not found", "details": []}}}},
         },
     },
 )
@@ -65,12 +63,7 @@ async def get_labeler_projects(
     labeler_id: UUID,
     use_case: GetLabelerProjectsUseCase = Depends(Provide[Container.get_labeler_projects_use_case]),
 ):
-    try:
-        projects = await use_case.execute(labeler_id=labeler_id)
-    except UserNotFound:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Labeler not found")
-    except Unauthorized:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User is not a labeler")
+    projects = await use_case.execute(labeler_id=labeler_id)
     return [
         ProjectResponse(
             id=p.id,
