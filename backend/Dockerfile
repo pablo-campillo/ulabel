@@ -40,7 +40,7 @@ ENV PATH="/app/.venv/bin:$PATH" \
 
 EXPOSE 8000
 
-CMD ["uvicorn", "ulabel.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "ulabel.api.main:app", "--host", "0.0.0.0", "--port", "8000", "--loop", "uvloop"]
 
 # ── dev ───────────────────────────────────────────────────────────────────────
 # Extends builder with dev dependencies (pytest, ruff, mypy, …) and test files.

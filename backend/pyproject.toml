@@ -30,6 +30,7 @@ dependencies = [
     "opentelemetry-instrumentation-logging>=0.46b0",
     "opentelemetry-instrumentation-aiohttp-client>=0.46b0",
     "prometheus-client>=0.21.0",
+    "uvloop>=0.21.0",
 ]
 
 [dependency-groups]

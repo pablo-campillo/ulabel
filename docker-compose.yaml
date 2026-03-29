@@ -23,7 +23,7 @@ services:
         condition: service_healthy
       storage:
         condition: service_healthy
-    command: ["uvicorn", "ulabel.api.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    command: ["uvicorn", "ulabel.api.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload", "--loop", "uvloop"]
     restart: unless-stopped
 
   frontend:
