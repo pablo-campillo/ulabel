@@ -1,4 +1,6 @@
-.PHONY: help build up up-d down down-v logs migrate init
+.PHONY: help build up up-d down down-v logs migrate init bootstrap wait-healthy
+
+TIMEOUT := 120
 
 help:             ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*##"}; {printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2}'
@@ -8,7 +10,7 @@ help:             ## Show this help
 build:            ## Build all Docker images
 	docker compose build
 
-up:               ## Start the full platform (backend + frontend + db + storage)
+up:               ## Start the full platform (backend + frontend + db + storage + observability)
 	docker compose up --build
 
 up-d:             ## Start the full platform in detached mode
@@ -30,7 +32,30 @@ migrate:          ## Run pending database migrations
 
 # ── Bootstrap ──────────────────────────────────────────────────────────────
 
-init:             ## Bootstrap the platform: migrate, seed users, seed dataset
+wait-healthy:
+	@echo "==> Waiting for services to be ready (timeout: $(TIMEOUT)s)..."
+	@db_ok=0; api_ok=0; elapsed=0; \
+	while [ $$elapsed -lt $(TIMEOUT) ]; do \
+		if [ $$db_ok -eq 0 ] && docker compose exec -T db pg_isready -U ulabel -q 2>/dev/null; then \
+			echo "    - Database is ready"; \
+			db_ok=1; \
+		fi; \
+		if [ $$api_ok -eq 0 ] && curl -sf http://localhost:8000/ >/dev/null 2>&1; then \
+			echo "    - Backend API is ready"; \
+			api_ok=1; \
+		fi; \
+		if [ $$db_ok -eq 1 ] && [ $$api_ok -eq 1 ]; then \
+			echo "==> All services are ready."; \
+			exit 0; \
+		fi; \
+		sleep 2; \
+		elapsed=$$((elapsed + 2)); \
+	done; \
+	echo "ERROR: services did not become ready within $(TIMEOUT)s (db=$$db_ok, api=$$api_ok)"; \
+	docker compose logs app --tail 20; \
+	exit 1
+
+init:             ## Bootstrap data: migrate, seed users, seed dataset
 	$(MAKE) migrate
 	@echo "==> Seeding users..."
 	docker compose exec db psql -U ulabel -d ulabel -c " \
@@ -49,3 +74,35 @@ init:             ## Bootstrap the platform: migrate, seed users, seed dataset
 	  ON CONFLICT (username) DO NOTHING;"
 	@echo "==> Seeding dataset..."
 	$(MAKE) -C backend seed-dataset
+
+bootstrap:        ## Start everything, initialize data, and show access info
+	$(MAKE) up-d
+	$(MAKE) wait-healthy
+	$(MAKE) init
+	@echo ""
+	@echo "══════════════════════════════════════════════════════════════"
+	@echo "  uLabel platform is ready!"
+	@echo "══════════════════════════════════════════════════════════════"
+	@echo ""
+	@echo "  Frontend        http://localhost:5173"
+	@echo "  Backend API     http://localhost:8000"
+	@echo "  API Docs        http://localhost:8000/redoc"
+	@echo "  Grafana         http://localhost:3000   (admin / admin)"
+	@echo "  Prometheus      http://localhost:9090"
+	@echo "  MinIO Console   http://localhost:9001   (minioadmin / minioadmin)"
+	@echo "  PostgreSQL      localhost:5432          (ulabel / secret)"
+	@echo ""
+	@echo "  Seeded users:"
+	@echo "    admin     -> role: admin"
+	@echo "    labeler1  -> role: labeler  (..labeler10)"
+	@echo ""
+	@echo "  Next steps:"
+	@echo "    1. Open http://localhost:5173 and log in as 'admin'"
+	@echo "    2. Create a project and import images from the dataset"
+	@echo "    3. Log in as 'labeler1' to start labeling"
+	@echo ""
+	@echo "  Useful commands:"
+	@echo "    make logs       Follow all service logs"
+	@echo "    make down       Stop all services"
+	@echo "    make down-v     Stop and remove all data"
+	@echo "══════════════════════════════════════════════════════════════"

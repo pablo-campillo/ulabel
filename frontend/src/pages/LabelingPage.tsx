@@ -7,7 +7,7 @@ import {
 } from '../stores/labelingStore'
 import { getLabelerProjects } from '../api/projects'
 import { getProjectStats } from '../api/stats'
-import { getNextImage, submitLabel } from '../api/images'
+import { createAssignment, submitLabel } from '../api/images'
 import { deriveLabelerStats } from '../lib/stats'
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts'
 import { Header } from '../components/Header'
@@ -86,7 +86,7 @@ export function LabelingPage() {
 
     setLoading(true)
     try {
-      const img = await getNextImage(projectId, user.id)
+      const img = await createAssignment(projectId, user.id)
       if (img) {
         setImage(img)
         setPhase('labeling')
@@ -210,9 +210,21 @@ export function LabelingPage() {
           {/* Project header */}
           <div className="flex items-start justify-between mb-6">
             <div className="flex-1 min-w-0 mr-6">
-              <h1 className="text-2xl font-bold text-gray-900 mb-1">
-                {project.name}
-              </h1>
+              <div className="flex items-center gap-3 mb-1">
+                <button
+                  onClick={() => navigate('/dashboard')}
+                  disabled={phase === 'labeling' || submitting}
+                  className="text-gray-400 hover:text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  aria-label="Back to projects"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                  </svg>
+                </button>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  {project.name}
+                </h1>
+              </div>
               <p className="text-gray-500 text-sm leading-relaxed">
                 {project.description}
               </p>

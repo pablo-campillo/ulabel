@@ -15,8 +15,8 @@ container = Container()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await container.logging_setup.init()
-    await container.tracer_provider.init()
+    container.logging_setup.init()
+    container.tracer_provider.init()
     instrument_app(app, container.engine())
     await container.storage_service().ensure_bucket()
     task = asyncio.create_task(container.expire_images_task().run())

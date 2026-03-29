@@ -1,12 +1,16 @@
 import { request } from './client'
 import type { AssignedImage, SubmitLabelResult } from '../types/api'
 
-export function getNextImage(
+export function createAssignment(
   projectId: string,
   labelerId: string,
 ): Promise<AssignedImage | null> {
   return request<AssignedImage | null>(
-    `/projects/${projectId}/images/next?labeler_id=${labelerId}`,
+    `/projects/${projectId}/assignments`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ labeler_id: labelerId }),
+    },
   )
 }
 

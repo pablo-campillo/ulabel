@@ -10,19 +10,30 @@ clients:
 
 scrape_configs:
   - job_name: docker
-    static_configs:
-      - targets:
-          - localhost
-        labels:
-          job: docker
-          __path__: /var/lib/docker/containers/**/*.log
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 5s
+    relabel_configs:
+      - source_labels: ["__meta_docker_container_name"]
+        regex: "/?(.*)"
+        target_label: "container"
+      - source_labels: ["__meta_docker_compose_service"]
+        target_label: "service"
     pipeline_stages:
       - docker: {}
       - json:
           expressions:
-            service: service
             level: level
             trace_id: trace_id
+            service_name: service
       - labels:
-          service:
           level:
+          service_name:
+      - match:
+          selector: '{service="app"}'
+          stages:
+            - json:
+                expressions:
+                  trace_id: trace_id
+            - labels:
+                trace_id:

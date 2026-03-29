@@ -12,11 +12,17 @@ services:
       - STORAGE_ENDPOINT=storage:9000
       - STORAGE_ACCESS_KEY=minioadmin
       - STORAGE_SECRET_KEY=minioadmin
+      - STORAGE_BUCKET=ulabel
+      - STORAGE_SECURE=false
+      - STORAGE_PUBLIC_ENDPOINT=localhost:9000
       - OTEL_TRACING_ENABLED=true
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://tempo:4317
       - OTEL_TRACES_SAMPLE_RATIO=1.0
       - OTEL_METRICS_ENABLED=true
       - LOG_LEVEL=INFO
+    volumes:
+      - ./src:/app/src
+      - backend_venv:/app/.venv
     depends_on:
       db:
         condition: service_healthy
@@ -24,6 +30,7 @@ services:
         condition: service_healthy
       tempo:
         condition: service_started
+    command: ["uvicorn", "ulabel.api.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload", "--loop", "uvloop"]
     restart: unless-stopped
     logging:
       driver: json-file
@@ -96,7 +103,7 @@ services:
   promtail:
     image: grafana/promtail:2.9.4
     volumes:
-      - /var/log:/var/log:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - ./etc/promtail/promtail.yml:/etc/promtail/config.yml:ro
     command: -config.file=/etc/promtail/config.yml
@@ -123,6 +130,7 @@ services:
 volumes:
   postgres_data:
   minio_data:
+  backend_venv:
   tempo_data:
   prometheus_data:
   loki_data:
