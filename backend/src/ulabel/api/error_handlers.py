@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import Request
 from starlette.responses import JSONResponse, Response
 
@@ -14,6 +16,7 @@ from ulabel.application.submit_label import (
     LabelerMismatch,
 )
 from ulabel.domain.errors import DomainError
+from ulabel.infrastructure.observability.metrics import DOMAIN_ERRORS_TOTAL
 
 EXCEPTION_MAP: dict[type[DomainError], tuple[int, str, str]] = {
     ProjectNotFound: (404, "PROJECT_NOT_FOUND", "Project not found"),
@@ -32,11 +35,16 @@ EXCEPTION_MAP: dict[type[DomainError], tuple[int, str, str]] = {
 }
 
 
+logger = logging.getLogger(__name__)
+
+
 async def domain_error_handler(request: Request, exc: DomainError) -> Response:
     status_code, code, default_msg = EXCEPTION_MAP[type(exc)]
     if status_code == 204:
         return Response(status_code=204)
     message = str(exc) if str(exc) else default_msg
+    logger.warning("Domain error: %s %s %s", code, request.method, request.url.path)
+    DOMAIN_ERRORS_TOTAL.labels(code=code, status=status_code).inc()
     return JSONResponse(
         status_code=status_code,
         content={"error": {"code": code, "message": message, "details": []}},

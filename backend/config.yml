@@ -18,3 +18,15 @@ storage:
 tasks:
   image_assignment_timeout_seconds: 1800
   image_expiry_interval_seconds: 300
+
+observability:
+  service_name: "ulabel-backend"
+  log_level: "${LOG_LEVEL:INFO}"
+  log_format: "json"
+  tracing:
+    enabled: "${OTEL_TRACING_ENABLED:false}"
+    endpoint: "${OTEL_EXPORTER_OTLP_ENDPOINT:http://tempo:4317}"
+    sample_ratio: "${OTEL_TRACES_SAMPLE_RATIO:1.0}"
+    force_trace_header: "X-Force-Trace"
+  metrics:
+    enabled: "${OTEL_METRICS_ENABLED:false}"

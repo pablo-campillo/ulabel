@@ -7,12 +7,17 @@ from ulabel.api.api import api_router
 from ulabel.api.error_handlers import domain_error_handler
 from ulabel.container import Container
 from ulabel.domain.errors import DomainError
+from ulabel.infrastructure.observability.metrics import PrometheusMiddleware, metrics_route
+from ulabel.infrastructure.observability.tracing import instrument_app, shutdown_tracing
 
 container = Container()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    await container.logging_setup.init()
+    await container.tracer_provider.init()
+    instrument_app(app, container.engine())
     await container.storage_service().ensure_bucket()
     task = asyncio.create_task(container.expire_images_task().run())
     yield
@@ -21,6 +26,7 @@ async def lifespan(app: FastAPI):
         await task
     except asyncio.CancelledError:
         pass
+    shutdown_tracing(container.tracer_provider())
 
 
 app = FastAPI(
@@ -46,9 +52,11 @@ API for managing image labelling projects.
     lifespan=lifespan,
 )
 app.container = container
+app.add_middleware(PrometheusMiddleware)
 app.add_exception_handler(DomainError, domain_error_handler)
 
 app.include_router(api_router, prefix="/v1")
+app.add_route("/metrics", metrics_route)
 
 
 @app.get("/", tags=["Health"], summary="Health check", description="Verifies the service is up and running.")

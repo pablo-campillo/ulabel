@@ -4,24 +4,28 @@ from pathlib import Path
 from dependency_injector import containers, providers
 
 from ulabel.application.add_image_to_project import AddImageToProjectUseCase
-from ulabel.application.import_images_from_storage import ImportImagesFromStorageUseCase
-from ulabel.application.upload_image_to_project import UploadImageToProjectUseCase
 from ulabel.application.add_labeler_to_project import AddLabelerToProjectUseCase
+from ulabel.application.create_assignment import CreateAssignmentUseCase
 from ulabel.application.create_project import CreateProjectUseCase
 from ulabel.application.expire_images_task import ExpireImagesTask
-from ulabel.application.get_labeler_projects import GetLabelerProjectsUseCase
-from ulabel.application.list_projects import ListProjectsUseCase
-from ulabel.application.create_assignment import CreateAssignmentUseCase
-from ulabel.application.login import LoginUseCase
 from ulabel.application.export_labels import ExportLabelsUseCase
+from ulabel.application.get_labeler_projects import GetLabelerProjectsUseCase
 from ulabel.application.get_project_stats import GetProjectStatsUseCase
+from ulabel.application.import_images_from_storage import ImportImagesFromStorageUseCase
+from ulabel.application.list_projects import ListProjectsUseCase
+from ulabel.application.login import LoginUseCase
 from ulabel.application.search_labelers import SearchLabelersUseCase
-from ulabel.application.update_project import UpdateProjectUseCase
 from ulabel.application.submit_label import SubmitLabelUseCase
+from ulabel.application.update_project import UpdateProjectUseCase
+from ulabel.application.upload_image_to_project import UploadImageToProjectUseCase
 from ulabel.infrastructure.database import build_engine, build_sessionmaker
+from ulabel.infrastructure.observability.logging import configure_logging
+from ulabel.infrastructure.observability.tracing import setup_tracing
 from ulabel.infrastructure.repositories.sqlalchemy_image_repository import SqlAlchemyImageRepository
 from ulabel.infrastructure.repositories.sqlalchemy_label_repository import SqlAlchemyLabelRepository
-from ulabel.infrastructure.repositories.sqlalchemy_project_repository import SqlAlchemyProjectRepository
+from ulabel.infrastructure.repositories.sqlalchemy_project_repository import (
+    SqlAlchemyProjectRepository,
+)
 from ulabel.infrastructure.repositories.sqlalchemy_stats_repository import SqlAlchemyStatsRepository
 from ulabel.infrastructure.repositories.sqlalchemy_user_repository import SqlAlchemyUserRepository
 from ulabel.infrastructure.storage.s3_storage_service import S3StorageService
@@ -44,6 +48,22 @@ class Container(containers.DeclarativeContainer):
     )
 
     config = providers.Configuration(yaml_files=[str(CONFIG_PATH)])
+
+    logging_setup = providers.Resource(
+        configure_logging,
+        log_level=config.observability.log_level,
+        log_format=config.observability.log_format,
+        service_name=config.observability.service_name,
+    )
+
+    tracer_provider = providers.Resource(
+        setup_tracing,
+        service_name=config.observability.service_name,
+        endpoint=config.observability.tracing.endpoint,
+        enabled=config.observability.tracing.enabled,
+        sample_ratio=config.observability.tracing.sample_ratio,
+        force_trace_header=config.observability.tracing.force_trace_header,
+    )
 
     engine = providers.Singleton(
         build_engine,
