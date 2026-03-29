@@ -3,6 +3,7 @@ from enum import StrEnum
 from uuid import UUID, uuid4
 
 from ulabel.application.add_labeler_to_project import ProjectNotFound
+from ulabel.domain.errors import DomainError
 from ulabel.domain.images import Image
 from ulabel.domain.ports.image_repository import ImageRepository
 from ulabel.domain.ports.project_repository import ProjectRepository
@@ -28,6 +29,10 @@ class ImportJob:
     error: str | None = field(default=None)
 
 
+class ImportJobNotFound(DomainError):
+    pass
+
+
 class ImportImagesFromStorageUseCase:
 
     def __init__(
@@ -43,7 +48,7 @@ class ImportImagesFromStorageUseCase:
     async def start(self, project_id: UUID, prefix: str) -> ImportJob:
         project = await self._project_repository.get_by_id(project_id)
         if project is None:
-            raise ProjectNotFound(f"Project '{project_id}' not found")
+            raise ProjectNotFound("Project not found")
 
         job = ImportJob(id=uuid4(), project_id=project_id, prefix=prefix, status=ImportJobStatus.RUNNING)
         _jobs[job.id] = job
@@ -67,5 +72,8 @@ class ImportImagesFromStorageUseCase:
             job.error = str(e)
 
     @staticmethod
-    def get_job(import_id: UUID) -> ImportJob | None:
-        return _jobs.get(import_id)
+    def get_job(import_id: UUID, project_id: UUID) -> ImportJob:
+        job = _jobs.get(import_id)
+        if job is None or job.project_id != project_id:
+            raise ImportJobNotFound("Import job not found")
+        return job

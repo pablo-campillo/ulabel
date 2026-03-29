@@ -2,13 +2,14 @@ from uuid import UUID
 
 from ulabel.application.create_project import Unauthorized
 from ulabel.application.login import UserNotFound
+from ulabel.domain.errors import DomainError
 from ulabel.domain.ports.project_repository import ProjectRepository
 from ulabel.domain.ports.user_repository import UserRepository
 from ulabel.domain.projects import Project
 from ulabel.domain.users import UserRole
 
 
-class ProjectNotFound(Exception):
+class ProjectNotFound(DomainError):
     pass
 
 
@@ -21,14 +22,14 @@ class AddLabelerToProjectUseCase:
     async def execute(self, project_id: UUID, labeler_id: UUID) -> Project:
         project = await self.project_repository.get_by_id(project_id)
         if project is None:
-            raise ProjectNotFound(f"Project '{project_id}' not found")
+            raise ProjectNotFound("Project not found")
 
         labeler = await self.user_repository.get_by_id(labeler_id)
         if labeler is None:
-            raise UserNotFound(f"User '{labeler_id}' not found")
+            raise UserNotFound("Labeler not found")
 
         if labeler.role != UserRole.LABELER:
-            raise Unauthorized(f"User '{labeler.username}' is not a labeler")
+            raise Unauthorized("User is not a labeler")
 
         project.add_labeler(labeler_id)
         await self.project_repository.save(project)

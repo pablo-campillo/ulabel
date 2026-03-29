@@ -6,6 +6,7 @@ from enum import Enum
 from uuid import UUID
 
 from ulabel.application.add_labeler_to_project import ProjectNotFound
+from ulabel.domain.errors import DomainError
 from ulabel.domain.ports.label_repository import LabelRepository
 from ulabel.domain.ports.project_repository import ProjectRepository
 from ulabel.domain.ports.storage_service import StorageService
@@ -16,7 +17,7 @@ class ExportFormat(str, Enum):
     CSV = "csv"
 
 
-class NoLabelsFound(Exception):
+class NoLabelsFound(DomainError):
     pass
 
 
@@ -38,11 +39,11 @@ class ExportLabelsUseCase:
     async def execute(self, project_id: UUID, fmt: ExportFormat) -> str:
         project = await self._project_repository.get_by_id(project_id)
         if project is None:
-            raise ProjectNotFound(f"Project '{project_id}' not found")
+            raise ProjectNotFound("Project not found")
 
         label_count = await self._label_repository.count_by_project(project_id)
         if label_count == 0:
-            raise NoLabelsFound(f"No labels found for project '{project_id}'")
+            raise NoLabelsFound("No labels to export")
 
         filename = f"{project_id}.{fmt.value}"
         storage_key = f"exports/{project_id}/{filename}"

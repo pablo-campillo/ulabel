@@ -2,11 +2,10 @@ from datetime import timedelta
 from uuid import UUID
 
 from dependency_injector.wiring import Provide, inject
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 
 from ulabel.api.schemas.assignments import AssignmentResponse, CreateAssignmentRequest
-from ulabel.application.add_labeler_to_project import ProjectNotFound
-from ulabel.application.create_assignment import CreateAssignmentUseCase, LabelerNotInProject, NoImageAvailable
+from ulabel.application.create_assignment import CreateAssignmentUseCase
 from ulabel.container import Container
 from ulabel.domain.ports.storage_service import StorageService
 
@@ -38,11 +37,11 @@ automatically reset to `pending` and becomes available for another labeler.
         204: {"description": "No pending images available in the project right now."},
         403: {
             "description": "The labeler does not belong to this project.",
-            "content": {"application/json": {"example": {"detail": "Labeler is not in this project"}}},
+            "content": {"application/json": {"example": {"error": {"code": "LABELER_NOT_IN_PROJECT", "message": "Labeler is not in this project", "details": []}}}},
         },
         404: {
             "description": "Project not found.",
-            "content": {"application/json": {"example": {"detail": "Project not found"}}},
+            "content": {"application/json": {"example": {"error": {"code": "PROJECT_NOT_FOUND", "message": "Project not found", "details": []}}}},
         },
     },
 )
@@ -53,14 +52,7 @@ async def create_assignment(
     use_case: CreateAssignmentUseCase = Depends(Provide[Container.create_assignment_use_case]),
     storage: StorageService = Depends(Provide[Container.storage_service]),
 ):
-    try:
-        image = await use_case.execute(project_id=project_id, labeler_id=request.labeler_id)
-    except ProjectNotFound:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
-    except LabelerNotInProject:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Labeler is not in this project")
-    except NoImageAvailable:
-        raise HTTPException(status_code=status.HTTP_204_NO_CONTENT)
+    image = await use_case.execute(project_id=project_id, labeler_id=request.labeler_id)
     presigned_url = await storage.get_presigned_url(image.storage_key, expires_in=ASSIGNMENT_TIMEOUT)
     return AssignmentResponse(
         id=image.id,

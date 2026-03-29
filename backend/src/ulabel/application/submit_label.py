@@ -1,6 +1,7 @@
 from uuid import UUID, uuid4
 
 from ulabel.application.add_labeler_to_project import ProjectNotFound
+from ulabel.domain.errors import DomainError
 from ulabel.domain.images import ImageStatus
 from ulabel.domain.labels import LabelRecord, LabelerSubmitStats
 from ulabel.domain.ports.image_repository import ImageRepository
@@ -9,23 +10,23 @@ from ulabel.domain.ports.project_repository import ProjectRepository
 from ulabel.domain.ports.stats_repository import StatsRepository
 
 
-class ImageNotFound(Exception):
+class ImageNotFound(DomainError):
     pass
 
 
-class ImageNotInProgress(Exception):
+class ImageNotInProgress(DomainError):
     pass
 
 
-class AssignmentMismatch(Exception):
+class AssignmentMismatch(DomainError):
     pass
 
 
-class LabelerMismatch(Exception):
+class LabelerMismatch(DomainError):
     pass
 
 
-class InvalidLabel(Exception):
+class InvalidLabel(DomainError):
     pass
 
 
@@ -53,32 +54,23 @@ class SubmitLabelUseCase:
     ) -> tuple[LabelRecord, LabelerSubmitStats]:
         project = await self.project_repository.get_by_id(project_id)
         if project is None:
-            raise ProjectNotFound(f"Project '{project_id}' not found")
+            raise ProjectNotFound("Project not found")
 
         image = await self.image_repository.get_by_id(image_id)
         if image is None or image.project_id != project_id:
-            raise ImageNotFound(f"Image '{image_id}' not found in project '{project_id}'")
+            raise ImageNotFound("Image not found")
 
         if image.status != ImageStatus.IN_PROGRESS:
-            raise ImageNotInProgress(
-                f"Image '{image_id}' is not in progress (status: {image.status})"
-            )
+            raise ImageNotInProgress("Image is not in progress")
 
         if image.assignment_id != assignment_id:
-            raise AssignmentMismatch(
-                f"Assignment ID mismatch for image '{image_id}'"
-            )
+            raise AssignmentMismatch("Assignment ID mismatch")
 
         if image.labeler_id != labeler_id:
-            raise LabelerMismatch(
-                f"Labeler '{labeler_id}' is not assigned to image '{image_id}'"
-            )
+            raise LabelerMismatch("Labeler mismatch")
 
         if label not in project.labels:
-            raise InvalidLabel(
-                f"Label '{label}' is not valid for project '{project_id}'. "
-                f"Valid labels: {project.labels}"
-            )
+            raise InvalidLabel("Invalid label")
 
         label_record = LabelRecord.create(
             id=uuid4(),

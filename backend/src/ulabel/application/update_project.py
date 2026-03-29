@@ -25,12 +25,12 @@ class UpdateProjectUseCase:
     ) -> Project:
         project = await self.project_repository.get_by_id(project_id)
         if project is None:
-            raise ProjectNotFound(f"Project '{project_id}' not found")
+            raise ProjectNotFound("Project not found")
 
         if name is not None and name != project.name:
             existing = await self.project_repository.get_by_name(name)
             if existing is not None:
-                raise ProjectNameAlreadyExists(f"A project named '{name}' already exists")
+                raise ProjectNameAlreadyExists("Project name already exists")
 
         project.update(name=name, description=description)
 
@@ -38,9 +38,9 @@ class UpdateProjectUseCase:
             for labeler_id in labeler_ids:
                 user = await self.user_repository.get_by_id(labeler_id)
                 if user is None:
-                    raise UserNotFound(f"User '{labeler_id}' not found")
+                    raise UserNotFound("Labeler not found")
                 if user.role != UserRole.LABELER:
-                    raise Unauthorized(f"User '{user.username}' is not a labeler")
+                    raise Unauthorized("User is not a labeler")
             project.set_labelers(labeler_ids)
 
         await self.project_repository.save(project)

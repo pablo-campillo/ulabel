@@ -17,7 +17,7 @@ class GetLabelerProjectsUseCase:
     async def execute(self, labeler_id: UUID) -> list[Project]:
         labeler = await self.user_repository.get_by_id(labeler_id)
         if labeler is None:
-            raise UserNotFound(f"User '{labeler_id}' not found")
+            raise UserNotFound("Labeler not found")
         if labeler.role != UserRole.LABELER:
-            raise Unauthorized(f"User '{labeler.username}' is not a labeler")
+            raise Unauthorized("User is not a labeler")
         return await self.project_repository.get_by_labeler_id(labeler_id)

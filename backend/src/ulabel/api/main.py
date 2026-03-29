@@ -4,7 +4,9 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from ulabel.api.api import api_router
+from ulabel.api.error_handlers import domain_error_handler
 from ulabel.container import Container
+from ulabel.domain.errors import DomainError
 
 container = Container()
 
@@ -44,6 +46,7 @@ API for managing image labelling projects.
     lifespan=lifespan,
 )
 app.container = container
+app.add_exception_handler(DomainError, domain_error_handler)
 
 app.include_router(api_router, prefix="/v1")
 
