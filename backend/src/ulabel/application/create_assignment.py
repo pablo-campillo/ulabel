@@ -16,7 +16,7 @@ class NoImageAvailable(Exception):
     pass
 
 
-class GetNextImageUseCase:
+class CreateAssignmentUseCase:
 
     def __init__(
         self,

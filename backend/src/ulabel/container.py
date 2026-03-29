@@ -11,7 +11,7 @@ from ulabel.application.create_project import CreateProjectUseCase
 from ulabel.application.expire_images_task import ExpireImagesTask
 from ulabel.application.get_labeler_projects import GetLabelerProjectsUseCase
 from ulabel.application.list_projects import ListProjectsUseCase
-from ulabel.application.get_next_image import GetNextImageUseCase
+from ulabel.application.create_assignment import CreateAssignmentUseCase
 from ulabel.application.login import LoginUseCase
 from ulabel.application.export_labels import ExportLabelsUseCase
 from ulabel.application.get_project_stats import GetProjectStatsUseCase
@@ -36,6 +36,7 @@ class Container(containers.DeclarativeContainer):
             "ulabel.api.routers.tokens",
             "ulabel.api.routers.projects",
             "ulabel.api.routers.images",
+            "ulabel.api.routers.assignments",
             "ulabel.api.routers.labelers",
             "ulabel.api.routers.exports",
             "ulabel.api.routers.stats",
@@ -108,8 +109,8 @@ class Container(containers.DeclarativeContainer):
         project_repository=project_repository,
     )
 
-    get_next_image_use_case = providers.Factory(
-        GetNextImageUseCase,
+    create_assignment_use_case = providers.Factory(
+        CreateAssignmentUseCase,
         project_repository=project_repository,
         image_repository=image_repository,
     )

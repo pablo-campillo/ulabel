@@ -47,41 +47,41 @@ def client(project, pending_image):
         yield TestClient(app)
 
 
-def test_get_next_image_returns_200(client, project, labeler, pending_image):
-    response = client.get(f"/v1/projects/{project.id}/images/next", params={"labeler_id": str(labeler.id)})
-    assert response.status_code == 200
+def test_create_assignment_returns_201(client, project, labeler, pending_image):
+    response = client.post(f"/v1/projects/{project.id}/assignments", json={"labeler_id": str(labeler.id)})
+    assert response.status_code == 201
     body = response.json()
     assert body["id"] == str(pending_image.id)
     assert body["status"] == "in_progress"
     assert body["assignment_id"] is not None
 
 
-def test_get_next_image_returns_presigned_url(client, project, labeler, pending_image):
-    response = client.get(f"/v1/projects/{project.id}/images/next", params={"labeler_id": str(labeler.id)})
+def test_create_assignment_returns_presigned_url(client, project, labeler, pending_image):
+    response = client.post(f"/v1/projects/{project.id}/assignments", json={"labeler_id": str(labeler.id)})
     body = response.json()
     assert "presigned_url" in body
     assert "img.jpg" in body["presigned_url"]
     assert body["presigned_url_expires_in"] == 1800
 
 
-def test_get_next_image_returns_404_when_project_not_found(client, labeler):
-    response = client.get(f"/v1/projects/{uuid4()}/images/next", params={"labeler_id": str(labeler.id)})
+def test_create_assignment_returns_404_when_project_not_found(client, labeler):
+    response = client.post(f"/v1/projects/{uuid4()}/assignments", json={"labeler_id": str(labeler.id)})
     assert response.status_code == 404
 
 
-def test_get_next_image_returns_403_when_labeler_not_in_project(client, project):
-    response = client.get(f"/v1/projects/{project.id}/images/next", params={"labeler_id": str(uuid4())})
+def test_create_assignment_returns_403_when_labeler_not_in_project(client, project):
+    response = client.post(f"/v1/projects/{project.id}/assignments", json={"labeler_id": str(uuid4())})
     assert response.status_code == 403
 
 
-def test_get_next_image_returns_204_when_no_images_available(project, labeler):
+def test_create_assignment_returns_204_when_no_images_available(project, labeler):
     with (
         app.container.project_repository.override(InMemoryProjectRepository(projects=[project])),
         app.container.image_repository.override(InMemoryImageRepository(images=[])),
         app.container.storage_service.override(FakeStorageService()),
     ):
-        response = TestClient(app).get(
-            f"/v1/projects/{project.id}/images/next",
-            params={"labeler_id": str(labeler.id)},
+        response = TestClient(app).post(
+            f"/v1/projects/{project.id}/assignments",
+            json={"labeler_id": str(labeler.id)},
         )
     assert response.status_code == 204

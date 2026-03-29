@@ -1,22 +1,17 @@
-from datetime import timedelta
 from uuid import UUID
 
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, UploadFile, status
 
-from ulabel.api.schemas.images import AddImageRequest, AssignedImageResponse, ImageResponse, ImportImagesRequest, ImportJobResponse, LabelRecordResponse, SubmitLabelRequest, SubmitLabelResponse
+from ulabel.api.schemas.images import AddImageRequest, ImageResponse, ImportImagesRequest, ImportJobResponse, SubmitLabelRequest, SubmitLabelResponse
 from ulabel.application.add_image_to_project import AddImageToProjectUseCase
 from ulabel.application.add_labeler_to_project import ProjectNotFound
-from ulabel.application.get_next_image import GetNextImageUseCase, LabelerNotInProject, NoImageAvailable
 from ulabel.application.import_images_from_storage import ImportImagesFromStorageUseCase
 from ulabel.application.submit_label import AssignmentMismatch, ImageNotFound, ImageNotInProgress, InvalidLabel, LabelerMismatch, SubmitLabelUseCase
 from ulabel.application.upload_image_to_project import UploadImageToProjectUseCase
 from ulabel.container import Container
-from ulabel.domain.ports.storage_service import StorageService
 
 router = APIRouter()
-
-ASSIGNMENT_TIMEOUT = timedelta(minutes=30)
 
 
 @router.post(
@@ -187,62 +182,6 @@ async def get_import_status(
     )
 
 
-@router.get(
-    "/{project_id}/images/next",
-    response_model=AssignedImageResponse,
-    summary="Get next pending image",
-    description="""
-Assigns and returns the next `pending` image in the project to the given labeler.
-
-The image transitions to `in_progress` and a **presigned URL** valid for 30 minutes
-is generated for direct file access from the browser or client.
-
-If the labeler does not complete the task before the time expires, the image is
-automatically reset to `pending` and becomes available for another labeler.
-
-**Special responses:**
-- `204 No Content` — no pending images in this project right now.
-- `403 Forbidden` — the labeler is not assigned to this project.
-""",
-    responses={
-        200: {"description": "Image assigned. Includes a presigned URL for file access."},
-        204: {"description": "No pending images available in the project right now."},
-        403: {
-            "description": "The labeler does not belong to this project.",
-            "content": {"application/json": {"example": {"detail": "Labeler is not in this project"}}},
-        },
-        404: {
-            "description": "Project not found.",
-            "content": {"application/json": {"example": {"detail": "Project not found"}}},
-        },
-    },
-)
-@inject
-async def get_next_image(
-    project_id: UUID,
-    labeler_id: UUID,
-    use_case: GetNextImageUseCase = Depends(Provide[Container.get_next_image_use_case]),
-    storage: StorageService = Depends(Provide[Container.storage_service]),
-):
-    try:
-        image = await use_case.execute(project_id=project_id, labeler_id=labeler_id)
-    except ProjectNotFound:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
-    except LabelerNotInProject:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Labeler is not in this project")
-    except NoImageAvailable:
-        raise HTTPException(status_code=status.HTTP_204_NO_CONTENT)
-    presigned_url = await storage.get_presigned_url(image.storage_key, expires_in=ASSIGNMENT_TIMEOUT)
-    return AssignedImageResponse(
-        id=image.id,
-        project_id=image.project_id,
-        status=image.status,
-        assignment_id=image.assignment_id,
-        presigned_url=presigned_url,
-        presigned_url_expires_in=int(ASSIGNMENT_TIMEOUT.total_seconds()),
-    )
-
-
 @router.post(
     "/{project_id}/images/{image_id}/label",
     response_model=SubmitLabelResponse,
@@ -251,7 +190,7 @@ async def get_next_image(
     description="""
 Submits a label for an image that is currently assigned (`in_progress`) to the labeler.
 
-The `assignment_id` must match the one returned by `GET /{project_id}/images/next` to
+The `assignment_id` must match the one returned by `POST /{project_id}/assignments` to
 prevent stale or duplicate submissions. The `label` must be one of the labels configured
 for the project.
 

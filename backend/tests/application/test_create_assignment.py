@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from uuid import uuid4
 
 from ulabel.application.add_labeler_to_project import ProjectNotFound
-from ulabel.application.get_next_image import GetNextImageUseCase, LabelerNotInProject, NoImageAvailable
+from ulabel.application.create_assignment import CreateAssignmentUseCase, LabelerNotInProject, NoImageAvailable
 from ulabel.domain.images import Image, ImageStatus
 from ulabel.domain.projects import Project
 from ulabel.domain.users import User
@@ -37,7 +37,7 @@ def pending_image(project):
 
 @pytest.fixture
 def use_case(project, pending_image):
-    return GetNextImageUseCase(
+    return CreateAssignmentUseCase(
         project_repository=InMemoryProjectRepository(projects=[project]),
         image_repository=InMemoryImageRepository(images=[pending_image]),
         now=lambda: FIXED_NOW,
@@ -71,7 +71,7 @@ async def test_returns_pending_image_with_lowest_uuid(project, labeler):
     image_high = Image.create(id=high_id, project_id=project.id, storage_key="high.jpg")
     image_low = Image.create(id=low_id, project_id=project.id, storage_key="low.jpg")
 
-    use_case = GetNextImageUseCase(
+    use_case = CreateAssignmentUseCase(
         project_repository=InMemoryProjectRepository(projects=[project]),
         image_repository=InMemoryImageRepository(images=[image_high, image_low]),
         now=lambda: FIXED_NOW,
@@ -82,7 +82,7 @@ async def test_returns_pending_image_with_lowest_uuid(project, labeler):
 
 
 async def test_raises_when_no_pending_images(project, labeler):
-    use_case = GetNextImageUseCase(
+    use_case = CreateAssignmentUseCase(
         project_repository=InMemoryProjectRepository(projects=[project]),
         image_repository=InMemoryImageRepository(),
         now=lambda: FIXED_NOW,
