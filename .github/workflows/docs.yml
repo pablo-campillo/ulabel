@@ -19,7 +19,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: backend
-        run: uv sync --extra docs
+        run: uv sync --group docs
 
       - name: Deploy to GitHub Pages
         working-directory: backend
