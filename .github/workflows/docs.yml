@@ -1,0 +1,26 @@
+name: Deploy docs
+
+on:
+  push:
+    branches: [main]
+    paths: [backend/docs/**, backend/mkdocs.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+
+      - name: Install dependencies
+        working-directory: backend
+        run: uv sync
+
+      - name: Deploy to GitHub Pages
+        working-directory: backend
+        run: uv run mkdocs gh-deploy --force
