@@ -1,3 +1,9 @@
+"""Router for image assignment endpoints.
+
+Handles creating assignments that pair labelers with pending images
+and generate time-limited presigned URLs for image access.
+"""
+
 from datetime import timedelta
 from uuid import UUID
 
@@ -52,6 +58,17 @@ async def create_assignment(
     use_case: CreateAssignmentUseCase = Depends(Provide[Container.create_assignment_use_case]),
     storage: StorageService = Depends(Provide[Container.storage_service]),
 ):
+    """Assign the next pending image to a labeler and return a presigned URL.
+
+    Args:
+        project_id: The project to assign an image from.
+        request: Contains the labeler ID to assign the image to.
+        use_case: Injected assignment use case.
+        storage: Injected storage service for presigned URL generation.
+
+    Returns:
+        An AssignmentResponse with image details and a presigned URL.
+    """
     image = await use_case.execute(project_id=project_id, labeler_id=request.labeler_id)
     presigned_url = await storage.get_presigned_url(image.storage_key, expires_in=ASSIGNMENT_TIMEOUT)
     return AssignmentResponse(

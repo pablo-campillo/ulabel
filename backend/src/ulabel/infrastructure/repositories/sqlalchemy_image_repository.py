@@ -1,3 +1,9 @@
+"""SQLAlchemy implementation of the image repository.
+
+Provides PostgreSQL-backed persistence for images using upsert
+semantics and row-level locking for concurrent assignment safety.
+"""
+
 from datetime import datetime
 from uuid import UUID
 
@@ -11,11 +17,25 @@ from ulabel.infrastructure.models.image import ImageModel
 
 
 class SqlAlchemyImageRepository(ImageRepository):
+    """PostgreSQL-backed image repository using SQLAlchemy."""
 
     def __init__(self, sessionmaker: async_sessionmaker[AsyncSession]):
+        """Initialize with an async session factory.
+
+        Args:
+            sessionmaker: Factory for creating async database sessions.
+        """
         self._sessionmaker = sessionmaker
 
     async def get_by_id(self, image_id: UUID) -> Image | None:
+        """Retrieve an image by its ID.
+
+        Args:
+            image_id: The image's unique identifier.
+
+        Returns:
+            The domain Image if found, otherwise None.
+        """
         async with self._sessionmaker() as session:
             result = await session.execute(
                 select(ImageModel).where(ImageModel.id == image_id)
@@ -24,6 +44,11 @@ class SqlAlchemyImageRepository(ImageRepository):
             return model.to_domain() if model else None
 
     async def save(self, image: Image) -> None:
+        """Save or update an image using upsert semantics.
+
+        Args:
+            image: The domain Image to persist.
+        """
         async with self._sessionmaker() as session:
             stmt = (
                 insert(ImageModel)
@@ -50,6 +75,17 @@ class SqlAlchemyImageRepository(ImageRepository):
             await session.commit()
 
     async def get_next_pending(self, project_id: UUID) -> Image | None:
+        """Get the next pending image for a project using row-level locking.
+
+        Uses ``SELECT ... FOR UPDATE SKIP LOCKED`` to safely handle
+        concurrent assignment requests.
+
+        Args:
+            project_id: The project to find a pending image in.
+
+        Returns:
+            The next pending Image, or None if no images are available.
+        """
         async with self._sessionmaker() as session:
             result = await session.execute(
                 select(ImageModel)
@@ -65,6 +101,14 @@ class SqlAlchemyImageRepository(ImageRepository):
             return model.to_domain() if model else None
 
     async def get_expired_in_progress(self, cutoff: datetime) -> list[Image]:
+        """Find all in-progress images assigned before the cutoff time.
+
+        Args:
+            cutoff: Images assigned before this time are considered expired.
+
+        Returns:
+            A list of expired in-progress Images.
+        """
         async with self._sessionmaker() as session:
             result = await session.execute(
                 select(ImageModel).where(
@@ -75,6 +119,11 @@ class SqlAlchemyImageRepository(ImageRepository):
             return [m.to_domain() for m in result.scalars()]
 
     async def save_bulk(self, images: list[Image]) -> None:
+        """Bulk-insert images in chunks, skipping duplicates.
+
+        Args:
+            images: The list of domain Images to insert.
+        """
         if not images:
             return
         chunk_size = 1000

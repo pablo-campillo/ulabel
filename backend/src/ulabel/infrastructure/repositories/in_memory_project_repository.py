@@ -1,3 +1,5 @@
+"""In-memory implementation of the project repository for testing."""
+
 from uuid import UUID
 
 from ulabel.domain.pagination import PaginatedResult
@@ -6,8 +8,14 @@ from ulabel.domain.projects import Project
 
 
 class InMemoryProjectRepository(ProjectRepository):
+    """In-memory project repository backed by a dictionary."""
 
     def __init__(self, projects: list[Project] | None = None):
+        """Initialize with optional seed projects.
+
+        Args:
+            projects: Optional list of projects to pre-populate the repository.
+        """
         self._projects: dict[UUID, Project] = {p.id: p for p in (projects or [])}
 
     async def get_by_id(self, project_id: UUID) -> Project | None:

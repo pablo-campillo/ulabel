@@ -1,3 +1,5 @@
+"""In-memory implementation of the statistics repository for testing."""
+
 from collections import defaultdict
 from uuid import UUID
 
@@ -20,6 +22,13 @@ class InMemoryStatsRepository(StatsRepository):
         labels: list[LabelRecord],
         usernames: dict[UUID, str],
     ):
+        """Initialize with shared data collections.
+
+        Args:
+            images: Shared list of images to compute stats from.
+            labels: Shared list of label records.
+            usernames: Mapping of user IDs to usernames.
+        """
         self._images = images
         self._labels = labels
         self._usernames = usernames

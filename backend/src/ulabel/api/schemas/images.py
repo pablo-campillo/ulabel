@@ -1,3 +1,5 @@
+"""Pydantic schemas for image-related requests and responses."""
+
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -7,6 +9,7 @@ from ulabel.domain.images import ImageStatus
 
 
 class AddImageRequest(BaseModel):
+    """Request body for registering an existing storage object as a project image."""
     storage_key: str = Field(
         ...,
         description="Key of an object already present in the storage bucket (MinIO/S3).",
@@ -19,6 +22,8 @@ class AddImageRequest(BaseModel):
 
 
 class ImageResponse(BaseModel):
+    """Response body for an image resource."""
+
     id: UUID = Field(..., description="Unique image identifier.")
     project_id: UUID = Field(..., description="ID of the project this image belongs to.")
     storage_key: str = Field(..., description="Object key in the storage bucket.")
@@ -40,6 +45,8 @@ class ImageResponse(BaseModel):
 
 
 class SubmitLabelRequest(BaseModel):
+    """Request body for submitting a label for an assigned image."""
+
     labeler_id: UUID = Field(
         ...,
         description="ID of the labeler submitting the label.",
@@ -66,6 +73,8 @@ class SubmitLabelRequest(BaseModel):
 
 
 class LabelRecordResponse(BaseModel):
+    """Response body for a label record."""
+
     id: UUID = Field(..., description="Unique label record identifier.")
     project_id: UUID = Field(..., description="ID of the project.")
     image_id: UUID = Field(..., description="ID of the labelled image.")
@@ -86,6 +95,8 @@ class LabelRecordResponse(BaseModel):
 
 
 class SubmitLabelResponse(BaseModel):
+    """Response body for a submitted label, including labeler ranking."""
+
     id: UUID = Field(..., description="Unique label record identifier.")
     project_id: UUID = Field(..., description="ID of the project.")
     image_id: UUID = Field(..., description="ID of the labelled image.")
@@ -112,6 +123,8 @@ class SubmitLabelResponse(BaseModel):
 
 
 class ImportImagesRequest(BaseModel):
+    """Request body for starting a bulk image import from storage."""
+
     prefix: str = Field(
         ...,
         description="Bucket path prefix used to filter which objects to import.",
@@ -124,6 +137,8 @@ class ImportImagesRequest(BaseModel):
 
 
 class ImportJobResponse(BaseModel):
+    """Response body for an import job with its current status."""
+
     import_id: UUID = Field(..., description="Unique import job identifier. Use it to poll for status.")
     project_id: UUID = Field(..., description="ID of the target project.")
     prefix: str = Field(..., description="Prefix used to filter objects in the bucket.")

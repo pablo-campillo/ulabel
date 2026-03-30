@@ -1,3 +1,5 @@
+"""In-memory implementation of the image repository for testing."""
+
 from datetime import datetime
 from uuid import UUID
 
@@ -6,8 +8,14 @@ from ulabel.domain.ports.image_repository import ImageRepository
 
 
 class InMemoryImageRepository(ImageRepository):
+    """In-memory image repository backed by a dictionary."""
 
     def __init__(self, images: list[Image] | None = None):
+        """Initialize with optional seed images.
+
+        Args:
+            images: Optional list of images to pre-populate the repository.
+        """
         self._images: dict[UUID, Image] = {i.id: i for i in (images or [])}
 
     async def get_by_id(self, image_id: UUID) -> Image | None:

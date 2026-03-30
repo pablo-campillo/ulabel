@@ -1,0 +1,76 @@
+site_name: uLabel API Documentation
+site_description: Documentation for the uLabel image labeling platform backend API.
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
+          options:
+            docstring_style: google
+            show_source: true
+            show_root_heading: true
+            show_root_full_path: false
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            members_order: source
+            merge_init_into_class: true
+            show_if_no_docstring: false
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Tutorials:
+      - Getting Started: tutorials/getting-started.md
+  - How-To Guides:
+      - How-To Guides: how-to-guides.md
+  - Reference:
+      - API Reference: reference/index.md
+      - Domain:
+          - Entities: reference/domain/entities.md
+          - Ports: reference/domain/ports.md
+          - Errors: reference/domain/errors.md
+      - Application:
+          - Use Cases: reference/application/use-cases.md
+      - API:
+          - Routers: reference/api/routers.md
+          - Schemas: reference/api/schemas.md
+      - Infrastructure:
+          - Repositories: reference/infrastructure/repositories.md
+          - Storage: reference/infrastructure/storage.md
+          - Observability: reference/infrastructure/observability.md
+  - Explanation:
+      - Architecture: explanation/architecture.md

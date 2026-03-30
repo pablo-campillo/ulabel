@@ -1,3 +1,5 @@
+"""Use case for exporting labeled data from a project as CSV or JSON."""
+
 import csv
 import io
 import json
@@ -13,11 +15,15 @@ from ulabel.domain.ports.storage_service import StorageService
 
 
 class ExportFormat(str, Enum):
+    """Supported export file formats."""
+
     JSON = "json"
     CSV = "csv"
 
 
 class NoLabelsFound(DomainError):
+    """Raised when a project has no labels to export."""
+
     pass
 
 
@@ -25,6 +31,11 @@ PRESIGNED_URL_EXPIRY = timedelta(hours=1)
 
 
 class ExportLabelsUseCase:
+    """Generates and uploads a label export file, returning a presigned download URL.
+
+    Caches exports in object storage and reuses them when the label count
+    has not changed since the last export.
+    """
 
     def __init__(
         self,
@@ -32,11 +43,31 @@ class ExportLabelsUseCase:
         label_repository: LabelRepository,
         storage_service: StorageService,
     ):
+        """Initialize the use case.
+
+        Args:
+            project_repository: Repository for project lookups.
+            label_repository: Repository for label data retrieval.
+            storage_service: Service for file upload and presigned URL generation.
+        """
         self._project_repository = project_repository
         self._label_repository = label_repository
         self._storage_service = storage_service
 
     async def execute(self, project_id: UUID, fmt: ExportFormat) -> str:
+        """Export all labels for a project in the specified format.
+
+        Args:
+            project_id: The project whose labels to export.
+            fmt: The desired output format.
+
+        Returns:
+            A presigned URL to download the export file.
+
+        Raises:
+            ProjectNotFound: If the project does not exist.
+            NoLabelsFound: If the project has no labels to export.
+        """
         project = await self._project_repository.get_by_id(project_id)
         if project is None:
             raise ProjectNotFound("Project not found")
@@ -71,6 +102,14 @@ class ExportLabelsUseCase:
 
     @staticmethod
     def _generate_csv(rows) -> tuple[bytes, str]:
+        """Generate CSV bytes from label export rows.
+
+        Args:
+            rows: Iterable of label export row objects with image_id, storage_key, and value.
+
+        Returns:
+            A tuple of the CSV content as bytes and the content type string.
+        """
         output = io.StringIO()
         writer = csv.writer(output)
         writer.writerow(["image_id", "storage_key", "value"])
@@ -80,6 +119,14 @@ class ExportLabelsUseCase:
 
     @staticmethod
     def _generate_json(rows) -> tuple[bytes, str]:
+        """Generate JSON bytes from label export rows.
+
+        Args:
+            rows: Iterable of label export row objects with image_id, storage_key, and value.
+
+        Returns:
+            A tuple of the JSON content as bytes and the content type string.
+        """
         data = [
             {"image_id": str(row.image_id), "storage_key": row.storage_key, "value": row.value}
             for row in rows

@@ -1,3 +1,8 @@
+"""Fake storage service implementation for testing.
+
+Returns predictable URLs and performs no actual I/O.
+"""
+
 from collections.abc import AsyncIterator
 from datetime import timedelta
 
@@ -5,8 +10,14 @@ from ulabel.domain.ports.storage_service import StorageService
 
 
 class FakeStorageService(StorageService):
+    """No-op storage service that returns fake URLs for testing."""
 
     def __init__(self, objects: list[str] | None = None):
+        """Initialize with optional pre-existing object keys.
+
+        Args:
+            objects: Optional list of object keys to simulate in the bucket.
+        """
         self._objects = objects or []
 
     async def get_presigned_url(self, storage_key: str, expires_in: timedelta) -> str:

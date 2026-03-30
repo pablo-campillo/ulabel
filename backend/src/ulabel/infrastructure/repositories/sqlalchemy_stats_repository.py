@@ -1,3 +1,9 @@
+"""SQLAlchemy implementation of the statistics repository.
+
+Provides PostgreSQL-backed queries for image counts, labeler rankings,
+class distributions, and daily activity breakdowns.
+"""
+
 from uuid import UUID
 
 from sqlalchemy import case, cast, Date, func, select
@@ -16,11 +22,25 @@ from ulabel.infrastructure.models.user import UserModel
 
 
 class SqlAlchemyStatsRepository(StatsRepository):
+    """PostgreSQL-backed statistics repository using SQLAlchemy."""
 
     def __init__(self, sessionmaker: async_sessionmaker[AsyncSession]):
+        """Initialize with an async session factory.
+
+        Args:
+            sessionmaker: Factory for creating async database sessions.
+        """
         self._sessionmaker = sessionmaker
 
     async def get_image_counts(self, project_id: UUID) -> ImageCounts:
+        """Get total and labeled image counts for a project.
+
+        Args:
+            project_id: The project to count images for.
+
+        Returns:
+            An ImageCounts with total and labeled counts.
+        """
         async with self._sessionmaker() as session:
             stmt = select(
                 func.count().label("total"),
@@ -30,6 +50,14 @@ class SqlAlchemyStatsRepository(StatsRepository):
             return ImageCounts(total=row.total, labeled=row.labeled)
 
     async def get_labeler_class_counts(self, project_id: UUID) -> list[LabelerClassRow]:
+        """Get per-labeler, per-class label counts for a project.
+
+        Args:
+            project_id: The project to query.
+
+        Returns:
+            A list of LabelerClassRow with labeler, class, and count data.
+        """
         async with self._sessionmaker() as session:
             stmt = (
                 select(
@@ -58,6 +86,14 @@ class SqlAlchemyStatsRepository(StatsRepository):
             ]
 
     async def get_daily_label_counts(self, project_id: UUID) -> list[DailyLabelRow]:
+        """Get daily per-labeler, per-class label counts for a project.
+
+        Args:
+            project_id: The project to query.
+
+        Returns:
+            A list of DailyLabelRow ordered by date.
+        """
         async with self._sessionmaker() as session:
             day_col = cast(LabelRecordModel.created_at, Date).label("day")
             stmt = (
@@ -91,6 +127,15 @@ class SqlAlchemyStatsRepository(StatsRepository):
             ]
 
     async def get_labeler_ranking(self, project_id: UUID, labeler_id: UUID) -> LabelerSubmitStats:
+        """Compute a labeler's ranking within a project.
+
+        Args:
+            project_id: The project to compute rankings for.
+            labeler_id: The labeler whose ranking to determine.
+
+        Returns:
+            A LabelerSubmitStats with count, ranking position, and total labelers.
+        """
         async with self._sessionmaker() as session:
             # Subquery: count per labeler in this project
             counts_sq = (

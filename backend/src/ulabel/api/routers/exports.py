@@ -1,3 +1,9 @@
+"""Router for label export endpoints.
+
+Provides an endpoint to export all label data for a project as a
+downloadable file via a presigned redirect URL.
+"""
+
 from uuid import UUID
 
 from dependency_injector.wiring import Provide, inject
@@ -35,5 +41,15 @@ async def export_labels(
     fmt: ExportFormat = Query(default=ExportFormat.JSON, alias="format"),
     use_case: ExportLabelsUseCase = Depends(Provide[Container.export_labels_use_case]),
 ) -> RedirectResponse:
+    """Export project labels and redirect to a presigned download URL.
+
+    Args:
+        project_id: The project whose labels to export.
+        fmt: The desired export format (defaults to JSON).
+        use_case: Injected export use case.
+
+    Returns:
+        A 307 redirect to the presigned URL for downloading the export file.
+    """
     presigned_url = await use_case.execute(project_id=project_id, fmt=fmt)
     return RedirectResponse(url=presigned_url, status_code=status.HTTP_307_TEMPORARY_REDIRECT)

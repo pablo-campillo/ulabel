@@ -1,3 +1,5 @@
+"""Pydantic schemas for authentication requests and responses."""
+
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -6,6 +8,7 @@ from ulabel.domain.users import UserRole
 
 
 class LoginRequest(BaseModel):
+    """Request body for user sign-in by username."""
     username: str = Field(..., description="Username registered in the system.")
 
     model_config = {
@@ -16,6 +19,8 @@ class LoginRequest(BaseModel):
 
 
 class Claim(BaseModel):
+    """Response body containing the authenticated user's identity and role."""
+
     username: str = Field(..., description="Username.")
     id: UUID = Field(..., description="Unique user identifier.")
     role: UserRole = Field(..., description="User role: `admin` or `labeler`.")

@@ -1,3 +1,9 @@
+"""SQLAlchemy ORM model for images.
+
+Maps the ``images`` table and provides conversion between the
+database representation and the domain Image entity.
+"""
+
 from datetime import datetime
 from uuid import UUID
 
@@ -10,6 +16,8 @@ from ulabel.infrastructure.models.base import Base
 
 
 class ImageModel(Base):
+    """ORM model representing an image in a labelling project."""
+
     __tablename__ = "images"
     __table_args__ = (
         UniqueConstraint("project_id", "storage_key", name="uq_images_project_storage_key"),
@@ -26,6 +34,11 @@ class ImageModel(Base):
     assignment_id: Mapped[UUID | None] = mapped_column(PG_UUID(as_uuid=True), nullable=True)
 
     def to_domain(self) -> Image:
+        """Convert this ORM model to a domain Image entity.
+
+        Returns:
+            The corresponding domain Image.
+        """
         return Image(
             id=self.id,
             project_id=self.project_id,
@@ -38,6 +51,14 @@ class ImageModel(Base):
 
     @classmethod
     def from_domain(cls, image: Image) -> "ImageModel":
+        """Create an ORM model from a domain Image entity.
+
+        Args:
+            image: The domain Image to convert.
+
+        Returns:
+            A new ImageModel instance.
+        """
         return cls(
             id=image.id,
             project_id=image.project_id,

@@ -1,3 +1,9 @@
+"""SQLAlchemy implementation of the project repository.
+
+Provides PostgreSQL-backed persistence for projects with eager loading
+of related labels and labelers, and full upsert support.
+"""
+
 from uuid import UUID
 
 from sqlalchemy import delete, func, select
@@ -12,6 +18,11 @@ from ulabel.infrastructure.models.project import ProjectLabelModel, ProjectLabel
 
 
 def _load_options():
+    """Return SQLAlchemy eager-loading options for project queries.
+
+    Returns:
+        A list of load options for owner, labels, and labelers.
+    """
     return [
         joinedload(ProjectModel.owner),
         selectinload(ProjectModel.label_entries),
@@ -20,11 +31,25 @@ def _load_options():
 
 
 class SqlAlchemyProjectRepository(ProjectRepository):
+    """PostgreSQL-backed project repository using SQLAlchemy."""
 
     def __init__(self, sessionmaker: async_sessionmaker[AsyncSession]):
+        """Initialize with an async session factory.
+
+        Args:
+            sessionmaker: Factory for creating async database sessions.
+        """
         self._sessionmaker = sessionmaker
 
     async def get_by_id(self, project_id: UUID) -> Project | None:
+        """Retrieve a project by its ID with all relations loaded.
+
+        Args:
+            project_id: The project's unique identifier.
+
+        Returns:
+            The domain Project if found, otherwise None.
+        """
         async with self._sessionmaker() as session:
             result = await session.execute(
                 select(ProjectModel)
@@ -35,6 +60,14 @@ class SqlAlchemyProjectRepository(ProjectRepository):
             return model.to_domain() if model else None
 
     async def get_by_name(self, name: str) -> Project | None:
+        """Retrieve a project by its unique name.
+
+        Args:
+            name: The project name to look up.
+
+        Returns:
+            The domain Project if found, otherwise None.
+        """
         async with self._sessionmaker() as session:
             result = await session.execute(
                 select(ProjectModel)
@@ -45,6 +78,14 @@ class SqlAlchemyProjectRepository(ProjectRepository):
             return model.to_domain() if model else None
 
     async def get_by_labeler_id(self, labeler_id: UUID) -> list[Project]:
+        """Retrieve all projects that a labeler is assigned to.
+
+        Args:
+            labeler_id: The labeler's user ID.
+
+        Returns:
+            A list of domain Projects the labeler belongs to.
+        """
         async with self._sessionmaker() as session:
             result = await session.execute(
                 select(ProjectModel)
@@ -55,6 +96,16 @@ class SqlAlchemyProjectRepository(ProjectRepository):
             return [row.to_domain() for row in result.unique().scalars()]
 
     async def get_all(self, limit: int, offset: int, *, name: str | None = None) -> PaginatedResult[Project]:
+        """Retrieve a paginated list of projects, optionally filtered by name.
+
+        Args:
+            limit: Maximum number of projects to return.
+            offset: Number of projects to skip.
+            name: Optional case-insensitive name filter (contains match).
+
+        Returns:
+            A PaginatedResult with projects ordered by creation date (newest first).
+        """
         async with self._sessionmaker() as session:
             filters = []
             if name is not None:
@@ -77,6 +128,14 @@ class SqlAlchemyProjectRepository(ProjectRepository):
             return PaginatedResult(items=items, total=total)
 
     async def save(self, project: Project) -> None:
+        """Save or update a project with its labels and labelers.
+
+        Uses upsert for the project row and replaces all label and
+        labeler associations on each save.
+
+        Args:
+            project: The domain Project to persist.
+        """
         async with self._sessionmaker() as session:
             # Upsert project row
             await session.execute(

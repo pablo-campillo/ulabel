@@ -1,3 +1,9 @@
+"""Router for project statistics endpoints.
+
+Provides an endpoint to retrieve labelling statistics for a project,
+including image counts, class distribution, and per-labeler activity.
+"""
+
 from uuid import UUID
 
 from dependency_injector.wiring import Provide, inject
@@ -37,6 +43,16 @@ async def get_project_stats(
     project_id: UUID,
     use_case: GetProjectStatsUseCase = Depends(Provide[Container.get_project_stats_use_case]),
 ):
+    """Retrieve labelling statistics for a project.
+
+    Args:
+        project_id: The project to get statistics for.
+        use_case: Injected get-project-stats use case.
+
+    Returns:
+        A ProjectStatsResponse with image counts, class distribution,
+        per-labeler breakdowns, and daily activity data.
+    """
     stats = await use_case.execute(project_id=project_id)
 
     return ProjectStatsResponse(

@@ -1,3 +1,9 @@
+"""Router for labeler-related endpoints.
+
+Provides endpoints for searching labelers by username prefix and
+listing the projects assigned to a specific labeler.
+"""
+
 from uuid import UUID
 
 from dependency_injector.wiring import Provide, inject
@@ -13,6 +19,8 @@ router = APIRouter()
 
 
 class LabelerAutocompleteItem(BaseModel):
+    """Schema for a single labeler autocomplete suggestion."""
+
     id: UUID
     username: str
 
@@ -29,6 +37,16 @@ async def autocomplete_labelers(
     limit: int = Query(default=10, ge=1, le=50),
     use_case: SearchLabelersUseCase = Depends(Provide[Container.search_labelers_use_case]),
 ):
+    """Search labelers by username prefix for autocomplete.
+
+    Args:
+        q: Username prefix to search for.
+        limit: Maximum number of results to return.
+        use_case: Injected search-labelers use case.
+
+    Returns:
+        A list of matching labeler autocomplete items.
+    """
     results = await use_case.execute(prefix=q, limit=limit)
     return [LabelerAutocompleteItem(id=u.id, username=u.username) for u in results]
 
@@ -63,6 +81,15 @@ async def get_labeler_projects(
     labeler_id: UUID,
     use_case: GetLabelerProjectsUseCase = Depends(Provide[Container.get_labeler_projects_use_case]),
 ):
+    """List all projects assigned to a labeler.
+
+    Args:
+        labeler_id: The labeler's user ID.
+        use_case: Injected get-labeler-projects use case.
+
+    Returns:
+        A list of ProjectResponse objects for the labeler's projects.
+    """
     projects = await use_case.execute(labeler_id=labeler_id)
     return [
         ProjectResponse(

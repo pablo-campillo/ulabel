@@ -1,3 +1,5 @@
+"""Pydantic schemas for image assignment requests and responses."""
+
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -6,6 +8,7 @@ from ulabel.domain.images import ImageStatus
 
 
 class CreateAssignmentRequest(BaseModel):
+    """Request body for creating a new image assignment."""
     labeler_id: UUID = Field(
         ...,
         description="ID of the labeler to assign the next pending image to.",
@@ -19,6 +22,8 @@ class CreateAssignmentRequest(BaseModel):
 
 
 class AssignmentResponse(BaseModel):
+    """Response body for a created image assignment with presigned URL."""
+
     id: UUID = Field(..., description="Unique image identifier.")
     project_id: UUID = Field(..., description="ID of the project this image belongs to.")
     status: ImageStatus = Field(..., description="Current image status (always `in_progress` in this response).")

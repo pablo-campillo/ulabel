@@ -47,7 +47,7 @@ CMD ["uvicorn", "ulabel.api.main:app", "--host", "0.0.0.0", "--port", "8000", "-
 # Use this stage for local development and CI.
 FROM builder AS dev
 
-RUN uv sync --frozen
+RUN uv sync --frozen --group docs
 
 COPY config.yml ./
 COPY tests/ ./tests/

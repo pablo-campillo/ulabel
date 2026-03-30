@@ -1,3 +1,9 @@
+"""SQLAlchemy implementation of the label repository.
+
+Provides PostgreSQL-backed persistence for label records, including
+saving, counting, and exporting label data.
+"""
+
 from uuid import UUID
 
 from sqlalchemy import func, select
@@ -11,11 +17,22 @@ from ulabel.infrastructure.models.label import LabelRecordModel
 
 
 class SqlAlchemyLabelRepository(LabelRepository):
+    """PostgreSQL-backed label repository using SQLAlchemy."""
 
     def __init__(self, sessionmaker: async_sessionmaker[AsyncSession]):
+        """Initialize with an async session factory.
+
+        Args:
+            sessionmaker: Factory for creating async database sessions.
+        """
         self._sessionmaker = sessionmaker
 
     async def save(self, label_record: LabelRecord) -> None:
+        """Persist a label record, ignoring conflicts on duplicate image IDs.
+
+        Args:
+            label_record: The domain LabelRecord to save.
+        """
         async with self._sessionmaker() as session:
             stmt = (
                 insert(LabelRecordModel)
@@ -32,6 +49,14 @@ class SqlAlchemyLabelRepository(LabelRepository):
             await session.commit()
 
     async def count_by_project(self, project_id: UUID) -> int:
+        """Count the total number of labels for a project.
+
+        Args:
+            project_id: The project to count labels for.
+
+        Returns:
+            The total label count.
+        """
         async with self._sessionmaker() as session:
             result = await session.execute(
                 select(func.count(LabelRecordModel.id)).where(
@@ -41,6 +66,14 @@ class SqlAlchemyLabelRepository(LabelRepository):
             return result.scalar_one()
 
     async def get_export_data(self, project_id: UUID) -> list[LabelExportRow]:
+        """Retrieve label data joined with image storage keys for export.
+
+        Args:
+            project_id: The project to export labels for.
+
+        Returns:
+            A list of LabelExportRow objects ordered by image ID.
+        """
         async with self._sessionmaker() as session:
             stmt = (
                 select(

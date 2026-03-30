@@ -1,3 +1,9 @@
+"""FastAPI application entry point for the uLabel API.
+
+Configures the FastAPI app with middleware, error handlers, routers,
+and manages the application lifecycle including background tasks.
+"""
+
 import asyncio
 from contextlib import asynccontextmanager
 
@@ -15,6 +21,18 @@ container = Container()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    """Manage application startup and shutdown lifecycle.
+
+    On startup, initializes logging, tracing, storage, and starts the
+    background task that expires stale image assignments. On shutdown,
+    cancels the background task and shuts down tracing.
+
+    Args:
+        app: The FastAPI application instance.
+
+    Yields:
+        Control to the running application.
+    """
     container.logging_setup.init()
     container.tracer_provider.init()
     instrument_app(app, container.engine())
@@ -61,4 +79,9 @@ app.add_route("/metrics", metrics_route)
 
 @app.get("/", tags=["Health"], summary="Health check", description="Verifies the service is up and running.")
 async def root():
+    """Return a simple health check response.
+
+    Returns:
+        A dict with ``alive: True`` confirming the service is running.
+    """
     return {"alive": True}

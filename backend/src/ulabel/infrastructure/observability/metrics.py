@@ -1,3 +1,9 @@
+"""Prometheus metrics collection and HTTP middleware.
+
+Defines counters, histograms, and gauges for HTTP request tracking,
+and provides a Starlette middleware that records metrics per request.
+"""
+
 from __future__ import annotations
 
 import time
@@ -51,8 +57,18 @@ def _get_path_template(request: Request) -> str:
 
 
 class PrometheusMiddleware(BaseHTTPMiddleware):
+    """Starlette middleware that records Prometheus metrics for each HTTP request."""
 
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
+        """Record request count, duration, and in-progress gauge metrics.
+
+        Args:
+            request: The incoming HTTP request.
+            call_next: The next middleware or route handler.
+
+        Returns:
+            The HTTP response from the downstream handler.
+        """
         path = _get_path_template(request)
 
         if path == "/metrics":
@@ -79,6 +95,14 @@ class PrometheusMiddleware(BaseHTTPMiddleware):
 
 
 async def metrics_route(request: Request) -> Response:
+    """Serve Prometheus metrics in text exposition format.
+
+    Args:
+        request: The incoming HTTP request.
+
+    Returns:
+        A plain-text response with all collected Prometheus metrics.
+    """
     return Response(
         content=generate_latest(),
         media_type="text/plain; version=0.0.4; charset=utf-8",

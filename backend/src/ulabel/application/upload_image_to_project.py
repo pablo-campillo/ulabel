@@ -1,3 +1,5 @@
+"""Use case for uploading an image file to a labeling project."""
+
 from uuid import UUID, uuid4
 
 from ulabel.application.add_labeler_to_project import ProjectNotFound
@@ -8,6 +10,11 @@ from ulabel.domain.ports.storage_service import StorageService
 
 
 class UploadImageToProjectUseCase:
+    """Uploads image data to object storage and registers it in a project.
+
+    Handles both the storage upload and the creation of the image entity
+    in a single operation.
+    """
 
     def __init__(
         self,
@@ -15,11 +22,31 @@ class UploadImageToProjectUseCase:
         image_repository: ImageRepository,
         storage_service: StorageService,
     ):
+        """Initialize the use case.
+
+        Args:
+            project_repository: Repository for project lookups.
+            image_repository: Repository for image persistence.
+            storage_service: Service for uploading files to object storage.
+        """
         self.project_repository = project_repository
         self.image_repository = image_repository
         self.storage_service = storage_service
 
     async def execute(self, project_id: UUID, data: bytes, content_type: str) -> Image:
+        """Upload an image to a project.
+
+        Args:
+            project_id: The project to add the image to.
+            data: The raw image bytes.
+            content_type: The MIME type of the image.
+
+        Returns:
+            The newly created image entity.
+
+        Raises:
+            ProjectNotFound: If the project does not exist.
+        """
         project = await self.project_repository.get_by_id(project_id)
         if project is None:
             raise ProjectNotFound(f"Project '{project_id}' not found")

@@ -1,3 +1,9 @@
+"""Centralized error handling for domain exceptions.
+
+Maps domain-layer exceptions to HTTP status codes and structured JSON
+error responses, and records domain error metrics.
+"""
+
 import logging
 
 from fastapi import Request
@@ -39,6 +45,19 @@ logger = logging.getLogger(__name__)
 
 
 async def domain_error_handler(request: Request, exc: DomainError) -> Response:
+    """Handle domain errors and convert them to appropriate HTTP responses.
+
+    Looks up the exception type in ``EXCEPTION_MAP`` to determine the HTTP
+    status code and error code. Logs the error and increments the domain
+    error counter metric.
+
+    Args:
+        request: The incoming HTTP request.
+        exc: The domain error that was raised.
+
+    Returns:
+        A JSON response with the error details, or a 204 empty response.
+    """
     status_code, code, default_msg = EXCEPTION_MAP[type(exc)]
     if status_code == 204:
         return Response(status_code=204)

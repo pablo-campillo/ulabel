@@ -1,3 +1,9 @@
+"""Aggregated API router for the uLabel v1 endpoints.
+
+Collects all feature routers (tokens, projects, assignments, images,
+exports, stats, labelers) and mounts them under a common prefix.
+"""
+
 from fastapi import APIRouter
 
 from ulabel.api.routers import assignments, exports, images, labelers, projects, stats, tokens

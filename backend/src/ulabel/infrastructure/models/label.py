@@ -1,3 +1,9 @@
+"""SQLAlchemy ORM model for label records.
+
+Maps the ``label_records`` table and provides conversion between the
+database representation and the domain LabelRecord entity.
+"""
+
 from datetime import datetime
 from uuid import UUID
 
@@ -10,6 +16,8 @@ from ulabel.infrastructure.models.base import Base
 
 
 class LabelRecordModel(Base):
+    """ORM model representing a label submitted for an image."""
+
     __tablename__ = "label_records"
     __table_args__ = (
         UniqueConstraint("image_id", name="uq_label_records_image_id"),
@@ -29,6 +37,11 @@ class LabelRecordModel(Base):
     )
 
     def to_domain(self) -> LabelRecord:
+        """Convert this ORM model to a domain LabelRecord entity.
+
+        Returns:
+            The corresponding domain LabelRecord.
+        """
         return LabelRecord(
             id=self.id,
             project_id=self.project_id,
@@ -39,6 +52,14 @@ class LabelRecordModel(Base):
 
     @classmethod
     def from_domain(cls, label_record: LabelRecord) -> "LabelRecordModel":
+        """Create an ORM model from a domain LabelRecord entity.
+
+        Args:
+            label_record: The domain LabelRecord to convert.
+
+        Returns:
+            A new LabelRecordModel instance.
+        """
         return cls(
             id=label_record.id,
             project_id=label_record.project_id,

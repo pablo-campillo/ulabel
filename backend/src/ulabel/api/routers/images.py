@@ -1,3 +1,9 @@
+"""Router for image management endpoints.
+
+Provides endpoints for registering, uploading, bulk-importing images,
+checking import job status, and submitting labels for images.
+"""
+
 from uuid import UUID
 
 from dependency_injector.wiring import Provide, inject
@@ -40,6 +46,16 @@ async def add_image(
     request: AddImageRequest,
     use_case: AddImageToProjectUseCase = Depends(Provide[Container.add_image_to_project_use_case]),
 ):
+    """Register an existing storage object as a project image.
+
+    Args:
+        project_id: The target project ID.
+        request: Contains the storage key of the existing object.
+        use_case: Injected add-image use case.
+
+    Returns:
+        An ImageResponse with the registered image details.
+    """
     image = await use_case.execute(project_id=project_id, storage_key=request.storage_key)
     return ImageResponse(
         id=image.id,
@@ -77,6 +93,16 @@ async def upload_image(
     file: UploadFile,
     use_case: UploadImageToProjectUseCase = Depends(Provide[Container.upload_image_to_project_use_case]),
 ):
+    """Upload an image file and register it in the project.
+
+    Args:
+        project_id: The target project ID.
+        file: The uploaded image file.
+        use_case: Injected upload-image use case.
+
+    Returns:
+        An ImageResponse with the newly created image details.
+    """
     data = await file.read()
     image = await use_case.execute(
         project_id=project_id,
@@ -121,6 +147,17 @@ async def import_images(
     background_tasks: BackgroundTasks,
     use_case: ImportImagesFromStorageUseCase = Depends(Provide[Container.import_images_use_case]),
 ):
+    """Start an asynchronous bulk import of images from a storage prefix.
+
+    Args:
+        project_id: The target project ID.
+        request: Contains the bucket prefix to import from.
+        background_tasks: FastAPI background task manager.
+        use_case: Injected import use case.
+
+    Returns:
+        An ImportJobResponse with the job ID and initial status.
+    """
     job = await use_case.start(project_id=project_id, prefix=request.prefix)
     background_tasks.add_task(use_case.run, job)
     return ImportJobResponse(
@@ -159,6 +196,16 @@ async def get_import_status(
     import_id: UUID,
     use_case: ImportImagesFromStorageUseCase = Depends(Provide[Container.import_images_use_case]),
 ):
+    """Retrieve the current status of a bulk import job.
+
+    Args:
+        project_id: The project the import belongs to.
+        import_id: The import job identifier.
+        use_case: Injected import use case.
+
+    Returns:
+        An ImportJobResponse with the current job state.
+    """
     job = use_case.get_job(import_id, project_id)
     return ImportJobResponse(
         import_id=job.id,
@@ -211,6 +258,17 @@ async def submit_label(
     request: SubmitLabelRequest,
     use_case: SubmitLabelUseCase = Depends(Provide[Container.submit_label_use_case]),
 ):
+    """Submit a label for an assigned image.
+
+    Args:
+        project_id: The project the image belongs to.
+        image_id: The image to label.
+        request: Contains labeler ID, assignment ID, and the label value.
+        use_case: Injected submit-label use case.
+
+    Returns:
+        A SubmitLabelResponse with the label record and labeler ranking.
+    """
     label_record, stats = await use_case.execute(
         project_id=project_id,
         image_id=image_id,

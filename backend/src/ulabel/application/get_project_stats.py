@@ -1,3 +1,5 @@
+"""Use case for retrieving statistics and analytics for a labeling project."""
+
 import asyncio
 from collections import defaultdict
 from dataclasses import dataclass
@@ -11,6 +13,8 @@ from ulabel.domain.ports.stats_repository import StatsRepository
 
 @dataclass
 class LabelerClassCount:
+    """Label counts per class for a single labeler."""
+
     labeler_id: UUID
     username: str
     counts: dict[str, int]
@@ -18,12 +22,16 @@ class LabelerClassCount:
 
 @dataclass
 class DailyCount:
+    """Label counts per class for a single day."""
+
     date: date
     counts: dict[str, int]
 
 
 @dataclass
 class LabelerDailyActivity:
+    """Daily labeling activity breakdown for a single labeler."""
+
     labeler_id: UUID
     username: str
     daily: list[DailyCount]
@@ -31,6 +39,8 @@ class LabelerDailyActivity:
 
 @dataclass
 class DailyLabelerTotal:
+    """Total label count for a labeler on a given day."""
+
     labeler_id: UUID
     username: str
     count: int
@@ -38,12 +48,16 @@ class DailyLabelerTotal:
 
 @dataclass
 class DailyTotal:
+    """Aggregated labeler totals for a single day."""
+
     date: date
     labelers: list[DailyLabelerTotal]
 
 
 @dataclass
 class ProjectStats:
+    """Aggregate statistics for a labeling project."""
+
     total_images: int
     labeled_images: int
     class_distribution: dict[str, int]
@@ -53,16 +67,38 @@ class ProjectStats:
 
 
 class GetProjectStatsUseCase:
+    """Computes and returns comprehensive statistics for a project.
+
+    Aggregates image counts, class distributions, per-labeler breakdowns,
+    and daily activity data.
+    """
 
     def __init__(
         self,
         project_repository: ProjectRepository,
         stats_repository: StatsRepository,
     ):
+        """Initialize the use case.
+
+        Args:
+            project_repository: Repository for project lookups.
+            stats_repository: Repository for statistical queries.
+        """
         self._project_repository = project_repository
         self._stats_repository = stats_repository
 
     async def execute(self, project_id: UUID) -> ProjectStats:
+        """Get statistics for a project.
+
+        Args:
+            project_id: The ID of the project to get stats for.
+
+        Returns:
+            Aggregated project statistics.
+
+        Raises:
+            ProjectNotFound: If the project does not exist.
+        """
         project = await self._project_repository.get_by_id(project_id)
         if project is None:
             raise ProjectNotFound("Project not found")

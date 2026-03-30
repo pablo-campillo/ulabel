@@ -1,3 +1,5 @@
+"""Pydantic schemas for project-related requests and responses."""
+
 from datetime import datetime
 from uuid import UUID
 
@@ -7,6 +9,7 @@ from ulabel.api.schemas.pagination import PaginatedResponse
 
 
 class CreateProjectRequest(BaseModel):
+    """Request body for creating a new labelling project."""
     owner_id: UUID = Field(..., description="ID of the `admin` user who will own the project.")
     name: str = Field(..., description="Project name.", examples=["Vehicle classification"])
     description: str = Field(..., description="Detailed description of the project goal.")
@@ -25,6 +28,8 @@ class CreateProjectRequest(BaseModel):
 
 
 class AddLabelerRequest(BaseModel):
+    """Request body for adding a labeler to a project."""
+
     labeler_id: UUID = Field(..., description="ID of the `labeler` user to add to the project.")
 
     model_config = {
@@ -35,6 +40,8 @@ class AddLabelerRequest(BaseModel):
 
 
 class UpdateProjectRequest(BaseModel):
+    """Request body for updating a project's mutable fields."""
+
     name: str | None = Field(None, description="New project name.")
     description: str | None = Field(None, description="New project description.")
     labeler_ids: list[UUID] | None = Field(None, description="Full list of labeler IDs to assign.")
@@ -51,11 +58,15 @@ class UpdateProjectRequest(BaseModel):
 
 
 class LabelerInfo(BaseModel):
+    """Summary information for a labeler assigned to a project."""
+
     id: UUID = Field(..., description="Labeler user ID.")
     username: str = Field(..., description="Labeler username.")
 
 
 class ProjectResponse(BaseModel):
+    """Response body for a project resource."""
+
     id: UUID = Field(..., description="Unique project identifier.")
     owner_id: UUID = Field(..., description="ID of the admin owner.")
     name: str = Field(..., description="Project name.")
@@ -79,4 +90,6 @@ class ProjectResponse(BaseModel):
 
 
 class PaginatedProjectResponse(PaginatedResponse[ProjectResponse]):
+    """Paginated response containing a list of projects."""
+
     pass

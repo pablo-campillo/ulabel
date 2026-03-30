@@ -1,3 +1,5 @@
+"""In-memory implementation of the user repository for testing."""
+
 from uuid import UUID
 
 from ulabel.domain.ports.user_repository import UserRepository
@@ -5,8 +7,14 @@ from ulabel.domain.users import User
 
 
 class InMemoryUserRepository(UserRepository):
+    """In-memory user repository backed by username and ID dictionaries."""
 
     def __init__(self, users: list[User] | None = None):
+        """Initialize with optional seed users.
+
+        Args:
+            users: Optional list of users to pre-populate the repository.
+        """
         self._by_username: dict[str, User] = {u.username: u for u in (users or [])}
         self._by_id: dict[UUID, User] = {u.id: u for u in (users or [])}
 

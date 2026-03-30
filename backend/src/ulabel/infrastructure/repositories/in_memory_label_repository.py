@@ -1,3 +1,5 @@
+"""In-memory implementation of the label repository for testing."""
+
 from uuid import UUID
 
 from ulabel.domain.labels import LabelExportRow, LabelRecord
@@ -5,6 +7,7 @@ from ulabel.domain.ports.label_repository import LabelRepository
 
 
 class InMemoryLabelRepository(LabelRepository):
+    """In-memory label repository backed by a dictionary."""
 
     def __init__(self) -> None:
         self._records: dict[UUID, LabelRecord] = {}

@@ -1,3 +1,9 @@
+"""SQLAlchemy ORM models for projects and their associations.
+
+Maps the ``projects``, ``project_labels``, and ``project_labelers``
+tables and provides conversion to/from domain Project entities.
+"""
+
 from uuid import UUID
 
 from sqlalchemy import DateTime, ForeignKey, String, func
@@ -12,6 +18,8 @@ from ulabel.infrastructure.models.user import UserModel
 
 
 class ProjectLabelModel(Base):
+    """Association model linking a project to one of its allowed labels."""
+
     __tablename__ = "project_labels"
 
     project_id: Mapped[UUID] = mapped_column(
@@ -21,6 +29,8 @@ class ProjectLabelModel(Base):
 
 
 class ProjectLabelerModel(Base):
+    """Association model linking a project to an assigned labeler."""
+
     __tablename__ = "project_labelers"
 
     project_id: Mapped[UUID] = mapped_column(
@@ -30,6 +40,8 @@ class ProjectLabelerModel(Base):
 
 
 class ProjectModel(Base):
+    """ORM model representing a labelling project with its labels and labelers."""
+
     __tablename__ = "projects"
 
     id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True)
@@ -49,6 +61,11 @@ class ProjectModel(Base):
     )
 
     def to_domain(self) -> Project:
+        """Convert this ORM model to a domain Project entity.
+
+        Returns:
+            The corresponding domain Project with labels and labeler IDs.
+        """
         return Project(
             id=self.id,
             owner=self.owner.to_domain(),
@@ -61,6 +78,14 @@ class ProjectModel(Base):
 
     @classmethod
     def from_domain(cls, project: Project) -> "ProjectModel":
+        """Create an ORM model from a domain Project entity.
+
+        Args:
+            project: The domain Project to convert.
+
+        Returns:
+            A new ProjectModel with associated label and labeler entries.
+        """
         model = cls(
             id=project.id,
             owner_id=project.owner.id,

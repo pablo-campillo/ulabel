@@ -1,3 +1,9 @@
+"""SQLAlchemy implementation of the user repository.
+
+Provides PostgreSQL-backed persistence for users with lookup by
+username, ID, prefix search, and upsert support.
+"""
+
 from uuid import UUID
 
 from sqlalchemy import select
@@ -10,11 +16,25 @@ from ulabel.infrastructure.models.user import UserModel
 
 
 class SqlAlchemyUserRepository(UserRepository):
+    """PostgreSQL-backed user repository using SQLAlchemy."""
 
     def __init__(self, sessionmaker: async_sessionmaker[AsyncSession]):
+        """Initialize with an async session factory.
+
+        Args:
+            sessionmaker: Factory for creating async database sessions.
+        """
         self._sessionmaker = sessionmaker
 
     async def get_by_username(self, username: str) -> User | None:
+        """Retrieve a user by their unique username.
+
+        Args:
+            username: The username to look up.
+
+        Returns:
+            The domain User if found, otherwise None.
+        """
         async with self._sessionmaker() as session:
             result = await session.execute(
                 select(UserModel).where(UserModel.username == username)
@@ -23,6 +43,14 @@ class SqlAlchemyUserRepository(UserRepository):
             return model.to_domain() if model else None
 
     async def get_by_id(self, user_id: UUID) -> User | None:
+        """Retrieve a user by their unique ID.
+
+        Args:
+            user_id: The user's unique identifier.
+
+        Returns:
+            The domain User if found, otherwise None.
+        """
         async with self._sessionmaker() as session:
             result = await session.execute(
                 select(UserModel).where(UserModel.id == user_id)
@@ -33,6 +61,16 @@ class SqlAlchemyUserRepository(UserRepository):
     async def search_by_username_prefix(
         self, prefix: str, *, role: str | None = None, limit: int = 10
     ) -> list[User]:
+        """Search users by username prefix with optional role filter.
+
+        Args:
+            prefix: The username prefix to match (case-insensitive).
+            role: Optional role to filter by.
+            limit: Maximum number of results.
+
+        Returns:
+            A list of matching Users ordered by username.
+        """
         async with self._sessionmaker() as session:
             stmt = select(UserModel).where(UserModel.username.ilike(f"{prefix}%"))
             if role is not None:
@@ -42,6 +80,11 @@ class SqlAlchemyUserRepository(UserRepository):
             return [row.to_domain() for row in result.scalars()]
 
     async def save(self, user: User) -> None:
+        """Save or update a user using upsert semantics.
+
+        Args:
+            user: The domain User to persist.
+        """
         async with self._sessionmaker() as session:
             stmt = (
                 insert(UserModel)

@@ -1,3 +1,10 @@
+"""Dependency injection container for the uLabel application.
+
+Uses dependency-injector to wire together infrastructure components
+(database, repositories, storage, observability) with application
+use cases, providing a single composition root for the entire system.
+"""
+
 from datetime import timedelta
 from pathlib import Path
 
@@ -34,6 +41,12 @@ CONFIG_PATH = Path(__file__).resolve().parent.parent.parent / "config.yml"
 
 
 class Container(containers.DeclarativeContainer):
+    """Application-wide dependency injection container.
+
+    Configures all providers for infrastructure services (database, storage,
+    observability) and application use cases, loading settings from a YAML
+    configuration file.
+    """
 
     wiring_config = containers.WiringConfiguration(
         modules=[

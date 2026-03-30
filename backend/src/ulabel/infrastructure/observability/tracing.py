@@ -1,3 +1,10 @@
+"""OpenTelemetry distributed tracing configuration.
+
+Sets up a TracerProvider with a configurable sampler that supports
+both ratio-based sampling and forced sampling via HTTP header. Also
+instruments FastAPI, SQLAlchemy, logging, and aiohttp.
+"""
+
 from __future__ import annotations
 
 import logging
@@ -34,6 +41,12 @@ class ForceTraceSampler(Sampler):
     when the configured header is present in the span attributes."""
 
     def __init__(self, ratio: float, force_trace_header: str) -> None:
+        """Initialize the sampler.
+
+        Args:
+            ratio: Base sampling ratio (0.0 to 1.0).
+            force_trace_header: HTTP header name that forces sampling when set to "true".
+        """
         self._delegate = TraceIdRatioBased(ratio)
         self._force_key = f"http.request.header.{force_trace_header.lower()}"
 
@@ -46,6 +59,22 @@ class ForceTraceSampler(Sampler):
         attributes: Attributes | None = None,
         links: Sequence[Link] | None = None,
     ) -> SamplingResult:
+        """Decide whether to sample a span.
+
+        Forces sampling if the configured header is present and set to
+        "true"; otherwise delegates to the ratio-based sampler.
+
+        Args:
+            parent_context: The parent span context, if any.
+            trace_id: The trace identifier.
+            name: The span name.
+            kind: The span kind.
+            attributes: Span attributes that may contain HTTP headers.
+            links: Links to other spans.
+
+        Returns:
+            A SamplingResult indicating whether to record and sample.
+        """
         if attributes:
             header_values = attributes.get(self._force_key)
             if header_values:
@@ -62,6 +91,11 @@ class ForceTraceSampler(Sampler):
         )
 
     def get_description(self) -> str:
+        """Return a human-readable description of this sampler.
+
+        Returns:
+            A string describing the sampler and its delegate.
+        """
         return f"ForceTraceSampler(delegate={self._delegate.get_description()})"
 
 
@@ -72,6 +106,18 @@ def setup_tracing(
     sample_ratio: str,
     force_trace_header: str,
 ) -> TracerProvider | None:
+    """Initialize OpenTelemetry tracing with OTLP gRPC export.
+
+    Args:
+        service_name: The service name for the trace resource.
+        endpoint: OTLP collector endpoint URL.
+        enabled: Whether tracing is enabled ("true"/"false").
+        sample_ratio: Ratio of traces to sample (e.g., "0.1" for 10%).
+        force_trace_header: HTTP header name that forces sampling.
+
+    Returns:
+        The configured TracerProvider, or None if tracing is disabled.
+    """
     if enabled.lower() != "true":
         logger.info("Tracing disabled")
         return None
@@ -91,6 +137,15 @@ def setup_tracing(
 
 
 def instrument_app(app: FastAPI, engine: AsyncEngine) -> None:
+    """Instrument the FastAPI app and related libraries for tracing.
+
+    Adds automatic span creation for FastAPI routes, SQLAlchemy queries,
+    logging, and outbound aiohttp requests.
+
+    Args:
+        app: The FastAPI application to instrument.
+        engine: The async SQLAlchemy engine to instrument.
+    """
     FastAPIInstrumentor.instrument_app(app)
     SQLAlchemyInstrumentor().instrument(engine=engine.sync_engine)
     LoggingInstrumentor().instrument(set_logging_format=False)
@@ -99,6 +154,11 @@ def instrument_app(app: FastAPI, engine: AsyncEngine) -> None:
 
 
 def shutdown_tracing(provider: TracerProvider | None) -> None:
+    """Gracefully shut down the tracer provider and flush pending spans.
+
+    Args:
+        provider: The TracerProvider to shut down, or None if tracing is disabled.
+    """
     if provider is not None:
         provider.shutdown()
         logger.info("Tracing shut down")
