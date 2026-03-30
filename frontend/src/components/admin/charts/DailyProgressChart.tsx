@@ -52,15 +52,15 @@ export function DailyProgressChart({ stats, labels }: Props) {
   const isZoomed = zoomLeft !== null && zoomRight !== null
 
   const handleMouseDown = useCallback(
-    (e: { activeLabel?: string }) => {
-      if (e?.activeLabel) setRefAreaLeft(e.activeLabel)
+    (e: { activeLabel?: string | number }) => {
+      if (e?.activeLabel != null) setRefAreaLeft(String(e.activeLabel))
     },
     [],
   )
 
   const handleMouseMove = useCallback(
-    (e: { activeLabel?: string }) => {
-      if (refAreaLeft && e?.activeLabel) setRefAreaRight(e.activeLabel)
+    (e: { activeLabel?: string | number }) => {
+      if (refAreaLeft && e?.activeLabel != null) setRefAreaRight(String(e.activeLabel))
     },
     [refAreaLeft],
   )
