@@ -14,7 +14,7 @@ from ulabel.api.error_handlers import domain_error_handler
 from ulabel.container import Container
 from ulabel.domain.errors import DomainError
 from ulabel.infrastructure.observability.metrics import PrometheusMiddleware, metrics_route
-from ulabel.infrastructure.observability.tracing import instrument_app, shutdown_tracing
+from ulabel.infrastructure.observability.tracing import instrument_fastapi, instrument_libraries, shutdown_tracing
 
 container = Container()
 
@@ -35,7 +35,7 @@ async def lifespan(app: FastAPI):
     """
     container.logging_setup.init()
     container.tracer_provider.init()
-    instrument_app(app, container.engine())
+    instrument_libraries(container.engine())
     await container.storage_service().ensure_bucket()
     task = asyncio.create_task(container.expire_images_task().run())
     yield
@@ -71,6 +71,7 @@ API for managing image labelling projects.
 )
 app.container = container
 app.add_middleware(PrometheusMiddleware)
+instrument_fastapi(app)
 app.add_exception_handler(DomainError, domain_error_handler)
 
 app.include_router(api_router, prefix="/v1")

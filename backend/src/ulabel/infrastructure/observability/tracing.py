@@ -136,21 +136,31 @@ def setup_tracing(
     return provider
 
 
-def instrument_app(app: FastAPI, engine: AsyncEngine) -> None:
-    """Instrument the FastAPI app and related libraries for tracing.
+def instrument_fastapi(app: FastAPI) -> None:
+    """Add OpenTelemetry tracing middleware to the FastAPI app.
 
-    Adds automatic span creation for FastAPI routes, SQLAlchemy queries,
-    logging, and outbound aiohttp requests.
+    Must be called at module level, before the ASGI lifespan builds
+    the middleware stack. The middleware resolves the global TracerProvider
+    at request time, so the provider can be set up later in the lifespan.
 
     Args:
         app: The FastAPI application to instrument.
-        engine: The async SQLAlchemy engine to instrument.
     """
     FastAPIInstrumentor.instrument_app(app)
+
+
+def instrument_libraries(engine: AsyncEngine) -> None:
+    """Instrument libraries that do not depend on the middleware stack.
+
+    Safe to call inside the ASGI lifespan.
+
+    Args:
+        engine: The async SQLAlchemy engine to instrument.
+    """
     SQLAlchemyInstrumentor().instrument(engine=engine.sync_engine)
-    LoggingInstrumentor().instrument(set_logging_format=False)
+    LoggingInstrumentor().instrument(set_logging_format=True)
     AioHttpClientInstrumentor().instrument()
-    logger.info("Instrumentation complete: FastAPI, SQLAlchemy, Logging, AioHTTP")
+    logger.info("Instrumentation complete: SQLAlchemy, Logging, AioHTTP")
 
 
 def shutdown_tracing(provider: TracerProvider | None) -> None:

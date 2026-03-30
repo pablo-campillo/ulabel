@@ -17,21 +17,16 @@ scrape_configs:
       - source_labels: ["__meta_docker_container_name"]
         regex: "/?(.*)"
         target_label: "container"
-      - source_labels: ["__meta_docker_compose_service"]
-        target_label: "service"
+      - source_labels: ["__meta_docker_container_label_com_docker_compose_service"]
+        target_label: "compose_service"
     pipeline_stages:
-      - docker: {}
-      - json:
-          expressions:
-            level: level
-            trace_id: trace_id
-            service_name: service
-      - labels:
-          level:
       - match:
-          selector: '{service="app"}'
+          selector: '{compose_service="app"}'
           stages:
+            - json:
+                expressions:
+                  level: level
+                  service: service
             - labels:
+                level:
                 service:
-                  source: service_name
-                trace_id:

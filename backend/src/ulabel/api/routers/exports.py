@@ -54,6 +54,9 @@ async def export_labels(
     Returns:
         A 307 redirect to the presigned URL for downloading the export file.
     """
-    presigned_url = await use_case.execute(project_id=project_id, fmt=fmt)
-    logger.info("Export generated: project=%s format=%s", project_id, fmt.value)
-    return RedirectResponse(url=presigned_url, status_code=status.HTTP_307_TEMPORARY_REDIRECT)
+    result = await use_case.execute(project_id=project_id, fmt=fmt)
+    if result.cache_hit:
+        logger.info("Export cache hit: project=%s format=%s", project_id, fmt.value)
+    else:
+        logger.info("Export generated: project=%s format=%s", project_id, fmt.value)
+    return RedirectResponse(url=result.url, status_code=status.HTTP_307_TEMPORARY_REDIRECT)

@@ -1,10 +1,13 @@
 """Background task that expires stale in-progress image assignments."""
 
 import asyncio
+import logging
 from datetime import datetime, timedelta, timezone
 from typing import Callable
 
 from ulabel.domain.ports.image_repository import ImageRepository
+
+logger = logging.getLogger(__name__)
 
 class ExpireImagesTask:
     """Periodically checks for and expires in-progress images that have exceeded their timeout.
@@ -46,3 +49,5 @@ class ExpireImagesTask:
         for image in expired:
             image.expire()
             await self._image_repository.save(image)
+        if expired:
+            logger.info("Expired %d stale assignments", len(expired))

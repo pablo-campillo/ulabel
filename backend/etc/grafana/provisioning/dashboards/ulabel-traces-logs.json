@@ -125,16 +125,21 @@
     },
     {
       "title": "Recent Traces",
-      "type": "traces",
+      "type": "logs",
       "gridPos": { "h": 10, "w": 24, "x": 0, "y": 4 },
-      "datasource": { "type": "tempo", "uid": "tempo" },
+      "datasource": { "type": "loki", "uid": "loki" },
       "targets": [
         {
-          "queryType": "traceqlSearch",
-          "serviceName": "ulabel-backend",
-          "limit": 20
+          "refId": "A",
+          "expr": "{service=\"ulabel-backend\"} | json | level = \"INFO\" | trace_id != \"\" | trace_id != \"0\""
         }
-      ]
+      ],
+      "options": {
+        "showTime": true,
+        "sortOrder": "Descending",
+        "enableLogDetails": true,
+        "showLabels": false
+      }
     },
     {
       "title": "Error & Warning Rate",
@@ -228,7 +233,7 @@
         "name": "DS_LOKI",
         "type": "datasource",
         "query": "loki",
-        "current": { "text": "Loki", "value": "Loki" }
+        "current": { "text": "Loki", "value": "loki" }
       },
       {
         "name": "level",
@@ -255,5 +260,5 @@
   "timezone": "browser",
   "title": "uLabel Traces & Logs",
   "uid": "ulabel-traces-logs",
-  "version": 1
+  "version": 2
 }

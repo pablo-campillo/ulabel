@@ -16,7 +16,7 @@ storage:
   public_endpoint: "${STORAGE_PUBLIC_ENDPOINT:}"
 
 tasks:
-  image_assignment_timeout_seconds: 1800
+  image_assignment_timeout_seconds: 60
   image_expiry_interval_seconds: 300
 
 observability:

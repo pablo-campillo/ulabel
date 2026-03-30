@@ -167,7 +167,15 @@ async def import_images(
         An ImportJobResponse with the job ID and initial status.
     """
     job = await use_case.start(project_id=project_id, prefix=request.prefix)
-    background_tasks.add_task(use_case.run, job)
+
+    async def _run_import():
+        await use_case.run(job)
+        if job.status == "done":
+            logger.info("Import completed: job=%s project=%s imported=%d", job.id, project_id, job.imported)
+        else:
+            logger.warning("Import failed: job=%s project=%s error=%s", job.id, project_id, job.error)
+
+    background_tasks.add_task(_run_import)
     logger.info("Import started: job=%s project=%s prefix=%s", job.id, project_id, request.prefix)
     return ImportJobResponse(
         import_id=job.id,

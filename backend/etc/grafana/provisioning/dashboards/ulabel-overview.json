@@ -268,13 +268,13 @@
         "name": "DS_PROMETHEUS",
         "type": "datasource",
         "query": "prometheus",
-        "current": { "text": "Prometheus", "value": "Prometheus" }
+        "current": { "text": "Prometheus", "value": "prometheus" }
       },
       {
         "name": "DS_LOKI",
         "type": "datasource",
         "query": "loki",
-        "current": { "text": "Loki", "value": "Loki" }
+        "current": { "text": "Loki", "value": "loki" }
       },
       {
         "name": "path",
