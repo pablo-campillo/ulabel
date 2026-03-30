@@ -1,3 +1,4 @@
+import { useState, useMemo, useCallback } from 'react'
 import {
   ComposedChart,
   Bar,
@@ -7,6 +8,7 @@ import {
   CartesianGrid,
   Tooltip,
   ReferenceLine,
+  ReferenceArea,
   ResponsiveContainer,
   Brush,
   Legend,
@@ -32,6 +34,67 @@ export function DailyProgressChart({ stats, labels }: Props) {
     stats.total_images,
   )
 
+  const [refAreaLeft, setRefAreaLeft] = useState<string | null>(null)
+  const [refAreaRight, setRefAreaRight] = useState<string | null>(null)
+  const [zoomLeft, setZoomLeft] = useState<string | null>(null)
+  const [zoomRight, setZoomRight] = useState<string | null>(null)
+
+  const zoomedData = useMemo(() => {
+    if (!zoomLeft || !zoomRight) return data
+    const leftIdx = data.findIndex((d) => d.date === zoomLeft)
+    const rightIdx = data.findIndex((d) => d.date === zoomRight)
+    if (leftIdx === -1 || rightIdx === -1) return data
+    const start = Math.min(leftIdx, rightIdx)
+    const end = Math.max(leftIdx, rightIdx)
+    return data.slice(start, end + 1)
+  }, [data, zoomLeft, zoomRight])
+
+  const isZoomed = zoomLeft !== null && zoomRight !== null
+
+  const handleMouseDown = useCallback(
+    (e: { activeLabel?: string }) => {
+      if (e?.activeLabel) setRefAreaLeft(e.activeLabel)
+    },
+    [],
+  )
+
+  const handleMouseMove = useCallback(
+    (e: { activeLabel?: string }) => {
+      if (refAreaLeft && e?.activeLabel) setRefAreaRight(e.activeLabel)
+    },
+    [refAreaLeft],
+  )
+
+  const handleMouseUp = useCallback(() => {
+    if (!refAreaLeft || !refAreaRight) {
+      setRefAreaLeft(null)
+      setRefAreaRight(null)
+      return
+    }
+
+    const leftIdx = data.findIndex((d) => d.date === refAreaLeft)
+    const rightIdx = data.findIndex((d) => d.date === refAreaRight)
+
+    if (leftIdx === rightIdx) {
+      setRefAreaLeft(null)
+      setRefAreaRight(null)
+      return
+    }
+
+    const start = Math.min(leftIdx, rightIdx)
+    const end = Math.max(leftIdx, rightIdx)
+
+    setZoomLeft(data[start].date)
+    setZoomRight(data[end].date)
+    setRefAreaLeft(null)
+    setRefAreaRight(null)
+  }, [refAreaLeft, refAreaRight, data])
+
+  const handleResetZoom = useCallback(() => {
+    setZoomLeft(null)
+    setZoomRight(null)
+  }, [])
+
   if (data.length === 0) {
     return (
       <ChartContainer title="Daily Labeling Progress">
@@ -48,13 +111,24 @@ export function DailyProgressChart({ stats, labels }: Props) {
   )
 
   return (
-    <ChartContainer title="Daily Labeling Progress">
+    <ChartContainer
+      title="Daily Labeling Progress"
+      isZoomed={isZoomed}
+      onResetZoom={handleResetZoom}
+    >
       <ResponsiveContainer width="100%" height="100%">
-        <ComposedChart data={data} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+        <ComposedChart
+          data={zoomedData}
+          margin={{ top: 5, right: 20, bottom: 5, left: 0 }}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+        >
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
           <XAxis
             dataKey="date"
             tick={{ fontSize: 11 }}
+            allowDataOverflow
             tickFormatter={(d: string) => {
               const date = new Date(d)
               return `${date.getMonth() + 1}/${date.getDate()}`
@@ -100,7 +174,7 @@ export function DailyProgressChart({ stats, labels }: Props) {
             connectNulls
           />
 
-          {data.length > 10 && (
+          {zoomedData.length > 10 && (
             <Brush
               dataKey="date"
               height={25}
@@ -109,6 +183,16 @@ export function DailyProgressChart({ stats, labels }: Props) {
                 const date = new Date(d)
                 return `${date.getMonth() + 1}/${date.getDate()}`
               }}
+            />
+          )}
+
+          {refAreaLeft && refAreaRight && (
+            <ReferenceArea
+              x1={refAreaLeft}
+              x2={refAreaRight}
+              strokeOpacity={0.3}
+              fill="#4c6ef5"
+              fillOpacity={0.15}
             />
           )}
         </ComposedChart>
