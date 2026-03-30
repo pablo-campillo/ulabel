@@ -80,6 +80,10 @@ Open http://localhost:3000 (`admin` / `admin`). Pre-configured dashboards:
 - **uLabel Labeling Activity** — labeling throughput and patterns
 - **uLabel Traces & Logs** — request traces and application logs
 
+## Documentation
+
+For a deeper dive into the architecture, API reference, and how-to guides, check the full documentation at [pablo-campillo.github.io/ulabel](https://pablo-campillo.github.io/ulabel/).
+
 ## Stop the platform
 
 ```bash
