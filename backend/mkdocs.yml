@@ -58,6 +58,7 @@ markdown_extensions:
 nav:
   - Home: index.md
   - Tutorials:
+      - Quick Start: tutorials/quick-start.md
       - Getting Started: tutorials/getting-started.md
   - How-To Guides:
       - How-To Guides: how-to-guides/index.md
