@@ -28,12 +28,10 @@ scrape_configs:
             service_name: service
       - labels:
           level:
-          service_name:
       - match:
           selector: '{service="app"}'
           stages:
-            - json:
-                expressions:
-                  trace_id: trace_id
             - labels:
+                service:
+                  source: service_name
                 trace_id:

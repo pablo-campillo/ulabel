@@ -79,6 +79,7 @@ bootstrap:        ## Start everything, initialize data, and show access info
 	$(MAKE) up-d
 	$(MAKE) wait-healthy
 	$(MAKE) init
+	docker compose --profile docs up --build -d docs
 	@echo ""
 	@echo "══════════════════════════════════════════════════════════════"
 	@echo "  uLabel platform is ready!"
@@ -87,6 +88,7 @@ bootstrap:        ## Start everything, initialize data, and show access info
 	@echo "  Frontend        http://localhost:5173"
 	@echo "  Backend API     http://localhost:8000"
 	@echo "  API Docs        http://localhost:8000/redoc"
+	@echo "  Documentation   http://localhost:8080"
 	@echo "  Grafana         http://localhost:3000   (admin / admin)"
 	@echo "  Prometheus      http://localhost:9090"
 	@echo "  MinIO Console   http://localhost:9001   (minioadmin / minioadmin)"

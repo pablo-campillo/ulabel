@@ -9,6 +9,7 @@ from ulabel.domain.ports.project_repository import ProjectRepository
 from ulabel.domain.ports.storage_service import StorageService
 
 
+
 class UploadImageToProjectUseCase:
     """Uploads image data to object storage and registers it in a project.
 

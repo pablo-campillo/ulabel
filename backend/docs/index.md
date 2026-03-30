@@ -19,7 +19,7 @@ This documentation follows the [Diataxis](https://diataxis.fr/) framework:
 | Section | Purpose |
 |---|---|
 | [Tutorials](tutorials/getting-started.md) | Step-by-step guides to get started |
-| [How-To Guides](how-to-guides.md) | Recipes for common tasks |
+| [How-To Guides](how-to-guides/index.md) | Recipes for common tasks |
 | [Reference](reference/index.md) | Auto-generated API reference from source code |
 | [Explanation](explanation/architecture.md) | Background and architecture decisions |
 

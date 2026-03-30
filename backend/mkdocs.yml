@@ -44,7 +44,11 @@ plugins:
 markdown_extensions:
   - admonition
   - pymdownx.details
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.highlight:
       anchor_linenums: true
   - pymdownx.inlinehilite
@@ -56,7 +60,9 @@ nav:
   - Tutorials:
       - Getting Started: tutorials/getting-started.md
   - How-To Guides:
-      - How-To Guides: how-to-guides.md
+      - How-To Guides: how-to-guides/index.md
+      - Grafana Dashboards: how-to-guides/grafana-dashboards.md
+      - Adding Observability: how-to-guides/adding-observability.md
   - Reference:
       - API Reference: reference/index.md
       - Domain:
@@ -74,3 +80,8 @@ nav:
           - Observability: reference/infrastructure/observability.md
   - Explanation:
       - Architecture: explanation/architecture.md
+      - Database Design: explanation/database.md
+      - API Design: explanation/api-design.md
+      - Image Ingestion: explanation/image-ingestion.md
+      - Tooling: explanation/tooling.md
+      - Observability Design: explanation/observability.md

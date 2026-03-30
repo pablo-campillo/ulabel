@@ -4,17 +4,135 @@
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
   "id": null,
-  "links": [],
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "dashboard",
+      "tags": [],
+      "title": "Labeling Activity",
+      "type": "link",
+      "url": "/d/ulabel-labeling-activity"
+    },
+    {
+      "asDropdown": false,
+      "icon": "dashboard",
+      "tags": [],
+      "title": "Traces & Logs",
+      "type": "link",
+      "url": "/d/ulabel-traces-logs"
+    }
+  ],
   "panels": [
     {
-      "title": "Request Rate (req/s)",
-      "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "title": "Request Rate",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
       "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
       "targets": [
         {
-          "expr": "sum(rate(http_requests_total[5m])) by (path)",
-          "legendFormat": "{{ path }}"
+          "expr": "sum(rate(http_requests_total{path=~\"$path\", method=~\"$method\"}[5m]))",
+          "legendFormat": ""
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 100 },
+              { "color": "red", "value": 500 }
+            ]
+          }
+        }
+      },
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "title": "Error Rate",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total{status=~\"4..|5..\", path=~\"$path\", method=~\"$method\"}[5m])) / sum(rate(http_requests_total{path=~\"$path\", method=~\"$method\"}[5m]))",
+          "legendFormat": ""
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.01 },
+              { "color": "red", "value": 0.05 }
+            ]
+          },
+          "noValue": "0%"
+        }
+      },
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "title": "P99 Latency",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket{path=~\"$path\", method=~\"$method\"}[5m])) by (le))",
+          "legendFormat": ""
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.5 },
+              { "color": "red", "value": 1.0 }
+            ]
+          }
+        }
+      },
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "title": "In Progress",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        {
+          "expr": "sum(http_requests_in_progress{path=~\"$path\", method=~\"$method\"})",
+          "legendFormat": ""
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 10 },
+              { "color": "red", "value": 50 }
+            ]
+          }
+        }
+      },
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "title": "Request Rate by Endpoint",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total{path=~\"$path\", method=~\"$method\"}[5m])) by (method, path)",
+          "legendFormat": "{{ method }} {{ path }}",
+          "exemplar": true
         }
       ],
       "fieldConfig": {
@@ -25,14 +143,15 @@
       }
     },
     {
-      "title": "Error Rate (4xx + 5xx)",
+      "title": "Error Rate by Endpoint & Status",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
       "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
       "targets": [
         {
-          "expr": "sum(rate(http_requests_total{status=~\"4..|5..\"}[5m])) by (path, status)",
-          "legendFormat": "{{ path }} [{{ status }}]"
+          "expr": "sum(rate(http_requests_total{status=~\"4..|5..\", path=~\"$path\", method=~\"$method\"}[5m])) by (method, path, status)",
+          "legendFormat": "{{ method }} {{ path }} [{{ status }}]",
+          "exemplar": true
         }
       ],
       "fieldConfig": {
@@ -43,22 +162,15 @@
       }
     },
     {
-      "title": "Latency P50 / P90 / P99",
+      "title": "Latency by Endpoint (P95)",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
       "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
       "targets": [
         {
-          "expr": "histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
-          "legendFormat": "P50"
-        },
-        {
-          "expr": "histogram_quantile(0.90, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
-          "legendFormat": "P90"
-        },
-        {
-          "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
-          "legendFormat": "P99"
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{path=~\"$path\", method=~\"$method\"}[5m])) by (le, path))",
+          "legendFormat": "{{ path }}",
+          "exemplar": true
         }
       ],
       "fieldConfig": {
@@ -69,18 +181,30 @@
       }
     },
     {
-      "title": "Requests In Progress",
+      "title": "Latency Percentiles (global)",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
       "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
       "targets": [
         {
-          "expr": "sum(http_requests_in_progress) by (path)",
-          "legendFormat": "{{ path }}"
+          "expr": "histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket{path=~\"$path\", method=~\"$method\"}[5m])) by (le))",
+          "legendFormat": "P50",
+          "exemplar": true
+        },
+        {
+          "expr": "histogram_quantile(0.90, sum(rate(http_request_duration_seconds_bucket{path=~\"$path\", method=~\"$method\"}[5m])) by (le))",
+          "legendFormat": "P90",
+          "exemplar": true
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket{path=~\"$path\", method=~\"$method\"}[5m])) by (le))",
+          "legendFormat": "P99",
+          "exemplar": true
         }
       ],
       "fieldConfig": {
         "defaults": {
+          "unit": "s",
           "custom": { "fillOpacity": 10 }
         }
       }
@@ -88,7 +212,7 @@
     {
       "title": "Domain Errors by Type",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 20 },
       "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
       "targets": [
         {
@@ -104,13 +228,30 @@
       }
     },
     {
+      "title": "Requests In Progress",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 20 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        {
+          "expr": "sum(http_requests_in_progress{path=~\"$path\", method=~\"$method\"}) by (path)",
+          "legendFormat": "{{ path }}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "fillOpacity": 10 }
+        }
+      }
+    },
+    {
       "title": "Recent Logs",
       "type": "logs",
-      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 24 },
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 28 },
       "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
       "targets": [
         {
-          "expr": "{service=\"ulabel-backend\"}"
+          "expr": "{service=\"ulabel-backend\"} | json"
         }
       ],
       "options": {
@@ -134,6 +275,28 @@
         "type": "datasource",
         "query": "loki",
         "current": { "text": "Loki", "value": "Loki" }
+      },
+      {
+        "name": "path",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+        "query": "label_values(http_requests_total, path)",
+        "includeAll": true,
+        "allValue": ".*",
+        "current": { "text": "All", "value": "$__all" },
+        "multi": true,
+        "refresh": 2
+      },
+      {
+        "name": "method",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+        "query": "label_values(http_requests_total, method)",
+        "includeAll": true,
+        "allValue": ".*",
+        "current": { "text": "All", "value": "$__all" },
+        "multi": true,
+        "refresh": 2
       }
     ]
   },
@@ -142,5 +305,5 @@
   "timezone": "browser",
   "title": "uLabel Overview",
   "uid": "ulabel-overview",
-  "version": 1
+  "version": 2
 }

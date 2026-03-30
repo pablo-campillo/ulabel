@@ -11,6 +11,7 @@ from ulabel.domain.projects import Project
 from ulabel.domain.users import UserRole
 
 
+
 class UpdateProjectUseCase:
     """Updates project metadata and labeler assignments.
 

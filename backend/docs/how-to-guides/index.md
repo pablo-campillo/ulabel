@@ -62,3 +62,8 @@ curl -X POST http://localhost:8000/api/v1/assignments/{assignment_id}/labels \
 ```bash
 curl http://localhost:8000/api/v1/projects/{project_id}/exports
 ```
+
+## Observability
+
+- [Grafana Dashboards](grafana-dashboards.md) — How to use the monitoring dashboards
+- [Adding Observability](adding-observability.md) — How to add new logs, metrics, or traces

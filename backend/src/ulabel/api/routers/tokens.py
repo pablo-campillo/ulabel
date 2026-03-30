@@ -4,12 +4,16 @@ Provides a simple sign-in endpoint that authenticates users by
 username and returns their identity and role.
 """
 
+import logging
+
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends
 
 from ulabel.api.schemas.tokens import Claim, LoginRequest
 from ulabel.application.login import LoginUseCase
 from ulabel.container import Container
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -47,4 +51,5 @@ async def login(
         A Claim with the user's ID, username, and role.
     """
     user = await use_case.execute(request.username)
+    logger.info("User logged in: id=%s username=%s role=%s", user.id, user.username, user.role)
     return Claim(username=user.username, id=user.id, role=user.role)

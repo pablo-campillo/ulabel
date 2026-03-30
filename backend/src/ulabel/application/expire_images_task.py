@@ -6,7 +6,6 @@ from typing import Callable
 
 from ulabel.domain.ports.image_repository import ImageRepository
 
-
 class ExpireImagesTask:
     """Periodically checks for and expires in-progress images that have exceeded their timeout.
 

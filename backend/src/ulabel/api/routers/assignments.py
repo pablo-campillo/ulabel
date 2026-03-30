@@ -4,6 +4,7 @@ Handles creating assignments that pair labelers with pending images
 and generate time-limited presigned URLs for image access.
 """
 
+import logging
 from datetime import timedelta
 from uuid import UUID
 
@@ -14,6 +15,8 @@ from ulabel.api.schemas.assignments import AssignmentResponse, CreateAssignmentR
 from ulabel.application.create_assignment import CreateAssignmentUseCase
 from ulabel.container import Container
 from ulabel.domain.ports.storage_service import StorageService
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -71,6 +74,7 @@ async def create_assignment(
     """
     image = await use_case.execute(project_id=project_id, labeler_id=request.labeler_id)
     presigned_url = await storage.get_presigned_url(image.storage_key, expires_in=ASSIGNMENT_TIMEOUT)
+    logger.info("Assignment created: project=%s image=%s labeler=%s", project_id, image.id, request.labeler_id)
     return AssignmentResponse(
         id=image.id,
         project_id=image.project_id,

@@ -1,0 +1,328 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "dashboard",
+      "tags": [],
+      "title": "Overview",
+      "type": "link",
+      "url": "/d/ulabel-overview"
+    },
+    {
+      "asDropdown": false,
+      "icon": "dashboard",
+      "tags": [],
+      "title": "Traces & Logs",
+      "type": "link",
+      "url": "/d/ulabel-traces-logs"
+    }
+  ],
+  "panels": [
+    {
+      "title": "Labels / min",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
+      "targets": [
+        {
+          "expr": "sum(count_over_time({service=\"ulabel-backend\"} |= \"Label submitted\" [5m])) / 5"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "thresholds": {
+            "steps": [
+              { "color": "blue", "value": null },
+              { "color": "green", "value": 1 }
+            ]
+          },
+          "noValue": "0"
+        }
+      },
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "title": "Uploads / min",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
+      "targets": [
+        {
+          "expr": "sum(count_over_time({service=\"ulabel-backend\"} |= \"Image uploaded\" [5m])) / 5"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "thresholds": {
+            "steps": [
+              { "color": "blue", "value": null },
+              { "color": "green", "value": 1 }
+            ]
+          },
+          "noValue": "0"
+        }
+      },
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "title": "Assignments / min",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+      "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
+      "targets": [
+        {
+          "expr": "sum(count_over_time({service=\"ulabel-backend\"} |= \"Assignment created\" [5m])) / 5"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "thresholds": {
+            "steps": [
+              { "color": "blue", "value": null },
+              { "color": "green", "value": 1 }
+            ]
+          },
+          "noValue": "0"
+        }
+      },
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "title": "Exports / min",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+      "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
+      "targets": [
+        {
+          "expr": "sum(count_over_time({service=\"ulabel-backend\"} |= \"Export generated\" [5m])) / 5"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "thresholds": {
+            "steps": [
+              { "color": "blue", "value": null },
+              { "color": "green", "value": 1 }
+            ]
+          },
+          "noValue": "0"
+        }
+      },
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "title": "Labels Submitted Over Time",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
+      "targets": [
+        {
+          "expr": "sum(count_over_time({service=\"ulabel-backend\"} |= \"Label submitted\" [1m]))",
+          "legendFormat": "labels/min"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "custom": { "fillOpacity": 20, "drawStyle": "bars" }
+        }
+      }
+    },
+    {
+      "title": "Labels by Value",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
+      "targets": [
+        {
+          "expr": "sum by (label) (count_over_time({service=\"ulabel-backend\"} |= \"Label submitted\" | json | line_format \"{{.message}}\" | regexp \"label=(?P<label>\\\\S+)\" [1m]))",
+          "legendFormat": "{{ label }}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "custom": { "fillOpacity": 20, "drawStyle": "bars", "stacking": { "mode": "normal" } }
+        }
+      }
+    },
+    {
+      "title": "Image Uploads Over Time",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+      "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
+      "targets": [
+        {
+          "expr": "sum(count_over_time({service=\"ulabel-backend\"} |= \"Image uploaded\" [1m]))",
+          "legendFormat": "uploads/min"
+        },
+        {
+          "expr": "sum(count_over_time({service=\"ulabel-backend\"} |= \"Image registered\" [1m]))",
+          "legendFormat": "registered/min"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "custom": { "fillOpacity": 20, "drawStyle": "bars" }
+        }
+      }
+    },
+    {
+      "title": "Upload Size Distribution",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+      "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
+      "targets": [
+        {
+          "expr": "avg_over_time({service=\"ulabel-backend\"} |= \"Image uploaded\" | json | line_format \"{{.message}}\" | regexp \"size_bytes=(?P<size_bytes>\\\\d+)\" | unwrap size_bytes [5m])",
+          "legendFormat": "avg size"
+        },
+        {
+          "expr": "max_over_time({service=\"ulabel-backend\"} |= \"Image uploaded\" | json | line_format \"{{.message}}\" | regexp \"size_bytes=(?P<size_bytes>\\\\d+)\" | unwrap size_bytes [5m])",
+          "legendFormat": "max size"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decbytes",
+          "custom": { "fillOpacity": 10 }
+        }
+      }
+    },
+    {
+      "title": "Assignments Created Over Time",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 20 },
+      "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
+      "targets": [
+        {
+          "expr": "sum(count_over_time({service=\"ulabel-backend\"} |= \"Assignment created\" [1m]))",
+          "legendFormat": "assignments/min"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "custom": { "fillOpacity": 20, "drawStyle": "bars" }
+        }
+      }
+    },
+    {
+      "title": "Imports & Exports",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 20 },
+      "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
+      "targets": [
+        {
+          "expr": "sum(count_over_time({service=\"ulabel-backend\"} |= \"Import started\" [5m]))",
+          "legendFormat": "imports started"
+        },
+        {
+          "expr": "sum(count_over_time({service=\"ulabel-backend\"} |= \"Import completed\" [5m]))",
+          "legendFormat": "imports completed"
+        },
+        {
+          "expr": "sum(count_over_time({service=\"ulabel-backend\"} |= \"Export generated\" [5m]))",
+          "legendFormat": "exports generated"
+        },
+        {
+          "expr": "sum(count_over_time({service=\"ulabel-backend\"} |= \"Export cache hit\" [5m]))",
+          "legendFormat": "exports cached"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "custom": { "fillOpacity": 20, "drawStyle": "bars", "stacking": { "mode": "normal" } }
+        }
+      }
+    },
+    {
+      "title": "Logins Over Time",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 28 },
+      "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
+      "targets": [
+        {
+          "expr": "sum(count_over_time({service=\"ulabel-backend\"} |= \"User logged in\" [5m]))",
+          "legendFormat": "logins/5m"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "custom": { "fillOpacity": 20, "drawStyle": "bars" }
+        }
+      }
+    },
+    {
+      "title": "Project Management Events",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 28 },
+      "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
+      "targets": [
+        {
+          "expr": "sum(count_over_time({service=\"ulabel-backend\"} |= \"Project created\" [5m]))",
+          "legendFormat": "projects created"
+        },
+        {
+          "expr": "sum(count_over_time({service=\"ulabel-backend\"} |= \"Project updated\" [5m]))",
+          "legendFormat": "projects updated"
+        },
+        {
+          "expr": "sum(count_over_time({service=\"ulabel-backend\"} |= \"Labeler added to project\" [5m]))",
+          "legendFormat": "labelers added"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "custom": { "fillOpacity": 20, "drawStyle": "bars", "stacking": { "mode": "normal" } }
+        }
+      }
+    },
+    {
+      "title": "Business Event Log",
+      "type": "logs",
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 36 },
+      "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
+      "targets": [
+        {
+          "expr": "{service=\"ulabel-backend\"} |= \"ulabel.api.routers\" | json"
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "sortOrder": "Descending",
+        "enableLogDetails": true
+      }
+    }
+  ],
+  "schemaVersion": 39,
+  "templating": {
+    "list": [
+      {
+        "name": "DS_LOKI",
+        "type": "datasource",
+        "query": "loki",
+        "current": { "text": "Loki", "value": "Loki" }
+      }
+    ]
+  },
+  "time": { "from": "now-1h", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "uLabel Labeling Activity",
+  "uid": "ulabel-labeling-activity",
+  "version": 1
+}

@@ -8,7 +8,7 @@ datasources:
     isDefault: true
     jsonData:
       exemplarTraceIdDestinations:
-        - name: trace_id
+        - name: TraceID
           datasourceUid: tempo
 
   - name: Tempo

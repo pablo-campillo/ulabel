@@ -4,6 +4,7 @@ Provides CRUD operations for labelling projects, including creation,
 listing with pagination, updating, and adding labelers to projects.
 """
 
+import logging
 from uuid import UUID
 
 from dependency_injector.wiring import Provide, inject
@@ -24,6 +25,8 @@ from ulabel.application.update_project import UpdateProjectUseCase
 from ulabel.container import Container
 from ulabel.domain.projects import Project
 from ulabel.domain.ports.user_repository import UserRepository
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -157,6 +160,7 @@ async def create_project(
         description=request.description,
         labels=request.labels,
     )
+    logger.info("Project created: id=%s name=%s owner=%s labels=%d", project.id, request.name, request.owner_id, len(request.labels))
     return await _to_response(project, user_repo)
 
 
@@ -215,6 +219,7 @@ async def update_project(
         description=request.description,
         labeler_ids=set(request.labeler_ids) if request.labeler_ids is not None else None,
     )
+    logger.info("Project updated: id=%s", project_id)
     return await _to_response(project, user_repo)
 
 
@@ -267,4 +272,5 @@ async def add_labeler(
         A ProjectResponse with the updated project details.
     """
     project = await use_case.execute(project_id=project_id, labeler_id=request.labeler_id)
+    logger.info("Labeler added to project: project=%s labeler=%s", project_id, request.labeler_id)
     return await _to_response(project, user_repo)

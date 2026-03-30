@@ -8,6 +8,7 @@ from ulabel.domain.ports.image_repository import ImageRepository
 from ulabel.domain.ports.project_repository import ProjectRepository
 
 
+
 class AddImageToProjectUseCase:
     """Registers an already-uploaded image in a project by its storage key.
 

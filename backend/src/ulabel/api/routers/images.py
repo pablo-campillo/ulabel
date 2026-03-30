@@ -4,6 +4,7 @@ Provides endpoints for registering, uploading, bulk-importing images,
 checking import job status, and submitting labels for images.
 """
 
+import logging
 from uuid import UUID
 
 from dependency_injector.wiring import Provide, inject
@@ -15,6 +16,8 @@ from ulabel.application.import_images_from_storage import ImportImagesFromStorag
 from ulabel.application.submit_label import SubmitLabelUseCase
 from ulabel.application.upload_image_to_project import UploadImageToProjectUseCase
 from ulabel.container import Container
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -57,6 +60,7 @@ async def add_image(
         An ImageResponse with the registered image details.
     """
     image = await use_case.execute(project_id=project_id, storage_key=request.storage_key)
+    logger.info("Image registered: project=%s image=%s key=%s", project_id, image.id, request.storage_key)
     return ImageResponse(
         id=image.id,
         project_id=image.project_id,
@@ -109,6 +113,10 @@ async def upload_image(
         data=data,
         content_type=file.content_type or "application/octet-stream",
     )
+    logger.info(
+        "Image uploaded: project=%s image=%s size_bytes=%d content_type=%s",
+        project_id, image.id, len(data), file.content_type,
+    )
     return ImageResponse(
         id=image.id,
         project_id=image.project_id,
@@ -160,6 +168,7 @@ async def import_images(
     """
     job = await use_case.start(project_id=project_id, prefix=request.prefix)
     background_tasks.add_task(use_case.run, job)
+    logger.info("Import started: job=%s project=%s prefix=%s", job.id, project_id, request.prefix)
     return ImportJobResponse(
         import_id=job.id,
         project_id=job.project_id,
@@ -275,6 +284,10 @@ async def submit_label(
         labeler_id=request.labeler_id,
         assignment_id=request.assignment_id,
         label=request.label,
+    )
+    logger.info(
+        "Label submitted: project=%s image=%s labeler=%s label=%s",
+        project_id, image_id, request.labeler_id, request.label,
     )
     return SubmitLabelResponse(
         id=label_record.id,

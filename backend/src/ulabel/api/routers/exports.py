@@ -4,6 +4,7 @@ Provides an endpoint to export all label data for a project as a
 downloadable file via a presigned redirect URL.
 """
 
+import logging
 from uuid import UUID
 
 from dependency_injector.wiring import Provide, inject
@@ -12,6 +13,8 @@ from fastapi.responses import RedirectResponse
 
 from ulabel.application.export_labels import ExportFormat, ExportLabelsUseCase
 from ulabel.container import Container
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -52,4 +55,5 @@ async def export_labels(
         A 307 redirect to the presigned URL for downloading the export file.
     """
     presigned_url = await use_case.execute(project_id=project_id, fmt=fmt)
+    logger.info("Export generated: project=%s format=%s", project_id, fmt.value)
     return RedirectResponse(url=presigned_url, status_code=status.HTTP_307_TEMPORARY_REDIRECT)

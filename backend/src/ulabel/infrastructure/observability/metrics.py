@@ -2,13 +2,16 @@
 
 Defines counters, histograms, and gauges for HTTP request tracking,
 and provides a Starlette middleware that records metrics per request.
+Uses OpenMetrics exposition format with exemplars linking metrics to traces.
 """
 
 from __future__ import annotations
 
 import time
 
-from prometheus_client import Counter, Gauge, Histogram, generate_latest
+from opentelemetry import trace
+from prometheus_client import REGISTRY, Counter, Gauge, Histogram
+from prometheus_client.openmetrics.exposition import CONTENT_TYPE_LATEST, generate_latest
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.requests import Request
 from starlette.responses import Response
@@ -89,21 +92,29 @@ class PrometheusMiddleware(BaseHTTPMiddleware):
             duration = time.perf_counter() - start
             REQUESTS_IN_PROGRESS.labels(method=method, path=path).dec()
 
-        REQUEST_DURATION_SECONDS.labels(method=method, path=path).observe(duration)
-        REQUESTS_TOTAL.labels(method=method, path=path, status=response.status_code).inc()
+        span = trace.get_current_span()
+        trace_id = trace.format_trace_id(span.get_span_context().trace_id)
+        exemplar = {"TraceID": trace_id} if trace_id != "0" * 32 else None
+
+        REQUEST_DURATION_SECONDS.labels(method=method, path=path).observe(
+            duration, exemplar=exemplar
+        )
+        REQUESTS_TOTAL.labels(method=method, path=path, status=response.status_code).inc(exemplar=exemplar)
         return response
 
 
 async def metrics_route(request: Request) -> Response:
-    """Serve Prometheus metrics in text exposition format.
+    """Serve Prometheus metrics in OpenMetrics exposition format.
+
+    Uses OpenMetrics format to support exemplars linking metrics to traces.
 
     Args:
         request: The incoming HTTP request.
 
     Returns:
-        A plain-text response with all collected Prometheus metrics.
+        A response with all collected Prometheus metrics in OpenMetrics format.
     """
     return Response(
-        content=generate_latest(),
-        media_type="text/plain; version=0.0.4; charset=utf-8",
+        content=generate_latest(REGISTRY),
+        media_type=CONTENT_TYPE_LATEST,
     )
