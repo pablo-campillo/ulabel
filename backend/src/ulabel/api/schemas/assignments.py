@@ -37,8 +37,8 @@ class AssignmentResponse(BaseModel):
     )
     presigned_url_expires_in: int = Field(
         ...,
-        description="Seconds until the URL and the assignment expire (default 1800 s = 30 min). After that, the image reverts to `pending`.",
-        examples=[1800],
+        description="Seconds until the URL and the assignment expire (configured via `tasks.image_assignment_timeout_seconds` in `config.yml`). After that, the image reverts to `pending`.",
+        examples=[60],
     )
 
     model_config = {
@@ -48,8 +48,8 @@ class AssignmentResponse(BaseModel):
                 "project_id": "789e0123-e89b-12d3-a456-426614174002",
                 "status": "in_progress",
                 "assignment_id": "def67890-e89b-12d3-a456-426614174004",
-                "presigned_url": "https://storage.example.com/ulabel/project/image?X-Amz-Expires=1800&X-Amz-Signature=...",
-                "presigned_url_expires_in": 1800,
+                "presigned_url": "https://storage.example.com/ulabel/project/image?X-Amz-Expires=60&X-Amz-Signature=...",
+                "presigned_url_expires_in": 60,
             }
         }
     }

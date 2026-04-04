@@ -156,6 +156,14 @@ Chronological record of all features implemented and design decisions made durin
 - The use case now calls one method instead of three (`get_next_pending` + `image.assign()` + `save`)
 - **Rationale**: Only one confirmed race condition. A full Unit of Work would touch 20+ files across all repositories and use cases. The atomic method is surgically targeted (5 files), does not block a future UoW migration, and `assign_next_pending` is a legitimate domain operation ("atomically claim the next available image")
 
+### Removed hardcoded ASSIGNMENT_TIMEOUT in favor of config
+
+**Problem**: `ASSIGNMENT_TIMEOUT = timedelta(minutes=30)` was hardcoded in the `create_assignment` router, while `config.yml` already had `tasks.image_assignment_timeout_seconds: 60`. The two values diverged (30 min vs 60 s) and the presigned URL expiry was not configurable.
+
+**Solution**: Removed the `ASSIGNMENT_TIMEOUT` constant and injected `config.tasks.image_assignment_timeout_seconds` via dependency-injector's `Provide[Container.config.tasks.image_assignment_timeout_seconds.as_int()]` directly into the endpoint function. Updated all documentation references from "30 minutes" / "1800" to reference the config file value (60 seconds).
+
+**Design decision**: Used `Provide[Container.config...]` injection (option B) instead of creating a new provider in the container — follows the existing pattern and requires fewer changes.
+
 ### Planned refactor: Separate ProjectSummary vs ProjectDetail
 
 **Problem identified**: The `GET /projects` list endpoint resolves labeler usernames by making N individual queries to `UserRepository` from the API layer (`_resolve_labelers`). However:
@@ -188,7 +196,7 @@ Chronological record of all features implemented and design decisions made durin
 
 ### Assignment expiration investigation
 - Identified timing gap: `image_assignment_timeout_seconds: 60` but the expiration job runs every 5 min (`image_expiry_interval_seconds: 300`), so expiration is not instantaneous
-- Tests use `TIMEOUT = 30 min` vs production `60s` (discrepancy noted)
+- ~~Tests use `TIMEOUT = 30 min` vs production `60s` (discrepancy noted)~~ — resolved: both now use `config.tasks.image_assignment_timeout_seconds`
 
 ---
 

@@ -20,8 +20,6 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-ASSIGNMENT_TIMEOUT = timedelta(minutes=30)
-
 
 @router.post(
     "/{project_id}/assignments",
@@ -32,7 +30,8 @@ ASSIGNMENT_TIMEOUT = timedelta(minutes=30)
 Assigns the next `pending` image in the project to the given labeler.
 
 The image transitions to `in_progress` and a **presigned URL** valid for 30 minutes
-is generated for direct file access from the browser or client.
+is generated for direct file access from the browser or client. The expiry time
+is controlled by ``tasks.image_assignment_timeout_seconds`` in ``config.yml``.
 
 If the labeler does not complete the task before the time expires, the image is
 automatically reset to `pending` and becomes available for another labeler.
@@ -60,6 +59,7 @@ async def create_assignment(
     request: CreateAssignmentRequest,
     use_case: CreateAssignmentUseCase = Depends(Provide[Container.create_assignment_use_case]),
     storage: StorageService = Depends(Provide[Container.storage_service]),
+    assignment_timeout_seconds: int = Depends(Provide[Container.config.tasks.image_assignment_timeout_seconds.as_int()]),
 ):
     """Assign the next pending image to a labeler and return a presigned URL.
 
@@ -73,7 +73,8 @@ async def create_assignment(
         An AssignmentResponse with image details and a presigned URL.
     """
     image = await use_case.execute(project_id=project_id, labeler_id=request.labeler_id)
-    presigned_url = await storage.get_presigned_url(image.storage_key, expires_in=ASSIGNMENT_TIMEOUT)
+    timeout = timedelta(seconds=assignment_timeout_seconds)
+    presigned_url = await storage.get_presigned_url(image.storage_key, expires_in=timeout)
     logger.info("Assignment created: project=%s image=%s labeler=%s", project_id, image.id, request.labeler_id)
     return AssignmentResponse(
         id=image.id,
@@ -81,5 +82,5 @@ async def create_assignment(
         status=image.status,
         assignment_id=image.assignment_id,
         presigned_url=presigned_url,
-        presigned_url_expires_in=int(ASSIGNMENT_TIMEOUT.total_seconds()),
+        presigned_url_expires_in=assignment_timeout_seconds,
     )

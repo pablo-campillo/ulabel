@@ -35,7 +35,7 @@ All endpoints live under the `/v1` prefix.
 
 | Method | Path | Purpose |
 |--------|------|---------|
-| `POST` | `/v1/projects/{project_id}/assignments` | Get next pending image with a presigned URL (30-min expiry) |
+| `POST` | `/v1/projects/{project_id}/assignments` | Get next pending image with a presigned URL (expiry from `config.yml`) |
 
 ### Exports
 

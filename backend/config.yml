@@ -17,7 +17,7 @@ storage:
 
 tasks:
   image_assignment_timeout_seconds: 60
-  image_expiry_interval_seconds: 300
+  image_expiry_interval_seconds: 30
 
 observability:
   service_name: "ulabel-backend"

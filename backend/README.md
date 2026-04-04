@@ -51,7 +51,7 @@ All variables are read from the `.env` file (or from the environment). See `.env
 | `STORAGE_ACCESS_KEY` | `minioadmin` | Storage access key |
 | `STORAGE_SECRET_KEY` | `minioadmin` | Storage secret key |
 | `STORAGE_BUCKET` | `ulabel` | Bucket where images are stored |
-| `IMAGE_ASSIGNMENT_TIMEOUT_SECONDS` | `1800` | Seconds before a assigned image is released back to pending |
+| `IMAGE_ASSIGNMENT_TIMEOUT_SECONDS` | `60` | Seconds before an assigned image is released back to pending (see `tasks.image_assignment_timeout_seconds` in `config.yml`) |
 | `IMAGE_EXPIRY_INTERVAL_SECONDS` | `300` | How often the assignment expiry task runs |
 
 ---
@@ -273,7 +273,7 @@ Returns the current state of a previously started import job.
 
 #### `GET /v1/projects/{project_id}/images/next` — Get next pending image
 
-Assigns and returns the next `pending` image in the project to the given labeler. Includes a **presigned URL** valid for 30 minutes for direct browser/client access.
+Assigns and returns the next `pending` image in the project to the given labeler. Includes a **presigned URL** whose expiry is configured via `tasks.image_assignment_timeout_seconds` in `config.yml` (default: 60 seconds).
 
 If the labeler does not finish within that time, the image is automatically reset to `pending` and becomes available again.
 
@@ -292,8 +292,8 @@ If the labeler does not finish within that time, the image is automatically rese
   "project_id": "789e0123-e89b-12d3-a456-426614174002",
   "status": "in_progress",
   "assignment_id": "def67890-e89b-12d3-a456-426614174004",
-  "presigned_url": "https://storage.example.com/ulabel/...?X-Amz-Expires=1800&...",
-  "presigned_url_expires_in": 1800
+  "presigned_url": "https://storage.example.com/ulabel/...?X-Amz-Expires=60&...",
+  "presigned_url_expires_in": 60
 }
 ```
 

@@ -61,7 +61,7 @@ def test_create_assignment_returns_presigned_url(client, project, labeler, pendi
     body = response.json()
     assert "presigned_url" in body
     assert "img.jpg" in body["presigned_url"]
-    assert body["presigned_url_expires_in"] == 1800
+    assert body["presigned_url_expires_in"] == 60
 
 
 def test_create_assignment_returns_404_when_project_not_found(client, labeler):
