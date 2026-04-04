@@ -1,6 +1,7 @@
 """Port interface for label persistence."""
 
 from abc import ABC, abstractmethod
+from collections.abc import AsyncIterator
 from uuid import UUID
 
 from ulabel.domain.labels import LabelExportRow, LabelRecord
@@ -31,13 +32,13 @@ class LabelRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def get_export_data(self, project_id: UUID) -> list[LabelExportRow]:
-        """Retrieve flattened label rows for export.
+    def get_export_data(self, project_id: UUID) -> AsyncIterator[LabelExportRow]:
+        """Retrieve flattened label rows for export as an async stream.
 
         Args:
             project_id: The project to export labels from.
 
-        Returns:
-            A list of export rows containing image and label information.
+        Yields:
+            Export rows containing image and label information.
         """
         raise NotImplementedError

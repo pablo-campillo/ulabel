@@ -107,6 +107,82 @@ class S3StorageService(StorageService):
                 kwargs["Metadata"] = metadata
             await client.put_object(**kwargs)
 
+    _MIN_PART_SIZE = 5 * 1024 * 1024  # 5 MB, S3 minimum for non-final parts
+
+    async def upload_file_streaming(
+        self,
+        key: str,
+        chunks: AsyncIterator[bytes],
+        content_type: str,
+        metadata: dict[str, str] | None = None,
+    ) -> None:
+        """Upload a file by streaming chunks via S3 multipart upload.
+
+        Buffers chunks until reaching the 5 MB minimum part size before
+        uploading each part. Aborts the upload on any error.
+
+        Args:
+            key: The object key to store the file under.
+            chunks: Async iterator yielding byte chunks.
+            content_type: The MIME type of the file.
+            metadata: Optional metadata to attach to the object.
+        """
+        async with self._client() as client:
+            create_kwargs: dict = {
+                "Bucket": self._bucket,
+                "Key": key,
+                "ContentType": content_type,
+            }
+            if metadata:
+                create_kwargs["Metadata"] = metadata
+
+            response = await client.create_multipart_upload(**create_kwargs)
+            upload_id = response["UploadId"]
+
+            parts: list[dict] = []
+            part_number = 1
+            buffer = bytearray()
+
+            try:
+                async for chunk in chunks:
+                    buffer.extend(chunk)
+                    if len(buffer) >= self._MIN_PART_SIZE:
+                        part = await client.upload_part(
+                            Bucket=self._bucket,
+                            Key=key,
+                            UploadId=upload_id,
+                            PartNumber=part_number,
+                            Body=bytes(buffer),
+                        )
+                        parts.append({"ETag": part["ETag"], "PartNumber": part_number})
+                        part_number += 1
+                        buffer.clear()
+
+                # Upload remaining buffer as the final part (can be < 5MB)
+                if buffer or not parts:
+                    part = await client.upload_part(
+                        Bucket=self._bucket,
+                        Key=key,
+                        UploadId=upload_id,
+                        PartNumber=part_number,
+                        Body=bytes(buffer),
+                    )
+                    parts.append({"ETag": part["ETag"], "PartNumber": part_number})
+
+                await client.complete_multipart_upload(
+                    Bucket=self._bucket,
+                    Key=key,
+                    UploadId=upload_id,
+                    MultipartUpload={"Parts": parts},
+                )
+            except Exception:
+                await client.abort_multipart_upload(
+                    Bucket=self._bucket,
+                    Key=key,
+                    UploadId=upload_id,
+                )
+                raise
+
     async def head_object(self, key: str) -> dict[str, str] | None:
         """Retrieve metadata for an object without downloading it.
 

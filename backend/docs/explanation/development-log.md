@@ -184,6 +184,21 @@ Chronological record of all features implemented and design decisions made durin
 
 **Rationale**: The list endpoint was doing unnecessary work (resolving usernames nobody displays) and the resolution was architecturally misplaced (API layer calling repositories directly). The summary/detail split follows the principle of not fetching data you don't need, and moving business logic to the application layer respects the hexagonal architecture boundaries.
 
+### Streaming export to MinIO
+
+**Problem**: `ExportLabelsUseCase` loaded all label rows into memory (`list[LabelExportRow]`), built the entire CSV/JSON file as `bytes`, and uploaded it with a single `put_object`. For large projects this consumed excessive memory proportional to the number of labels.
+
+**Solution**: End-to-end streaming pipeline across three layers:
+1. **Database**: `get_export_data` changed from `list` return to `AsyncIterator` using SQLAlchemy's `session.stream()` for server-side cursoring
+2. **Formatters**: `_generate_csv` and `_generate_json` converted to async generators yielding byte chunks (CSV: one chunk per row; JSON: manual array framing with `[`, `,`, `]`)
+3. **Storage**: New `upload_file_streaming` method using S3 multipart upload with a 5MB `bytearray` buffer per part
+
+**Design decisions**:
+- **New `upload_file_streaming` method instead of modifying `upload_file`**: The existing `upload_file(data: bytes)` is still used by image upload and other callers that have the full data in memory. Adding a separate streaming method avoids breaking existing contracts
+- **5MB buffer for multipart parts**: S3 requires a minimum of 5MB per part (except the last). The implementation accumulates chunks in a `bytearray` and flushes when the threshold is reached
+- **`try/except` with `abort_multipart_upload`**: On any error during streaming, orphaned multipart parts are cleaned up to avoid storage leaks
+- **Metadata preserved**: `label_count` metadata is passed via `create_multipart_upload`, so the caching mechanism (head_object + label_count comparison) works unchanged
+
 ---
 
 ## Cross-cutting sessions

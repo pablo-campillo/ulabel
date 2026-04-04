@@ -4,6 +4,7 @@ Provides PostgreSQL-backed persistence for label records, including
 saving, counting, and exporting label data.
 """
 
+from collections.abc import AsyncIterator
 from uuid import UUID
 
 from sqlalchemy import func, select
@@ -65,14 +66,14 @@ class SqlAlchemyLabelRepository(LabelRepository):
             )
             return result.scalar_one()
 
-    async def get_export_data(self, project_id: UUID) -> list[LabelExportRow]:
-        """Retrieve label data joined with image storage keys for export.
+    async def get_export_data(self, project_id: UUID) -> AsyncIterator[LabelExportRow]:
+        """Retrieve label data joined with image storage keys for export as a stream.
 
         Args:
             project_id: The project to export labels for.
 
-        Returns:
-            A list of LabelExportRow objects ordered by image ID.
+        Yields:
+            LabelExportRow objects ordered by image ID.
         """
         async with self._sessionmaker() as session:
             stmt = (
@@ -85,8 +86,6 @@ class SqlAlchemyLabelRepository(LabelRepository):
                 .where(LabelRecordModel.project_id == project_id)
                 .order_by(LabelRecordModel.image_id)
             )
-            result = await session.execute(stmt)
-            return [
-                LabelExportRow(image_id=row.image_id, storage_key=row.storage_key, value=row.label)
-                for row in result.all()
-            ]
+            result = await session.stream(stmt)
+            async for row in result:
+                yield LabelExportRow(image_id=row.image_id, storage_key=row.storage_key, value=row.label)

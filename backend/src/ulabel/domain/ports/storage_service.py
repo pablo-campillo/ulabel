@@ -37,6 +37,28 @@ class StorageService(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    async def upload_file_streaming(
+        self,
+        key: str,
+        chunks: AsyncIterator[bytes],
+        content_type: str,
+        metadata: dict[str, str] | None = None,
+    ) -> None:
+        """Upload a file to object storage by streaming chunks.
+
+        Uses multipart upload internally. The caller provides an async
+        iterator of byte chunks; the implementation buffers them into
+        parts of at least 5 MB before uploading each part.
+
+        Args:
+            key: The storage key for the uploaded object.
+            chunks: Async iterator yielding byte chunks.
+            content_type: MIME type of the file.
+            metadata: Optional metadata to attach to the object.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
     async def head_object(self, key: str) -> dict[str, str] | None:
         """Retrieve metadata for an object without downloading its contents.
 

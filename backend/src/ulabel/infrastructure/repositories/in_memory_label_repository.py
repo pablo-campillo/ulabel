@@ -1,5 +1,6 @@
 """In-memory implementation of the label repository for testing."""
 
+from collections.abc import AsyncIterator
 from uuid import UUID
 
 from ulabel.domain.labels import LabelExportRow, LabelRecord
@@ -18,9 +19,7 @@ class InMemoryLabelRepository(LabelRepository):
     async def count_by_project(self, project_id: UUID) -> int:
         return sum(1 for r in self._records.values() if r.project_id == project_id)
 
-    async def get_export_data(self, project_id: UUID) -> list[LabelExportRow]:
-        return [
-            LabelExportRow(image_id=r.image_id, storage_key="", value=r.label)
-            for r in self._records.values()
-            if r.project_id == project_id
-        ]
+    async def get_export_data(self, project_id: UUID) -> AsyncIterator[LabelExportRow]:
+        for r in self._records.values():
+            if r.project_id == project_id:
+                yield LabelExportRow(image_id=r.image_id, storage_key="", value=r.label)

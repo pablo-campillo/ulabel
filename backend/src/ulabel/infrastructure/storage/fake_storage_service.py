@@ -19,6 +19,7 @@ class FakeStorageService(StorageService):
             objects: Optional list of object keys to simulate in the bucket.
         """
         self._objects = objects or []
+        self._uploaded: dict[str, dict] = {}
 
     async def get_presigned_url(self, storage_key: str, expires_in: timedelta) -> str:
         return f"http://fake-storage/{storage_key}?expires_in={int(expires_in.total_seconds())}"
@@ -26,9 +27,23 @@ class FakeStorageService(StorageService):
     async def upload_file(
         self, key: str, data: bytes, content_type: str, size: int, metadata: dict[str, str] | None = None
     ) -> None:
-        pass
+        self._uploaded[key] = {"data": data, "metadata": metadata or {}}
+
+    async def upload_file_streaming(
+        self,
+        key: str,
+        chunks: AsyncIterator[bytes],
+        content_type: str,
+        metadata: dict[str, str] | None = None,
+    ) -> None:
+        collected = bytearray()
+        async for chunk in chunks:
+            collected.extend(chunk)
+        self._uploaded[key] = {"data": bytes(collected), "metadata": metadata or {}}
 
     async def head_object(self, key: str) -> dict[str, str] | None:
+        if key in self._uploaded:
+            return self._uploaded[key]["metadata"]
         return None
 
     async def list_objects(self, prefix: str) -> AsyncIterator[str]:

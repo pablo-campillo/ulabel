@@ -3,13 +3,15 @@
 import csv
 import io
 import json
+from collections.abc import AsyncIterator
 from dataclasses import dataclass
-from datetime import date, timedelta
+from datetime import timedelta
 from enum import Enum
 from uuid import UUID
 
 from ulabel.application.add_labeler_to_project import ProjectNotFound
 from ulabel.domain.errors import DomainError
+from ulabel.domain.labels import LabelExportRow
 from ulabel.domain.ports.label_repository import LabelRepository
 from ulabel.domain.ports.project_repository import ProjectRepository
 from ulabel.domain.ports.storage_service import StorageService
@@ -93,18 +95,19 @@ class ExportLabelsUseCase:
             url = await self._storage_service.get_presigned_url(storage_key, expires_in=PRESIGNED_URL_EXPIRY)
             return ExportResult(url=url, cache_hit=True)
 
-        rows = await self._label_repository.get_export_data(project_id)
+        rows = self._label_repository.get_export_data(project_id)
 
         if fmt == ExportFormat.CSV:
-            data, content_type = self._generate_csv(rows)
+            chunks = self._generate_csv(rows)
+            content_type = "text/csv"
         else:
-            data, content_type = self._generate_json(rows)
+            chunks = self._generate_json(rows)
+            content_type = "application/json"
 
-        await self._storage_service.upload_file(
+        await self._storage_service.upload_file_streaming(
             key=storage_key,
-            data=data,
+            chunks=chunks,
             content_type=content_type,
-            size=len(data),
             metadata={"label_count": str(label_count)},
         )
 
@@ -112,34 +115,46 @@ class ExportLabelsUseCase:
         return ExportResult(url=url, cache_hit=False)
 
     @staticmethod
-    def _generate_csv(rows) -> tuple[bytes, str]:
-        """Generate CSV bytes from label export rows.
+    async def _generate_csv(rows: AsyncIterator[LabelExportRow]) -> AsyncIterator[bytes]:
+        """Generate CSV bytes from label export rows as a stream.
 
         Args:
-            rows: Iterable of label export row objects with image_id, storage_key, and value.
+            rows: Async iterator of label export row objects.
 
-        Returns:
-            A tuple of the CSV content as bytes and the content type string.
+        Yields:
+            CSV content as byte chunks (header first, then one chunk per row).
         """
         output = io.StringIO()
         writer = csv.writer(output)
         writer.writerow(["image_id", "storage_key", "value"])
-        for row in rows:
+        yield output.getvalue().encode("utf-8")
+
+        async for row in rows:
+            output = io.StringIO()
+            writer = csv.writer(output)
             writer.writerow([str(row.image_id), row.storage_key, row.value])
-        return output.getvalue().encode("utf-8"), "text/csv"
+            yield output.getvalue().encode("utf-8")
 
     @staticmethod
-    def _generate_json(rows) -> tuple[bytes, str]:
-        """Generate JSON bytes from label export rows.
+    async def _generate_json(rows: AsyncIterator[LabelExportRow]) -> AsyncIterator[bytes]:
+        """Generate JSON bytes from label export rows as a stream.
 
         Args:
-            rows: Iterable of label export row objects with image_id, storage_key, and value.
+            rows: Async iterator of label export row objects.
 
-        Returns:
-            A tuple of the JSON content as bytes and the content type string.
+        Yields:
+            JSON content as byte chunks forming a valid JSON array.
         """
-        data = [
-            {"image_id": str(row.image_id), "storage_key": row.storage_key, "value": row.value}
-            for row in rows
-        ]
-        return json.dumps(data, indent=2).encode("utf-8"), "application/json"
+        yield b"[\n"
+        first = True
+        async for row in rows:
+            if not first:
+                yield b",\n"
+            else:
+                first = False
+            entry = json.dumps(
+                {"image_id": str(row.image_id), "storage_key": row.storage_key, "value": row.value},
+                indent=2,
+            )
+            yield entry.encode("utf-8")
+        yield b"\n]"
