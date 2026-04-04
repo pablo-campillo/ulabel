@@ -86,3 +86,4 @@ nav:
       - Image Ingestion: explanation/image-ingestion.md
       - Tooling: explanation/tooling.md
       - Observability Design: explanation/observability.md
+      - Development Log: explanation/development-log.md
