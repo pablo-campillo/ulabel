@@ -10,6 +10,7 @@ from ulabel.infrastructure.models.image import ImageModel  # noqa: F401
 from ulabel.infrastructure.models.label import LabelRecordModel  # noqa: F401
 from ulabel.infrastructure.models.project import ProjectLabelModel, ProjectLabelerModel, ProjectModel  # noqa: F401
 from ulabel.infrastructure.models.user import UserModel  # noqa: F401
+from ulabel.infrastructure.models.import_job import ImportJobModel  # noqa: F401
 
 config = context.config
 if config.config_file_name is not None:

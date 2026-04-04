@@ -12,6 +12,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, UploadFile, status
 
 from ulabel.api.schemas.images import AddImageRequest, ImageResponse, ImportImagesRequest, ImportJobResponse, SubmitLabelRequest, SubmitLabelResponse
 from ulabel.application.add_image_to_project import AddImageToProjectUseCase
+from ulabel.application.get_import_job import GetImportJobUseCase
 from ulabel.application.import_images_from_storage import ImportImagesFromStorageUseCase
 from ulabel.application.submit_label import SubmitLabelUseCase
 from ulabel.application.upload_image_to_project import UploadImageToProjectUseCase
@@ -166,14 +167,10 @@ async def import_images(
     Returns:
         An ImportJobResponse with the job ID and initial status.
     """
-    job = await use_case.start(project_id=project_id, prefix=request.prefix)
+    job = await use_case.execute(project_id=project_id, prefix=request.prefix)
 
     async def _run_import():
-        await use_case.run(job)
-        if job.status == "done":
-            logger.info("Import completed: job=%s project=%s imported=%d", job.id, project_id, job.imported)
-        else:
-            logger.warning("Import failed: job=%s project=%s error=%s", job.id, project_id, job.error)
+        await use_case.run_import(job.id)
 
     background_tasks.add_task(_run_import)
     logger.info("Import started: job=%s project=%s prefix=%s", job.id, project_id, request.prefix)
@@ -211,19 +208,19 @@ Possible `status` values:
 async def get_import_status(
     project_id: UUID,
     import_id: UUID,
-    use_case: ImportImagesFromStorageUseCase = Depends(Provide[Container.import_images_use_case]),
+    use_case: GetImportJobUseCase = Depends(Provide[Container.get_import_job_use_case]),
 ):
     """Retrieve the current status of a bulk import job.
 
     Args:
         project_id: The project the import belongs to.
         import_id: The import job identifier.
-        use_case: Injected import use case.
+        use_case: Injected get-import-job use case.
 
     Returns:
         An ImportJobResponse with the current job state.
     """
-    job = use_case.get_job(import_id, project_id)
+    job = await use_case.execute(import_id, project_id)
     return ImportJobResponse(
         import_id=job.id,
         project_id=job.project_id,

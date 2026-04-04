@@ -13,7 +13,7 @@ from ulabel.application.add_labeler_to_project import ProjectNotFound, UserNotFo
 from ulabel.application.create_assignment import LabelerNotInProject, NoImageAvailable
 from ulabel.application.create_project import ProjectNameAlreadyExists, Unauthorized
 from ulabel.application.export_labels import NoLabelsFound
-from ulabel.application.import_images_from_storage import ImportJobNotFound
+from ulabel.domain.import_jobs import ImportJobNotFound
 from ulabel.application.submit_label import (
     AssignmentMismatch,
     ImageNotFound,

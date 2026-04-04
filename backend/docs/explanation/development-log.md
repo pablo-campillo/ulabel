@@ -175,6 +175,20 @@ Chronological record of all features implemented and design decisions made durin
 
 **Design decision**: Used `Provide[Container.config...]` injection (option B) instead of creating a new provider in the container — follows the existing pattern and requires fewer changes.
 
+### Refactor: ImportJob as domain entity + restore execute pattern
+
+**Problem identified**: `ImportImagesFromStorageUseCase` broke two project conventions:
+1. Used `start()`/`run()`/`get_job()` instead of the standard `execute()` pattern used by all other use cases
+2. `ImportJob` was a plain dataclass stored in a module-level `dict` in memory — not a domain entity, not persisted to database, lost on restart
+
+**Design decision**: Promote `ImportJob` to a proper domain entity with database persistence
+- `ImportJob` domain entity in `domain/import_jobs.py` with factory method `create()` and state-transition methods (`mark_progress`, `mark_done`, `mark_failed`)
+- `ImportJobRepository` port with SQLAlchemy implementation (upsert semantics) and in-memory implementation for tests
+- New `import_jobs` table via Alembic migration
+- `ImportImagesFromStorageUseCase` refactored to use `execute()` (creates and persists the job, returns immediately) + `run_import()` (background execution, updates job in DB after each chunk)
+- Polling extracted to a separate `GetImportJobUseCase` with its own `execute()` method
+- **Rationale**: Aligns with the hexagonal architecture (domain entities with ports and adapters), ensures job state survives restarts, and maintains consistency with the `execute` pattern across all use cases. The async background nature of the import does not justify breaking the pattern — the router orchestrates the background task, not the use case
+
 ### Planned refactor: Separate ProjectSummary vs ProjectDetail
 
 **Problem identified**: The `GET /projects` list endpoint resolves labeler usernames by making N individual queries to `UserRepository` from the API layer (`_resolve_labelers`). However:

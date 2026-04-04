@@ -4,7 +4,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from ulabel.application.import_images_from_storage import ImportJobStatus
+from ulabel.domain.import_jobs import ImportJobStatus
 from ulabel.domain.images import ImageStatus
 
 

@@ -6,6 +6,7 @@ from ulabel.api.main import app
 from ulabel.domain.projects import Project
 from ulabel.domain.users import User
 from ulabel.infrastructure.repositories.in_memory_image_repository import InMemoryImageRepository
+from ulabel.infrastructure.repositories.in_memory_import_job_repository import InMemoryImportJobRepository
 from ulabel.infrastructure.repositories.in_memory_project_repository import InMemoryProjectRepository
 from ulabel.infrastructure.storage.fake_storage_service import FakeStorageService
 
@@ -33,11 +34,17 @@ def image_repo():
 
 
 @pytest.fixture
-def client(project, image_repo):
+def import_job_repo():
+    return InMemoryImportJobRepository()
+
+
+@pytest.fixture
+def client(project, image_repo, import_job_repo):
     with (
         app.container.project_repository.override(InMemoryProjectRepository(projects=[project])),
         app.container.image_repository.override(image_repo),
         app.container.storage_service.override(FakeStorageService(objects=STORAGE_OBJECTS)),
+        app.container.import_job_repository.override(import_job_repo),
     ):
         yield TestClient(app)
 
@@ -93,3 +100,12 @@ def test_import_idempotent_does_not_create_duplicates(client, project, image_rep
     keys = [img.storage_key for img in images if img.project_id == project.id]
     assert len(keys) == 3
     assert len(set(keys)) == 3
+
+
+def test_import_job_persisted_in_repository(client, project, import_job_repo):
+    job = _import(client, project, "dataset/train/")
+    job_id = __import__("uuid").UUID(job["import_id"])
+    assert job_id in import_job_repo._jobs
+    persisted = import_job_repo._jobs[job_id]
+    assert persisted.status.value == "done"
+    assert persisted.imported == 3

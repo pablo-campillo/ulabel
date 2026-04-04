@@ -18,6 +18,8 @@ from ulabel.domain.ports.storage_service import StorageService
 class S3StorageService(StorageService):
     """S3-compatible storage service using aioboto3."""
 
+    _MIN_PART_SIZE = 5 * 1024 * 1024  # 5 MB, S3 minimum for non-final parts
+
     def __init__(
         self,
         endpoint: str,
@@ -106,8 +108,6 @@ class S3StorageService(StorageService):
             if metadata:
                 kwargs["Metadata"] = metadata
             await client.put_object(**kwargs)
-
-    _MIN_PART_SIZE = 5 * 1024 * 1024  # 5 MB, S3 minimum for non-final parts
 
     async def upload_file_streaming(
         self,
