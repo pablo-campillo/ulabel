@@ -14,6 +14,7 @@ storage:
   bucket: ulabel
   secure: false
   public_endpoint: "${STORAGE_PUBLIC_ENDPOINT:}"
+  presigned_url_expiry_seconds: 3600
 
 tasks:
   image_assignment_timeout_seconds: 60

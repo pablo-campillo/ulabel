@@ -38,9 +38,6 @@ class ExportResult:
     cache_hit: bool
 
 
-PRESIGNED_URL_EXPIRY = timedelta(hours=1)
-
-
 class ExportLabelsUseCase:
     """Generates and uploads a label export file, returning a presigned download URL.
 
@@ -53,6 +50,7 @@ class ExportLabelsUseCase:
         project_repository: ProjectRepository,
         label_repository: LabelRepository,
         storage_service: StorageService,
+        presigned_url_expiry: timedelta,
     ):
         """Initialize the use case.
 
@@ -60,10 +58,12 @@ class ExportLabelsUseCase:
             project_repository: Repository for project lookups.
             label_repository: Repository for label data retrieval.
             storage_service: Service for file upload and presigned URL generation.
+            presigned_url_expiry: How long presigned download URLs remain valid.
         """
         self._project_repository = project_repository
         self._label_repository = label_repository
         self._storage_service = storage_service
+        self._presigned_url_expiry = presigned_url_expiry
 
     async def execute(self, project_id: UUID, fmt: ExportFormat) -> ExportResult:
         """Export all labels for a project in the specified format.
@@ -92,7 +92,7 @@ class ExportLabelsUseCase:
 
         metadata = await self._storage_service.head_object(storage_key)
         if metadata is not None and metadata.get("label_count") == str(label_count):
-            url = await self._storage_service.get_presigned_url(storage_key, expires_in=PRESIGNED_URL_EXPIRY)
+            url = await self._storage_service.get_presigned_url(storage_key, expires_in=self._presigned_url_expiry)
             return ExportResult(url=url, cache_hit=True)
 
         rows = self._label_repository.get_export_data(project_id)
@@ -111,7 +111,7 @@ class ExportLabelsUseCase:
             metadata={"label_count": str(label_count)},
         )
 
-        url = await self._storage_service.get_presigned_url(storage_key, expires_in=PRESIGNED_URL_EXPIRY)
+        url = await self._storage_service.get_presigned_url(storage_key, expires_in=self._presigned_url_expiry)
         return ExportResult(url=url, cache_hit=False)
 
     @staticmethod

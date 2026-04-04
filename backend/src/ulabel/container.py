@@ -175,6 +175,9 @@ class Container(containers.DeclarativeContainer):
         project_repository=project_repository,
         label_repository=label_repository,
         storage_service=storage_service,
+        presigned_url_expiry=config.storage.presigned_url_expiry_seconds.as_(
+            lambda s: timedelta(seconds=int(s))
+        ),
     )
 
     update_project_use_case = providers.Factory(

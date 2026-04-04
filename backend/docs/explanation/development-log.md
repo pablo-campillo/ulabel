@@ -199,6 +199,14 @@ Chronological record of all features implemented and design decisions made durin
 - **`try/except` with `abort_multipart_upload`**: On any error during streaming, orphaned multipart parts are cleaned up to avoid storage leaks
 - **Metadata preserved**: `label_count` metadata is passed via `create_multipart_upload`, so the caching mechanism (head_object + label_count comparison) works unchanged
 
+### Removed hardcoded PRESIGNED_URL_EXPIRY in favor of config
+
+**Problem**: `PRESIGNED_URL_EXPIRY = timedelta(hours=1)` was hardcoded in `ExportLabelsUseCase`, inconsistent with the established pattern where durations are managed from `config.yml` and injected via `dependency-injector`.
+
+**Solution**: Moved the value to `config.yml` as `storage.presigned_url_expiry_seconds: 3600` and injected it into the use case constructor via the container's `providers.Factory`, using `.as_(lambda s: timedelta(seconds=int(s)))` — the same pattern already used by `expire_images_task`.
+
+**Design decision**: Injected via constructor (not router endpoint) because the presigned URL expiry is an internal concern of the use case, unlike `image_assignment_timeout_seconds` which is used directly in the router.
+
 ---
 
 ## Cross-cutting sessions
