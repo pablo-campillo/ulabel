@@ -58,6 +58,23 @@ class SqlAlchemyUserRepository(UserRepository):
             model = result.scalar_one_or_none()
             return model.to_domain() if model else None
 
+    async def get_by_ids(self, user_ids: set[UUID]) -> list[User]:
+        """Retrieve multiple users by ID in a single query.
+
+        Args:
+            user_ids: The set of user IDs to look up.
+
+        Returns:
+            A list of found domain Users.
+        """
+        if not user_ids:
+            return []
+        async with self._sessionmaker() as session:
+            result = await session.execute(
+                select(UserModel).where(UserModel.id.in_(user_ids))
+            )
+            return [row.to_domain() for row in result.scalars()]
+
     async def search_by_username_prefix(
         self, prefix: str, *, role: str | None = None, limit: int = 10
     ) -> list[User]:

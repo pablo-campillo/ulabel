@@ -6,13 +6,13 @@ import { DailyProgressChart } from '../components/admin/charts/DailyProgressChar
 import { LabelDistributionChart } from '../components/admin/charts/LabelDistributionChart'
 import { LabelerActivityChart } from '../components/admin/charts/LabelerActivityChart'
 import { LabelerLeaderboardChart } from '../components/admin/charts/LabelerLeaderboardChart'
-import { getProjects, getProjectStats, exportProject } from '../api/admin'
-import type { Project, ProjectStats } from '../types/api'
+import { getProject, getProjectStats, exportProject } from '../api/admin'
+import type { ProjectDetail, ProjectStats } from '../types/api'
 
 export function AdminProjectDetailPage() {
   const { projectId } = useParams<{ projectId: string }>()
   const navigate = useNavigate()
-  const [project, setProject] = useState<Project | null>(null)
+  const [project, setProject] = useState<ProjectDetail | null>(null)
   const [stats, setStats] = useState<ProjectStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -23,17 +23,12 @@ export function AdminProjectDetailPage() {
     setLoading(true)
     setError('')
     try {
-      const [projectsRes, statsRes] = await Promise.all([
-        getProjects(100, 0),
+      const [projectRes, statsRes] = await Promise.all([
+        getProject(projectId),
         getProjectStats(projectId),
       ])
-      const found = projectsRes.items.find((p) => p.id === projectId)
-      if (!found) {
-        setError('Project not found')
-      } else {
-        setProject(found)
-        setStats(statsRes)
-      }
+      setProject(projectRes)
+      setStats(statsRes)
     } catch {
       setError('Failed to load project data.')
     } finally {

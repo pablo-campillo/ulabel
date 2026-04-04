@@ -24,6 +24,9 @@ class InMemoryUserRepository(UserRepository):
     async def get_by_id(self, user_id: UUID) -> User | None:
         return self._by_id.get(user_id)
 
+    async def get_by_ids(self, user_ids: set[UUID]) -> list[User]:
+        return [self._by_id[uid] for uid in user_ids if uid in self._by_id]
+
     async def search_by_username_prefix(
         self, prefix: str, *, role: str | None = None, limit: int = 10
     ) -> list[User]:

@@ -4,21 +4,21 @@ import { AdminProjectCard } from '../components/admin/AdminProjectCard'
 import { Pagination } from '../components/admin/Pagination'
 import { FAB } from '../components/admin/FAB'
 import { ProjectFormDialog } from '../components/admin/ProjectFormDialog'
-import { getProjects, getProjectStats } from '../api/admin'
+import { getProjects, getProject, getProjectStats } from '../api/admin'
 import { useDebounce } from '../hooks/useDebounce'
-import type { Project } from '../types/api'
+import type { ProjectSummary, ProjectDetail } from '../types/api'
 
 const PAGE_SIZE = 12
 
 export function AdminDashboardPage() {
-  const [projects, setProjects] = useState<Project[]>([])
+  const [projects, setProjects] = useState<ProjectSummary[]>([])
   const [completionMap, setCompletionMap] = useState<Record<string, number>>({})
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [showCreate, setShowCreate] = useState(false)
-  const [editProject, setEditProject] = useState<Project | null>(null)
+  const [editProject, setEditProject] = useState<ProjectDetail | null>(null)
   const [search, setSearch] = useState('')
   const debouncedSearch = useDebounce(search, 300)
 
@@ -65,6 +65,15 @@ export function AdminDashboardPage() {
   useEffect(() => {
     setPage(1)
   }, [debouncedSearch])
+
+  const handleEdit = async (summary: ProjectSummary) => {
+    try {
+      const detail = await getProject(summary.id)
+      setEditProject(detail)
+    } catch {
+      setError('Failed to load project details.')
+    }
+  }
 
   const handleDialogClose = (refreshNeeded?: boolean) => {
     setShowCreate(false)
@@ -135,7 +144,7 @@ export function AdminDashboardPage() {
                 <AdminProjectCard
                   key={project.id}
                   project={project}
-                  onEdit={setEditProject}
+                  onEdit={handleEdit}
                   completionPct={completionMap[project.id] ?? 0}
                 />
               ))}

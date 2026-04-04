@@ -5,10 +5,10 @@ import { getProjectStats } from '../api/stats'
 import { deriveLabelerStats } from '../lib/stats'
 import { Header } from '../components/Header'
 import { ProjectCard } from '../components/ProjectCard'
-import type { Project } from '../types/api'
+import type { ProjectSummary } from '../types/api'
 
 interface ProjectWithStats {
-  project: Project
+  project: ProjectSummary
   count: number
   ranking: number
   totalLabelers: number

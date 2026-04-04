@@ -1,7 +1,7 @@
 """Router for project management endpoints.
 
 Provides CRUD operations for labelling projects, including creation,
-listing with pagination, updating, and adding labelers to projects.
+listing with pagination, detail retrieval, updating, and adding labelers.
 """
 
 import logging
@@ -14,68 +14,54 @@ from ulabel.api.schemas.projects import (
     AddLabelerRequest,
     CreateProjectRequest,
     LabelerInfo,
-    PaginatedProjectResponse,
-    ProjectResponse,
+    PaginatedProjectSummaryResponse,
+    ProjectDetail,
+    ProjectSummary,
     UpdateProjectRequest,
 )
 from ulabel.application.add_labeler_to_project import AddLabelerToProjectUseCase
 from ulabel.application.create_project import CreateProjectUseCase
+from ulabel.application.dtos import ProjectWithLabelers
+from ulabel.application.get_project import GetProjectUseCase
 from ulabel.application.list_projects import ListProjectsUseCase
 from ulabel.application.update_project import UpdateProjectUseCase
 from ulabel.container import Container
 from ulabel.domain.projects import Project
-from ulabel.domain.ports.user_repository import UserRepository
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
 
-async def _resolve_labelers(project: Project, user_repo: UserRepository) -> list[LabelerInfo]:
-    """Resolve labeler IDs to LabelerInfo objects with usernames.
-
-    Args:
-        project: The project whose labelers to resolve.
-        user_repo: Repository for looking up user details.
-
-    Returns:
-        A list of LabelerInfo with resolved usernames.
-    """
-    labelers: list[LabelerInfo] = []
-    for lid in project.labeler_ids:
-        user = await user_repo.get_by_id(lid)
-        if user:
-            labelers.append(LabelerInfo(id=user.id, username=user.username))
-        else:
-            labelers.append(LabelerInfo(id=lid, username=str(lid)))
-    return labelers
-
-
-async def _to_response(project: Project, user_repo: UserRepository) -> ProjectResponse:
-    """Convert a domain Project to a ProjectResponse with resolved labelers.
-
-    Args:
-        project: The domain project entity.
-        user_repo: Repository for looking up user details.
-
-    Returns:
-        A fully populated ProjectResponse.
-    """
-    labelers = await _resolve_labelers(project, user_repo)
-    return ProjectResponse(
+def _to_summary(project: Project) -> ProjectSummary:
+    """Convert a domain Project to a ProjectSummary."""
+    return ProjectSummary(
         id=project.id,
         owner_id=project.owner.id,
         name=project.name,
         description=project.description,
         labels=project.labels,
-        labelers=labelers,
+        labeler_count=len(project.labeler_ids),
         created_at=project.created_at,
+    )
+
+
+def _to_detail(result: ProjectWithLabelers) -> ProjectDetail:
+    """Convert a ProjectWithLabelers DTO to a ProjectDetail response."""
+    return ProjectDetail(
+        id=result.project.id,
+        owner_id=result.project.owner.id,
+        name=result.project.name,
+        description=result.project.description,
+        labels=result.project.labels,
+        labelers=[LabelerInfo(id=l.id, username=l.username) for l in result.labelers],
+        created_at=result.project.created_at,
     )
 
 
 @router.get(
     "",
-    response_model=PaginatedProjectResponse,
+    response_model=PaginatedProjectSummaryResponse,
     summary="List all projects",
     description="Returns a paginated list of all projects, ordered by creation date (newest first).",
     responses={200: {"description": "Paginated list of projects."}},
@@ -86,7 +72,6 @@ async def list_projects(
     offset: int = Query(default=0, ge=0, description="Number of items to skip."),
     name: str | None = Query(default=None, description="Filter projects by name (case-insensitive, contains match)."),
     use_case: ListProjectsUseCase = Depends(Provide[Container.list_projects_use_case]),
-    user_repo: UserRepository = Depends(Provide[Container.user_repository]),
 ):
     """List all projects with pagination and optional name filtering.
 
@@ -95,14 +80,13 @@ async def list_projects(
         offset: Number of items to skip.
         name: Optional name filter (case-insensitive contains match).
         use_case: Injected list-projects use case.
-        user_repo: Injected user repository for resolving labeler names.
 
     Returns:
-        A PaginatedProjectResponse with project items and total count.
+        A PaginatedProjectSummaryResponse with project summaries and total count.
     """
     result = await use_case.execute(limit=limit, offset=offset, name=name)
-    items = [await _to_response(p, user_repo) for p in result.items]
-    return PaginatedProjectResponse(
+    items = [_to_summary(p) for p in result.items]
+    return PaginatedProjectSummaryResponse(
         items=items,
         total=result.total,
         limit=limit,
@@ -110,9 +94,40 @@ async def list_projects(
     )
 
 
+@router.get(
+    "/{project_id}",
+    response_model=ProjectDetail,
+    summary="Get project detail",
+    description="Returns a single project with fully resolved labeler information.",
+    responses={
+        200: {"description": "Project detail with resolved labelers."},
+        404: {
+            "description": "Project not found.",
+            "content": {"application/json": {"example": {"error": {"code": "PROJECT_NOT_FOUND", "message": "Project not found", "details": []}}}},
+        },
+    },
+)
+@inject
+async def get_project(
+    project_id: UUID,
+    use_case: GetProjectUseCase = Depends(Provide[Container.get_project_use_case]),
+):
+    """Retrieve a single project with resolved labeler details.
+
+    Args:
+        project_id: The project's unique identifier.
+        use_case: Injected get-project use case.
+
+    Returns:
+        A ProjectDetail with resolved labeler usernames.
+    """
+    result = await use_case.execute(project_id=project_id)
+    return _to_detail(result)
+
+
 @router.post(
     "",
-    response_model=ProjectResponse,
+    response_model=ProjectDetail,
     status_code=status.HTTP_201_CREATED,
     summary="Create project",
     description="""
@@ -142,17 +157,17 @@ changed after the project is created.
 async def create_project(
     request: CreateProjectRequest,
     use_case: CreateProjectUseCase = Depends(Provide[Container.create_project_use_case]),
-    user_repo: UserRepository = Depends(Provide[Container.user_repository]),
+    get_project_use_case: GetProjectUseCase = Depends(Provide[Container.get_project_use_case]),
 ):
     """Create a new labelling project.
 
     Args:
         request: Project creation parameters including owner, name, and labels.
         use_case: Injected create-project use case.
-        user_repo: Injected user repository for resolving labeler names.
+        get_project_use_case: Injected get-project use case for response building.
 
     Returns:
-        A ProjectResponse with the newly created project details.
+        A ProjectDetail with the newly created project details.
     """
     project = await use_case.execute(
         owner_id=request.owner_id,
@@ -161,12 +176,13 @@ async def create_project(
         labels=request.labels,
     )
     logger.info("Project created: id=%s name=%s owner=%s labels=%d", project.id, request.name, request.owner_id, len(request.labels))
-    return await _to_response(project, user_repo)
+    result = await get_project_use_case.execute(project_id=project.id)
+    return _to_detail(result)
 
 
 @router.patch(
     "/{project_id}",
-    response_model=ProjectResponse,
+    response_model=ProjectDetail,
     summary="Update project",
     description="""
 Updates a project's name, description, and/or labeler assignments.
@@ -200,7 +216,7 @@ async def update_project(
     project_id: UUID,
     request: UpdateProjectRequest,
     use_case: UpdateProjectUseCase = Depends(Provide[Container.update_project_use_case]),
-    user_repo: UserRepository = Depends(Provide[Container.user_repository]),
+    get_project_use_case: GetProjectUseCase = Depends(Provide[Container.get_project_use_case]),
 ):
     """Update a project's name, description, or labeler assignments.
 
@@ -208,24 +224,25 @@ async def update_project(
         project_id: The project to update.
         request: Fields to update (only provided fields are modified).
         use_case: Injected update-project use case.
-        user_repo: Injected user repository for resolving labeler names.
+        get_project_use_case: Injected get-project use case for response building.
 
     Returns:
-        A ProjectResponse with the updated project details.
+        A ProjectDetail with the updated project details.
     """
-    project = await use_case.execute(
+    await use_case.execute(
         project_id=project_id,
         name=request.name,
         description=request.description,
         labeler_ids=set(request.labeler_ids) if request.labeler_ids is not None else None,
     )
     logger.info("Project updated: id=%s", project_id)
-    return await _to_response(project, user_repo)
+    result = await get_project_use_case.execute(project_id=project_id)
+    return _to_detail(result)
 
 
 @router.post(
     "/{project_id}/labelers",
-    response_model=ProjectResponse,
+    response_model=ProjectDetail,
     summary="Add labeler to project",
     description="""
 Assigns a user with the `labeler` role to an existing project. From that point on,
@@ -258,7 +275,7 @@ async def add_labeler(
     project_id: UUID,
     request: AddLabelerRequest,
     use_case: AddLabelerToProjectUseCase = Depends(Provide[Container.add_labeler_to_project_use_case]),
-    user_repo: UserRepository = Depends(Provide[Container.user_repository]),
+    get_project_use_case: GetProjectUseCase = Depends(Provide[Container.get_project_use_case]),
 ):
     """Add a labeler to an existing project.
 
@@ -266,11 +283,12 @@ async def add_labeler(
         project_id: The project to add the labeler to.
         request: Contains the labeler user ID.
         use_case: Injected add-labeler use case.
-        user_repo: Injected user repository for resolving labeler names.
+        get_project_use_case: Injected get-project use case for response building.
 
     Returns:
-        A ProjectResponse with the updated project details.
+        A ProjectDetail with the updated project details.
     """
-    project = await use_case.execute(project_id=project_id, labeler_id=request.labeler_id)
+    await use_case.execute(project_id=project_id, labeler_id=request.labeler_id)
     logger.info("Labeler added to project: project=%s labeler=%s", project_id, request.labeler_id)
-    return await _to_response(project, user_repo)
+    result = await get_project_use_case.execute(project_id=project_id)
+    return _to_detail(result)

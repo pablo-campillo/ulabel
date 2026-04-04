@@ -1,6 +1,7 @@
 import { request, requestMultipart } from './client'
 import type {
-  Project,
+  ProjectSummary,
+  ProjectDetail,
   PaginatedResponse,
   CreateProjectPayload,
   UpdateProjectPayload,
@@ -13,18 +14,22 @@ import type {
 export function getProjects(limit = 20, offset = 0, name?: string) {
   const params = new URLSearchParams({ limit: String(limit), offset: String(offset) })
   if (name) params.set('name', name)
-  return request<PaginatedResponse<Project>>(`/projects?${params}`)
+  return request<PaginatedResponse<ProjectSummary>>(`/projects?${params}`)
+}
+
+export function getProject(projectId: string) {
+  return request<ProjectDetail>(`/projects/${projectId}`)
 }
 
 export function createProject(payload: CreateProjectPayload) {
-  return request<Project>('/projects', {
+  return request<ProjectDetail>('/projects', {
     method: 'POST',
     body: JSON.stringify(payload),
   })
 }
 
 export function updateProject(projectId: string, payload: UpdateProjectPayload) {
-  return request<Project>(`/projects/${projectId}`, {
+  return request<ProjectDetail>(`/projects/${projectId}`, {
     method: 'PATCH',
     body: JSON.stringify(payload),
   })

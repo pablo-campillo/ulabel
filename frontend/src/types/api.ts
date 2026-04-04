@@ -9,7 +9,17 @@ export interface LabelerInfo {
   username: string
 }
 
-export interface Project {
+export interface ProjectSummary {
+  id: string
+  owner_id: string
+  name: string
+  description: string
+  labels: string[]
+  labeler_count: number
+  created_at: string
+}
+
+export interface ProjectDetail {
   id: string
   owner_id: string
   name: string

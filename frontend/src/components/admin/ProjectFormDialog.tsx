@@ -5,10 +5,10 @@ import { createProject, updateProject } from '../../api/admin'
 import { TagInput } from './TagInput'
 import { LabelerAutocomplete } from './LabelerAutocomplete'
 import { ImageUploadSection } from './ImageUploadSection'
-import type { Project, LabelerAutocompleteItem } from '../../types/api'
+import type { ProjectDetail, LabelerAutocompleteItem } from '../../types/api'
 
 interface Props {
-  project?: Project
+  project?: ProjectDetail
   onClose: (refreshNeeded?: boolean) => void
 }
 

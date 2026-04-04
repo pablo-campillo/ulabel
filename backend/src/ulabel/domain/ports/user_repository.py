@@ -34,6 +34,18 @@ class UserRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    async def get_by_ids(self, user_ids: set[UUID]) -> list[User]:
+        """Retrieve multiple users by their unique identifiers in a single query.
+
+        Args:
+            user_ids: The set of user IDs to look up.
+
+        Returns:
+            A list of found users. Missing IDs are silently skipped.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
     async def search_by_username_prefix(
         self, prefix: str, *, role: str | None = None, limit: int = 10
     ) -> list[User]:

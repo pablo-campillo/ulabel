@@ -145,6 +145,30 @@ Chronological record of all features implemented and design decisions made durin
 
 ---
 
+## Day 6 - April 4, 2026: Project listing redesign
+
+### Planned refactor: Separate ProjectSummary vs ProjectDetail
+
+**Problem identified**: The `GET /projects` list endpoint resolves labeler usernames by making N individual queries to `UserRepository` from the API layer (`_resolve_labelers`). However:
+
+- The admin list frontend only uses `labelers.length` (count) — never the usernames
+- The labeler list frontend doesn't show labelers at all
+- Only the admin detail view needs resolved labeler usernames
+- No `GET /projects/{id}` endpoint exists — the detail page fetches ALL projects (`getProjects(100, 0)`) and filters client-side
+- Labeler resolution happens in the API layer (router) instead of the use case, violating the hexagonal architecture
+
+**Design decisions**:
+
+- **Two response schemas**: `ProjectSummary` (with `labeler_count: int`) for listings and `ProjectDetail` (with `labelers: list[LabelerInfo]`) for detail/mutation responses
+- **New `GET /projects/{id}` endpoint**: Returns `ProjectDetail` with resolved labelers, eliminates the client-side fetch-all-and-filter antipattern
+- **Batch user resolution**: New `UserRepository.get_by_ids(ids: set[UUID]) -> list[User]` method with a single `WHERE id IN (...)` query instead of N individual lookups
+- **New `GetProjectUseCase`**: Centralizes labeler resolution in the application layer (not the API router), receiving both `ProjectRepository` and `UserRepository`
+- **Application DTOs**: `ProjectWithLabelers` dataclass in the application layer to carry the resolved data without polluting the domain model
+
+**Rationale**: The list endpoint was doing unnecessary work (resolving usernames nobody displays) and the resolution was architecturally misplaced (API layer calling repositories directly). The summary/detail split follows the principle of not fetching data you don't need, and moving business logic to the application layer respects the hexagonal architecture boundaries.
+
+---
+
 ## Cross-cutting sessions
 
 ### Unified make bootstrap and Docker Compose
@@ -173,3 +197,6 @@ Chronological record of all features implemented and design decisions made durin
 | Containerized Makefile targets | Only Docker required on host, reproducible environment |
 | Docker Compose `include:` | Each service with its own independent compose, clean composition |
 | UUID v4 as implicit shuffle | No need for explicit randomization for image ordering |
+| ProjectSummary vs ProjectDetail schemas | Don't fetch data you don't need; list vs detail have different requirements |
+| Batch `get_by_ids` in UserRepository | Single `WHERE IN` query instead of N individual lookups |
+| Labeler resolution in use case, not API | Hexagonal: business logic belongs in application layer, not routers |

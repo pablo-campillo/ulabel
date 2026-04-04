@@ -1,10 +1,10 @@
 import { create } from 'zustand'
-import type { Project, AssignedImage, SubmitLabelResult } from '../types/api'
+import type { ProjectSummarySummary, AssignedImage, SubmitLabelResult } from '../types/api'
 
 export type LabelingPhase = 'idle' | 'labeling' | 'submitted' | 'no_more_images'
 
 interface LabelingState {
-  project: Project | null
+  project: ProjectSummary | null
   image: AssignedImage | null
   labelCount: number
   ranking: number
@@ -12,7 +12,7 @@ interface LabelingState {
   previousRanking: number | null
   phase: LabelingPhase
 
-  setProject: (p: Project) => void
+  setProjectSummary: (p: ProjectSummary) => void
   setImage: (img: AssignedImage | null) => void
   setInitialStats: (count: number, ranking: number, totalLabelers: number) => void
   onLabelSubmitted: (result: SubmitLabelResult) => void
@@ -29,7 +29,7 @@ export const useLabelingStore = create<LabelingState>()((set, get) => ({
   previousRanking: null,
   phase: 'idle',
 
-  setProject: (project) => set({ project }),
+  setProjectSummary: (project) => set({ project }),
 
   setImage: (image) => set({ image }),
 

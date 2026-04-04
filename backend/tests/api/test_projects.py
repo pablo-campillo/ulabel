@@ -117,6 +117,45 @@ def test_add_labeler_returns_403_when_user_is_not_labeler(client_with_project, p
 
 # --- list projects ---
 
+def test_list_projects_returns_labeler_count(admin, labeler):
+    p = Project.create(id=uuid4(), owner=admin, name="P1", description="d", labels={"a"})
+    p.add_labeler(labeler.id)
+    user_ctx, project_ctx, test_client = make_client(users=[admin, labeler], projects=[p])
+    with user_ctx, project_ctx:
+        response = test_client.get("/v1/projects")
+    body = response.json()
+    assert body["items"][0]["labeler_count"] == 1
+    assert "labelers" not in body["items"][0]
+
+
+# --- get project detail ---
+
+def test_get_project_returns_200(client_with_project, project):
+    response = client_with_project.get(f"/v1/projects/{project.id}")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["name"] == "My Project"
+    assert body["description"] == "desc"
+    assert "labelers" in body
+
+
+def test_get_project_returns_resolved_labelers(admin, labeler):
+    p = Project.create(id=uuid4(), owner=admin, name="P1", description="d", labels={"a"})
+    p.add_labeler(labeler.id)
+    user_ctx, project_ctx, test_client = make_client(users=[admin, labeler], projects=[p])
+    with user_ctx, project_ctx:
+        response = test_client.get(f"/v1/projects/{p.id}")
+    body = response.json()
+    assert len(body["labelers"]) == 1
+    assert body["labelers"][0]["id"] == str(labeler.id)
+    assert body["labelers"][0]["username"] == "labeler"
+
+
+def test_get_project_returns_404_when_not_found(client):
+    response = client.get(f"/v1/projects/{uuid4()}")
+    assert response.status_code == 404
+
+
 # --- update project ---
 
 def test_update_project_name_returns_200(client_with_project, project):

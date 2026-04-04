@@ -64,15 +64,40 @@ class LabelerInfo(BaseModel):
     username: str = Field(..., description="Labeler username.")
 
 
-class ProjectResponse(BaseModel):
-    """Response body for a project resource."""
+class ProjectSummary(BaseModel):
+    """Lightweight project representation for list endpoints."""
 
     id: UUID = Field(..., description="Unique project identifier.")
     owner_id: UUID = Field(..., description="ID of the admin owner.")
     name: str = Field(..., description="Project name.")
     description: str = Field(..., description="Project description.")
     labels: set[str] = Field(..., description="Labels available in the project.")
-    labelers: list[LabelerInfo] = Field(default_factory=list, description="Assigned labelers.")
+    labeler_count: int = Field(..., description="Number of assigned labelers.")
+    created_at: datetime = Field(..., description="Timestamp when the project was created.")
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "id": "789e0123-e89b-12d3-a456-426614174002",
+                "owner_id": "123e4567-e89b-12d3-a456-426614174000",
+                "name": "Vehicle classification",
+                "description": "Annotate urban traffic images indicating the type of vehicle present.",
+                "labels": ["car", "truck", "motorcycle", "bicycle"],
+                "labeler_count": 3,
+            }
+        }
+    }
+
+
+class ProjectDetail(BaseModel):
+    """Full project representation with resolved labeler details."""
+
+    id: UUID = Field(..., description="Unique project identifier.")
+    owner_id: UUID = Field(..., description="ID of the admin owner.")
+    name: str = Field(..., description="Project name.")
+    description: str = Field(..., description="Project description.")
+    labels: set[str] = Field(..., description="Labels available in the project.")
+    labelers: list[LabelerInfo] = Field(default_factory=list, description="Assigned labelers with resolved usernames.")
     created_at: datetime = Field(..., description="Timestamp when the project was created.")
 
     model_config = {
@@ -89,7 +114,7 @@ class ProjectResponse(BaseModel):
     }
 
 
-class PaginatedProjectResponse(PaginatedResponse[ProjectResponse]):
-    """Paginated response containing a list of projects."""
+class PaginatedProjectSummaryResponse(PaginatedResponse[ProjectSummary]):
+    """Paginated response containing a list of project summaries."""
 
     pass

@@ -1,6 +1,6 @@
 import { request } from './client'
-import type { Project } from '../types/api'
+import type { ProjectSummary } from '../types/api'
 
-export function getLabelerProjects(labelerId: string): Promise<Project[]> {
-  return request<Project[]>(`/labelers/${labelerId}/projects`)
+export function getLabelerProjects(labelerId: string): Promise<ProjectSummary[]> {
+  return request<ProjectSummary[]>(`/labelers/${labelerId}/projects`)
 }

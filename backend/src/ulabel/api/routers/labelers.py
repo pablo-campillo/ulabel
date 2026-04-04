@@ -10,7 +10,7 @@ from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 
-from ulabel.api.schemas.projects import ProjectResponse
+from ulabel.api.schemas.projects import ProjectSummary
 from ulabel.application.get_labeler_projects import GetLabelerProjectsUseCase
 from ulabel.application.search_labelers import SearchLabelersUseCase
 from ulabel.container import Container
@@ -53,7 +53,7 @@ async def autocomplete_labelers(
 
 @router.get(
     "/{labeler_id}/projects",
-    response_model=list[ProjectResponse],
+    response_model=list[ProjectSummary],
     summary="List labeler projects",
     description="""
 Returns all projects the labeler is assigned to.
@@ -88,16 +88,17 @@ async def get_labeler_projects(
         use_case: Injected get-labeler-projects use case.
 
     Returns:
-        A list of ProjectResponse objects for the labeler's projects.
+        A list of ProjectSummary objects for the labeler's projects.
     """
     projects = await use_case.execute(labeler_id=labeler_id)
     return [
-        ProjectResponse(
+        ProjectSummary(
             id=p.id,
             owner_id=p.owner.id,
             name=p.name,
             description=p.description,
             labels=p.labels,
+            labeler_count=len(p.labeler_ids),
             created_at=p.created_at,
         )
         for p in projects
