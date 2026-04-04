@@ -44,6 +44,25 @@ class ImageRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    async def assign_next_pending(
+        self, project_id: UUID, labeler_id: UUID, assigned_at: datetime
+    ) -> Image | None:
+        """Atomically claim the next pending image and assign it to a labeler.
+
+        Selects the next pending image and transitions it to IN_PROGRESS
+        within a single transaction to prevent race conditions.
+
+        Args:
+            project_id: The project to search within.
+            labeler_id: The labeler to assign the image to.
+            assigned_at: The assignment timestamp.
+
+        Returns:
+            The assigned image, or None if no pending images exist.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
     async def get_expired_in_progress(self, cutoff: datetime) -> list[Image]:
         """Retrieve all in-progress images assigned before the cutoff time.
 

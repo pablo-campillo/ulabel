@@ -82,3 +82,36 @@ async def test_assignment_id_is_persisted(repo, pending_image):
     all_expired = await repo.get_expired_in_progress(NOW + timedelta(hours=1))
     found = next(i for i in all_expired if i.id == pending_image.id)
     assert found.assignment_id == pending_image.assignment_id
+
+
+async def test_assign_next_pending_returns_assigned_image(repo, pending_image, project):
+    labeler_id = uuid4()
+    image = await repo.assign_next_pending(project.id, labeler_id, NOW)
+    assert image is not None
+    assert image.id == pending_image.id
+    assert image.labeler_id == labeler_id
+    assert image.status == ImageStatus.IN_PROGRESS
+    assert image.assigned_at == NOW
+    assert image.assignment_id is not None
+
+
+async def test_assign_next_pending_returns_none_when_empty(repo, project):
+    assert await repo.assign_next_pending(project.id, uuid4(), NOW) is None
+
+
+async def test_assign_next_pending_concurrent_single_image(sessionmaker, pending_image, project):
+    """Two concurrent assign_next_pending on the same image: only one wins."""
+    import asyncio
+
+    repo1 = SqlAlchemyImageRepository(sessionmaker)
+    repo2 = SqlAlchemyImageRepository(sessionmaker)
+    labeler_a, labeler_b = uuid4(), uuid4()
+
+    results = await asyncio.gather(
+        repo1.assign_next_pending(project.id, labeler_a, NOW),
+        repo2.assign_next_pending(project.id, labeler_b, NOW),
+    )
+
+    assigned = [r for r in results if r is not None]
+    assert len(assigned) == 1
+    assert assigned[0].id == pending_image.id

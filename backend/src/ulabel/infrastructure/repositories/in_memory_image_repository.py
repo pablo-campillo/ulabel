@@ -32,6 +32,15 @@ class InMemoryImageRepository(ImageRepository):
         pending.sort(key=lambda i: i.id)
         return pending[0] if pending else None
 
+    async def assign_next_pending(
+        self, project_id: UUID, labeler_id: UUID, assigned_at: datetime
+    ) -> Image | None:
+        image = await self.get_next_pending(project_id)
+        if image is None:
+            return None
+        image.assign(labeler_id=labeler_id, assigned_at=assigned_at)
+        return image
+
     async def get_expired_in_progress(self, cutoff: datetime) -> list[Image]:
         return [
             i for i in self._images.values()

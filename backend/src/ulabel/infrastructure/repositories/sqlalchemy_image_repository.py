@@ -100,6 +100,63 @@ class SqlAlchemyImageRepository(ImageRepository):
             model = result.scalar_one_or_none()
             return model.to_domain() if model else None
 
+    async def assign_next_pending(
+        self, project_id: UUID, labeler_id: UUID, assigned_at: datetime
+    ) -> Image | None:
+        """Atomically claim the next pending image within a single transaction.
+
+        Uses ``SELECT ... FOR UPDATE SKIP LOCKED`` followed by an update,
+        all within the same session, so the row lock is held until commit.
+
+        Args:
+            project_id: The project to find a pending image in.
+            labeler_id: The labeler to assign the image to.
+            assigned_at: The assignment timestamp.
+
+        Returns:
+            The assigned Image, or None if no pending images are available.
+        """
+        async with self._sessionmaker() as session:
+            result = await session.execute(
+                select(ImageModel)
+                .where(
+                    ImageModel.project_id == project_id,
+                    ImageModel.status == ImageStatus.PENDING.value,
+                )
+                .order_by(ImageModel.id)
+                .limit(1)
+                .with_for_update(skip_locked=True)
+            )
+            model = result.scalar_one_or_none()
+            if model is None:
+                return None
+            image = model.to_domain()
+            image.assign(labeler_id=labeler_id, assigned_at=assigned_at)
+            stmt = (
+                insert(ImageModel)
+                .values(
+                    id=image.id,
+                    project_id=image.project_id,
+                    storage_key=image.storage_key,
+                    status=image.status.value,
+                    labeler_id=image.labeler_id,
+                    assigned_at=image.assigned_at,
+                    assignment_id=image.assignment_id,
+                )
+                .on_conflict_do_update(
+                    index_elements=["id"],
+                    set_={
+                        "status": image.status.value,
+                        "labeler_id": image.labeler_id,
+                        "assigned_at": image.assigned_at,
+                        "assignment_id": image.assignment_id,
+                    },
+                )
+            )
+            await session.execute(stmt)
+            await session.commit()
+            return image
+
     async def get_expired_in_progress(self, cutoff: datetime) -> list[Image]:
         """Find all in-progress images assigned before the cutoff time.
 

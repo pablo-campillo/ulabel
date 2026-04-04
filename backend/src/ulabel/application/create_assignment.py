@@ -68,10 +68,11 @@ class CreateAssignmentUseCase:
         if labeler_id not in project.labeler_ids:
             raise LabelerNotInProject("Labeler is not in this project")
 
-        image = await self.image_repository.get_next_pending(project_id)
+        image = await self.image_repository.assign_next_pending(
+            project_id=project_id,
+            labeler_id=labeler_id,
+            assigned_at=self.now(),
+        )
         if image is None:
             raise NoImageAvailable("No pending images available")
-
-        image.assign(labeler_id=labeler_id, assigned_at=self.now())
-        await self.image_repository.save(image)
         return image

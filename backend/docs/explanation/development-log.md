@@ -147,6 +147,15 @@ Chronological record of all features implemented and design decisions made durin
 
 ## Day 6 - April 4, 2026: Project listing redesign
 
+### Fix: Race condition in CreateAssignmentUseCase
+
+**Bug identified**: `CreateAssignmentUseCase` called `get_next_pending()` and `save()` in **separate database sessions**. The `FOR UPDATE SKIP LOCKED` lock acquired during `get_next_pending` was released when its session closed, before `save` opened a new session. In the gap between the two transactions, a concurrent request could select and assign the same image to a different labeler.
+
+**Design decision**: Atomic `assign_next_pending` repository method instead of full Unit of Work pattern
+- New `ImageRepository.assign_next_pending(project_id, labeler_id, assigned_at)` method that performs SELECT FOR UPDATE SKIP LOCKED + domain mutation + UPDATE within a single transaction
+- The use case now calls one method instead of three (`get_next_pending` + `image.assign()` + `save`)
+- **Rationale**: Only one confirmed race condition. A full Unit of Work would touch 20+ files across all repositories and use cases. The atomic method is surgically targeted (5 files), does not block a future UoW migration, and `assign_next_pending` is a legitimate domain operation ("atomically claim the next available image")
+
 ### Planned refactor: Separate ProjectSummary vs ProjectDetail
 
 **Problem identified**: The `GET /projects` list endpoint resolves labeler usernames by making N individual queries to `UserRepository` from the API layer (`_resolve_labelers`). However:
