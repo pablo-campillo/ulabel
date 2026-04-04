@@ -41,6 +41,12 @@ class InMemoryImageRepository(ImageRepository):
         image.assign(labeler_id=labeler_id, assigned_at=assigned_at)
         return image
 
+    async def expire_in_progress(self, cutoff: datetime) -> list[Image]:
+        expired = await self.get_expired_in_progress(cutoff)
+        for image in expired:
+            image.expire()
+        return expired
+
     async def get_expired_in_progress(self, cutoff: datetime) -> list[Image]:
         return [
             i for i in self._images.values()

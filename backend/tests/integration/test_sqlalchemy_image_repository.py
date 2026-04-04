@@ -99,6 +99,38 @@ async def test_assign_next_pending_returns_none_when_empty(repo, project):
     assert await repo.assign_next_pending(project.id, uuid4(), NOW) is None
 
 
+async def test_expire_in_progress_resets_to_pending(repo, pending_image):
+    old_time = NOW - timedelta(hours=2)
+    pending_image.assign(labeler_id=uuid4(), assigned_at=old_time)
+    await repo.save(pending_image)
+
+    cutoff = NOW - timedelta(minutes=30)
+    expired = await repo.expire_in_progress(cutoff)
+
+    assert len(expired) == 1
+    assert expired[0].id == pending_image.id
+    assert expired[0].status == ImageStatus.PENDING
+    assert expired[0].labeler_id is None
+    assert expired[0].assigned_at is None
+    assert expired[0].assignment_id is None
+
+    found = await repo.get_by_id(pending_image.id)
+    assert found.status == ImageStatus.PENDING
+
+
+async def test_expire_in_progress_excludes_recent(repo, pending_image):
+    recent_time = NOW - timedelta(minutes=10)
+    pending_image.assign(labeler_id=uuid4(), assigned_at=recent_time)
+    await repo.save(pending_image)
+
+    cutoff = NOW - timedelta(minutes=30)
+    expired = await repo.expire_in_progress(cutoff)
+    assert len(expired) == 0
+
+    found = await repo.get_by_id(pending_image.id)
+    assert found.status == ImageStatus.IN_PROGRESS
+
+
 async def test_assign_next_pending_concurrent_single_image(sessionmaker, pending_image, project):
     """Two concurrent assign_next_pending on the same image: only one wins."""
     import asyncio

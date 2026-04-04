@@ -45,9 +45,6 @@ class ExpireImagesTask:
     async def tick(self) -> None:
         """Execute a single expiration cycle, expiring all overdue images."""
         cutoff = self._now() - self._timeout
-        expired = await self._image_repository.get_expired_in_progress(cutoff)
-        for image in expired:
-            image.expire()
-            await self._image_repository.save(image)
+        expired = await self._image_repository.expire_in_progress(cutoff)
         if expired:
             logger.info("Expired %d stale assignments", len(expired))

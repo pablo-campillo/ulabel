@@ -157,6 +157,60 @@ class SqlAlchemyImageRepository(ImageRepository):
             await session.commit()
             return image
 
+    async def expire_in_progress(self, cutoff: datetime) -> list[Image]:
+        """Atomically expire stale in-progress images within a single transaction.
+
+        Uses ``SELECT ... FOR UPDATE SKIP LOCKED`` to lock rows, then
+        resets each to PENDING via upsert, all within the same session.
+
+        Args:
+            cutoff: Images assigned before this time are considered expired.
+
+        Returns:
+            A list of images that were expired.
+        """
+        async with self._sessionmaker() as session:
+            result = await session.execute(
+                select(ImageModel)
+                .where(
+                    ImageModel.status == ImageStatus.IN_PROGRESS.value,
+                    ImageModel.assigned_at < cutoff,
+                )
+                .with_for_update(skip_locked=True)
+            )
+            models = list(result.scalars())
+            if not models:
+                return []
+            expired: list[Image] = []
+            for model in models:
+                image = model.to_domain()
+                image.expire()
+                stmt = (
+                    insert(ImageModel)
+                    .values(
+                        id=image.id,
+                        project_id=image.project_id,
+                        storage_key=image.storage_key,
+                        status=image.status.value,
+                        labeler_id=image.labeler_id,
+                        assigned_at=image.assigned_at,
+                        assignment_id=image.assignment_id,
+                    )
+                    .on_conflict_do_update(
+                        index_elements=["id"],
+                        set_={
+                            "status": image.status.value,
+                            "labeler_id": image.labeler_id,
+                            "assigned_at": image.assigned_at,
+                            "assignment_id": image.assignment_id,
+                        },
+                    )
+                )
+                await session.execute(stmt)
+                expired.append(image)
+            await session.commit()
+            return expired
+
     async def get_expired_in_progress(self, cutoff: datetime) -> list[Image]:
         """Find all in-progress images assigned before the cutoff time.
 

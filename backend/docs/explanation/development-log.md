@@ -156,6 +156,17 @@ Chronological record of all features implemented and design decisions made durin
 - The use case now calls one method instead of three (`get_next_pending` + `image.assign()` + `save`)
 - **Rationale**: Only one confirmed race condition. A full Unit of Work would touch 20+ files across all repositories and use cases. The atomic method is surgically targeted (5 files), does not block a future UoW migration, and `assign_next_pending` is a legitimate domain operation ("atomically claim the next available image")
 
+### Fix: Race condition in ExpireImagesTask
+
+**Bug identified**: `ExpireImagesTask.tick()` had a classic read-modify-write race condition. It called `get_expired_in_progress()` (a simple SELECT without row locking), mutated images in memory with `image.expire()`, and saved each one in a **separate transaction** via `save()`. Between the read and write, a concurrent `SubmitLabelUseCase` could complete the image (transition to DONE), and the expire task would overwrite it back to PENDING — losing the user's label.
+
+**Design decision**: Atomic `expire_in_progress` repository method (same pattern as `assign_next_pending`)
+- New `ImageRepository.expire_in_progress(cutoff)` method that performs `SELECT ... FOR UPDATE SKIP LOCKED` + domain `expire()` + upsert within a **single transaction**
+- The row-level lock prevents concurrent operations from modifying the same images between select and update
+- `SKIP LOCKED` ensures multiple instances of the expire task don't block each other
+- `ExpireImagesTask.tick()` simplified to a single repository call
+- **Rationale**: Follows the precedent established by `assign_next_pending` — surgical atomic method in the repository rather than a full Unit of Work pattern
+
 ### Removed hardcoded ASSIGNMENT_TIMEOUT in favor of config
 
 **Problem**: `ASSIGNMENT_TIMEOUT = timedelta(minutes=30)` was hardcoded in the `create_assignment` router, while `config.yml` already had `tasks.image_assignment_timeout_seconds: 60`. The two values diverged (30 min vs 60 s) and the presigned URL expiry was not configurable.

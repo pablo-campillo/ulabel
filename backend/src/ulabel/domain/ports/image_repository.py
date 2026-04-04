@@ -63,6 +63,21 @@ class ImageRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    async def expire_in_progress(self, cutoff: datetime) -> list[Image]:
+        """Atomically expire all in-progress images assigned before the cutoff time.
+
+        Selects expired images and resets them to PENDING within a single
+        transaction to prevent race conditions with concurrent label submissions.
+
+        Args:
+            cutoff: Images assigned before this timestamp are considered expired.
+
+        Returns:
+            A list of images that were expired.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
     async def get_expired_in_progress(self, cutoff: datetime) -> list[Image]:
         """Retrieve all in-progress images assigned before the cutoff time.
 
