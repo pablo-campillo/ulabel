@@ -65,12 +65,11 @@ class UpdateProjectUseCase:
         project.update(name=name, description=description)
 
         if labeler_ids is not None:
-            for labeler_id in labeler_ids:
-                user = await self.user_repository.get_by_id(labeler_id)
-                if user is None:
-                    raise UserNotFound("Labeler not found")
-                if user.role != UserRole.LABELER:
-                    raise Unauthorized("User is not a labeler")
+            users = await self.user_repository.get_by_ids(labeler_ids)
+            if len(users) != len(labeler_ids):
+                raise UserNotFound("Labeler not found")
+            if any(u.role != UserRole.LABELER for u in users):
+                raise Unauthorized("User is not a labeler")
             project.set_labelers(labeler_ids)
 
         await self.project_repository.save(project)

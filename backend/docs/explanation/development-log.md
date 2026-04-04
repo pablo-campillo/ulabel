@@ -224,6 +224,14 @@ Chronological record of all features implemented and design decisions made durin
 - **`try/except` with `abort_multipart_upload`**: On any error during streaming, orphaned multipart parts are cleaned up to avoid storage leaks
 - **Metadata preserved**: `label_count` metadata is passed via `create_multipart_upload`, so the caching mechanism (head_object + label_count comparison) works unchanged
 
+### Refactor: Batch labeler validation in UpdateProjectUseCase
+
+**Problem**: `UpdateProjectUseCase` validated labeler IDs by calling `get_by_id` in a loop — one database query per labeler. This was the same N+1 query antipattern that was already solved in `GetProjectUseCase` with the batch `get_by_ids` method.
+
+**Solution**: Replaced the `for labeler_id in labeler_ids` loop with a single `get_by_ids(labeler_ids)` call. Validation logic (existence check via length comparison, role check via `any()`) preserved with equivalent semantics.
+
+**Rationale**: `UserRepository.get_by_ids` already existed in the port and both implementations (SQLAlchemy and in-memory). This is a one-line change that follows the established pattern from `GetProjectUseCase`.
+
 ### Removed hardcoded PRESIGNED_URL_EXPIRY in favor of config
 
 **Problem**: `PRESIGNED_URL_EXPIRY = timedelta(hours=1)` was hardcoded in `ExportLabelsUseCase`, inconsistent with the established pattern where durations are managed from `config.yml` and injected via `dependency-injector`.
