@@ -87,6 +87,7 @@ class PrometheusMiddleware(BaseHTTPMiddleware):
             EXCEPTIONS_TOTAL.labels(
                 method=method, path=path, exception_type=type(exc).__name__
             ).inc()
+            REQUESTS_TOTAL.labels(method=method, path=path, status=500).inc()
             raise
         finally:
             duration = time.perf_counter() - start

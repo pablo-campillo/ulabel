@@ -10,7 +10,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from ulabel.api.api import api_router
-from ulabel.api.error_handlers import domain_error_handler
+from ulabel.api.error_handlers import domain_error_handler, unhandled_error_handler
 from ulabel.container import Container
 from ulabel.domain.errors import DomainError
 from ulabel.infrastructure.observability.metrics import PrometheusMiddleware, metrics_route
@@ -88,6 +88,7 @@ app.container = container
 app.add_middleware(PrometheusMiddleware)
 instrument_fastapi(app)
 app.add_exception_handler(DomainError, domain_error_handler)
+app.add_exception_handler(Exception, unhandled_error_handler)
 
 app.include_router(api_router, prefix="/v1")
 app.add_route("/metrics", metrics_route)

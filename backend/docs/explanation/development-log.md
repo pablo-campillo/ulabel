@@ -257,6 +257,24 @@ Chronological record of all features implemented and design decisions made durin
 
 ---
 
+## Day 7 - April 5, 2026: Observability gap fix
+
+### Fix: Unhandled exceptions invisible in Grafana
+
+**Bug identified**: Both JSON and CSV exports (`GET /v1/projects/{project_id}/export`) returned 500 Internal Server Error, but no error logs appeared in Grafana and no entries showed in the "Error Rate by Endpoint & Status" dashboard panel. The issue affected all endpoints, not just exports — any non-`DomainError` exception was invisible.
+
+**Root cause** (two gaps in the observability chain):
+1. **No structured error log**: Only `DomainError` had a registered exception handler (`domain_error_handler`). Non-domain exceptions (S3 failures, DB streaming errors) hit FastAPI's default 500 handler, which produces no structured JSON log entry — so nothing reached Loki/Grafana
+2. **No 500 in `http_requests_total` metric**: In `PrometheusMiddleware.dispatch()`, when an exception was thrown, execution jumped to the `except` block which incremented `http_exceptions_total` and re-raised. The `REQUESTS_TOTAL.labels(..., status=response.status_code).inc()` line was never reached. The "Error Rate by Endpoint & Status" panel queries `http_requests_total{status=~"5.."}`, so it always showed zero for unhandled exceptions
+
+**Solution**:
+- Added catch-all `Exception` handler (`unhandled_error_handler`) with `logger.exception()` for full traceback in structured logs, returning a JSON 500 response
+- Added `REQUESTS_TOTAL.labels(status=500).inc()` in the middleware's `except` block so unhandled exceptions are counted in the same metric the dashboard queries
+
+**Design decision**: Logging in the catch-all handler (API layer) follows the existing convention established in commit `a077233` — business logging in routers/API, not in use cases or domain layer
+
+---
+
 ## Cross-cutting sessions
 
 ### Unified make bootstrap and Docker Compose

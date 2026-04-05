@@ -68,3 +68,20 @@ async def domain_error_handler(request: Request, exc: DomainError) -> Response:
         status_code=status_code,
         content={"error": {"code": code, "message": message, "details": []}},
     )
+
+
+async def unhandled_error_handler(request: Request, exc: Exception) -> Response:
+    """Handle unexpected exceptions with structured logging and a JSON 500 response.
+
+    Args:
+        request: The incoming HTTP request.
+        exc: The unhandled exception.
+
+    Returns:
+        A JSON response with a generic error message.
+    """
+    logger.exception("Unhandled error: %s %s", request.method, request.url.path)
+    return JSONResponse(
+        status_code=500,
+        content={"error": {"code": "INTERNAL_ERROR", "message": "Internal server error", "details": []}},
+    )
