@@ -7,7 +7,7 @@ tables and provides conversion to/from domain Project entities.
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import DateTime, ForeignKey, String, func
+from sqlalchemy import DateTime, ForeignKey, Index, String, func
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -31,6 +31,9 @@ class ProjectLabelerModel(Base):
     """Association model linking a project to an assigned labeler."""
 
     __tablename__ = "project_labelers"
+    __table_args__ = (
+        Index("ix_project_labelers_labeler_id", "labeler_id"),
+    )
 
     project_id: Mapped[UUID] = mapped_column(
         PG_UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), primary_key=True
@@ -42,6 +45,9 @@ class ProjectModel(Base):
     """ORM model representing a labelling project with its labels and labelers."""
 
     __tablename__ = "projects"
+    __table_args__ = (
+        Index("ix_projects_created_at", "created_at", postgresql_ops={"created_at": "DESC"}),
+    )
 
     id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True)
     owner_id: Mapped[UUID] = mapped_column(

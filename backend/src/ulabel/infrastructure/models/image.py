@@ -7,7 +7,7 @@ database representation and the domain Image entity.
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import DateTime, ForeignKey, String, UniqueConstraint
+from sqlalchemy import DateTime, ForeignKey, Index, String, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -21,6 +21,8 @@ class ImageModel(Base):
     __tablename__ = "images"
     __table_args__ = (
         UniqueConstraint("project_id", "storage_key", name="uq_images_project_storage_key"),
+        Index("ix_images_project_status", "project_id", "status"),
+        Index("ix_images_status_assigned_at", "status", "assigned_at"),
     )
 
     id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True)

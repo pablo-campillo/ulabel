@@ -7,7 +7,7 @@ database representation and the domain LabelRecord entity.
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import DateTime, ForeignKey, String, UniqueConstraint, func
+from sqlalchemy import DateTime, ForeignKey, Index, String, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -21,6 +21,8 @@ class LabelRecordModel(Base):
     __tablename__ = "label_records"
     __table_args__ = (
         UniqueConstraint("image_id", name="uq_label_records_image_id"),
+        Index("ix_label_records_project_image", "project_id", "image_id"),
+        Index("ix_label_records_project_labeler", "project_id", "labeler_id"),
     )
 
     id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True)

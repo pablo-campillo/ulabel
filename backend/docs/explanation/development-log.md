@@ -240,6 +240,21 @@ Chronological record of all features implemented and design decisions made durin
 
 **Design decision**: Injected via constructor (not router endpoint) because the presigned URL expiry is an internal concern of the use case, unlike `image_assignment_timeout_seconds` which is used directly in the router.
 
+### Performance indexes for query optimization
+
+**Problem identified**: Several critical queries relied on individual column indexes that couldn't efficiently serve multi-column `WHERE`, `ORDER BY`, or `GROUP BY` clauses. The most impactful case was `assign_next_pending` — the core image assignment query using `SELECT ... FOR UPDATE SKIP LOCKED` — which filters on both `project_id` and `status` but only had separate indexes on each column, forcing PostgreSQL to pick one index and scan-filter the rest.
+
+**Solution**: Added 6 composite indexes via Alembic migration `0005_add_performance_indexes`, targeting the application's hottest query patterns:
+
+- `ix_images_project_status` (project_id, status) — covers `assign_next_pending` and `get_next_pending`
+- `ix_images_status_assigned_at` (status, assigned_at) — covers `expire_in_progress`
+- `ix_project_labelers_labeler_id` (labeler_id) — the PK `(project_id, labeler_id)` can't serve `WHERE labeler_id = ?` lookups
+- `ix_label_records_project_image` (project_id, image_id) — covers `get_export_data` with `ORDER BY image_id`
+- `ix_label_records_project_labeler` (project_id, labeler_id) — covers stats queries grouping by labeler within a project
+- `ix_projects_created_at` (created_at DESC) — covers paginated project listing
+
+**Design decision**: Composite indexes instead of relying on individual column indexes. B-tree indexes only satisfy multi-column predicates efficiently when the columns appear together in index order. The existing individual indexes on `images.project_id` and `images.status` are retained for single-column queries. Also updated `database.md` with the `import_jobs` table (missing from the ER diagram) and a new "Indexing Strategy" section.
+
 ---
 
 ## Cross-cutting sessions
@@ -273,3 +288,4 @@ Chronological record of all features implemented and design decisions made durin
 | ProjectSummary vs ProjectDetail schemas | Don't fetch data you don't need; list vs detail have different requirements |
 | Batch `get_by_ids` in UserRepository | Single `WHERE IN` query instead of N individual lookups |
 | Labeler resolution in use case, not API | Hexagonal: business logic belongs in application layer, not routers |
+| Composite indexes for hot queries | Individual indexes don't cover multi-column WHERE/ORDER BY; composites eliminate sequential scans |

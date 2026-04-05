@@ -55,6 +55,17 @@ erDiagram
     projects ||--o{ images : "contains"
     projects ||--o{ label_records : "collects"
     images ||--o| label_records : "labeled as"
+
+    import_jobs {
+        uuid id PK
+        uuid project_id FK
+        varchar prefix
+        varchar status
+        integer imported
+        text error
+    }
+
+    projects ||--o{ import_jobs : "imports"
 ```
 
 ## Tables
@@ -82,6 +93,25 @@ The central workflow table. Each image belongs to a project and moves through st
 ### `label_records`
 
 Stores submitted labels. The unique constraint on `image_id` enforces **one label per image** — once labeled, an image cannot be relabeled. The `created_at` timestamp uses a server-side default (`func.now()`) for consistent time tracking.
+
+### `import_jobs`
+
+Tracks asynchronous bulk image imports from object storage. Each job belongs to a project and progresses through statuses: `pending` → `running` → `done` (or `failed`). The `imported` counter is updated after each chunk, allowing the frontend to poll for progress. The `error` field captures failure details when a job fails.
+
+## Indexing Strategy
+
+Beyond primary keys and unique constraints, the schema uses composite indexes tuned to the application's most frequent and performance-critical queries:
+
+| Index | Table | Columns | Query |
+|-------|-------|---------|-------|
+| `ix_images_project_status` | images | (project_id, status) | `assign_next_pending`: `WHERE project_id = ? AND status = 'pending' FOR UPDATE SKIP LOCKED` |
+| `ix_images_status_assigned_at` | images | (status, assigned_at) | `expire_in_progress`: `WHERE status = 'in_progress' AND assigned_at < cutoff` |
+| `ix_project_labelers_labeler_id` | project_labelers | (labeler_id) | `get_by_labeler_id`: `JOIN ... WHERE labeler_id = ?` (PK is (project_id, labeler_id) — wrong column order for this access pattern) |
+| `ix_label_records_project_image` | label_records | (project_id, image_id) | `get_export_data`: `WHERE project_id = ? ORDER BY image_id` |
+| `ix_label_records_project_labeler` | label_records | (project_id, labeler_id) | Stats queries: `WHERE project_id = ? GROUP BY labeler_id` |
+| `ix_projects_created_at` | projects | (created_at DESC) | `get_all`: `ORDER BY created_at DESC LIMIT ... OFFSET ...` |
+
+Individual column indexes on `images.project_id` and `images.status` are retained for queries that filter on a single column.
 
 ## Design Decisions
 
