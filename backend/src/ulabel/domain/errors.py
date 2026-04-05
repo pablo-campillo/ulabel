@@ -9,3 +9,9 @@ class DomainError(Exception):
     """
 
     pass
+
+
+class StorageFull(DomainError):
+    """Raised when the storage backend has no free space."""
+
+    pass

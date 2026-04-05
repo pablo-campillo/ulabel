@@ -273,6 +273,31 @@ Chronological record of all features implemented and design decisions made durin
 
 **Design decision**: Logging in the catch-all handler (API layer) follows the existing convention established in commit `a077233` — business logging in routers/API, not in use cases or domain layer
 
+### Fix: Export fails with 500 when MinIO storage is full
+
+**Bug identified**: Clicking "Export JSON" or "Export CSV" produced an unhandled `botocore.exceptions.ClientError: An error occurred (XMinioStorageFull) when calling the UploadPart operation`. The error appeared as a raw 500 in a new browser tab with no user-friendly message.
+
+**Root cause**: The MinIO Docker volume reached its minimum free drive threshold. The `upload_file_streaming` multipart upload in `S3StorageService` re-raised the `ClientError` as-is, which was not a `DomainError` and therefore got caught only by the generic `unhandled_error_handler`.
+
+**Solution** (three layers):
+1. **Domain**: New `StorageFull(DomainError)` exception in `domain/errors.py`
+2. **Infrastructure**: `S3StorageService.upload_file_streaming` now catches `ClientError` with `XMinioStorageFull` code and raises `StorageFull` instead, translating the S3-specific error into a domain concept
+3. **API**: `StorageFull` mapped to HTTP 507 (Insufficient Storage) with code `STORAGE_FULL` in the error handler
+4. **Frontend**: `exportProject` replaced `window.open` with `fetch` + error handling. Export errors now display inline in the project detail page instead of opening a blank tab with raw JSON
+
+**Design decisions**:
+- **HTTP 507 (Insufficient Storage)**: Standard status code for this exact scenario (RFC 4918), more informative than a generic 500
+- **Translation at infrastructure layer**: The `S3StorageService` catches the S3-specific `ClientError` and raises a domain `StorageFull`. This keeps the domain layer S3-agnostic (hexagonal boundary) while providing specific error information
+- **`fetch` instead of `window.open`**: Allows the frontend to inspect the response status before acting — errors show inline, success triggers a file download via blob URL
+
+### API-level tests for export endpoint
+
+**Gap identified**: Every other endpoint had API-level tests using `TestClient` + container overrides, but exports only had application-level tests with fakes. Added `tests/api/test_exports.py` covering:
+- Happy path: JSON and CSV export return 307 redirect
+- Error: project not found returns 404
+- Error: no labels returns 404
+- Error: storage full returns 507
+
 ---
 
 ## Cross-cutting sessions

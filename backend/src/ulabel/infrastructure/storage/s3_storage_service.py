@@ -12,6 +12,7 @@ from typing import Any
 import aioboto3
 from botocore.exceptions import ClientError
 
+from ulabel.domain.errors import StorageFull
 from ulabel.domain.ports.storage_service import StorageService
 
 
@@ -180,6 +181,15 @@ class S3StorageService(StorageService):
                     UploadId=upload_id,
                     MultipartUpload={"Parts": parts},
                 )
+            except ClientError as e:
+                await client.abort_multipart_upload(
+                    Bucket=self._bucket,
+                    Key=key,
+                    UploadId=upload_id,
+                )
+                if e.response["Error"]["Code"] in ("XMinioStorageFull", "NoSuchBucket"):
+                    raise StorageFull(str(e)) from e
+                raise
             except Exception:
                 await client.abort_multipart_upload(
                     Bucket=self._bucket,

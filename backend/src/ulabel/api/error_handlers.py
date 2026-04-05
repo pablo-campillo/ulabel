@@ -20,7 +20,7 @@ from ulabel.application.submit_label import (
     InvalidLabel,
     LabelerMismatch,
 )
-from ulabel.domain.errors import DomainError
+from ulabel.domain.errors import DomainError, StorageFull
 from ulabel.domain.import_jobs import ImportJobNotFound
 from ulabel.infrastructure.observability.metrics import DOMAIN_ERRORS_TOTAL
 
@@ -38,6 +38,7 @@ EXCEPTION_MAP: dict[type[DomainError], tuple[int, str, str]] = {
     InvalidLabel: (422, "INVALID_LABEL", "Invalid label"),
     NoLabelsFound: (404, "NO_LABELS_FOUND", "No labels to export"),
     ImportJobNotFound: (404, "IMPORT_JOB_NOT_FOUND", "Import job not found"),
+    StorageFull: (507, "STORAGE_FULL", "Storage is full, please free up space"),
 }
 
 
@@ -83,5 +84,11 @@ async def unhandled_error_handler(request: Request, exc: Exception) -> Response:
     logger.exception("Unhandled error: %s %s", request.method, request.url.path)
     return JSONResponse(
         status_code=500,
-        content={"error": {"code": "INTERNAL_ERROR", "message": "Internal server error", "details": []}},
+        content={
+            "error": {
+                "code": "INTERNAL_ERROR",
+                "message": "Internal server error",
+                "details": [],
+            }
+        },
     )
