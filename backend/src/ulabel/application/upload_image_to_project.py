@@ -9,7 +9,6 @@ from ulabel.domain.ports.project_repository import ProjectRepository
 from ulabel.domain.ports.storage_service import StorageService
 
 
-
 class UploadImageToProjectUseCase:
     """Uploads image data to object storage and registers it in a project.
 
@@ -54,7 +53,12 @@ class UploadImageToProjectUseCase:
 
         image_id = uuid4()
         storage_key = f"{project_id}/{image_id}"
-        await self.storage_service.upload_file(key=storage_key, data=data, content_type=content_type, size=len(data))
+        await self.storage_service.upload_file(
+            key=storage_key,
+            data=data,
+            content_type=content_type,
+            size=len(data),
+        )
         image = Image.create(id=image_id, project_id=project_id, storage_key=storage_key)
         await self.image_repository.save(image)
         return image

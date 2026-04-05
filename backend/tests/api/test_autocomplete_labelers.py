@@ -1,12 +1,11 @@
 from uuid import uuid4
 
+import pytest
 from fastapi.testclient import TestClient
 
 from ulabel.api.main import app
 from ulabel.domain.users import User
 from ulabel.infrastructure.repositories.in_memory_user_repository import InMemoryUserRepository
-
-import pytest
 
 
 @pytest.fixture

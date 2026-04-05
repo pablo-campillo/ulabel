@@ -88,4 +88,8 @@ class SqlAlchemyLabelRepository(LabelRepository):
             )
             result = await session.stream(stmt)
             async for row in result:
-                yield LabelExportRow(image_id=row.image_id, storage_key=row.storage_key, value=row.label)
+                yield LabelExportRow(
+                    image_id=row.image_id,
+                    storage_key=row.storage_key,
+                    value=row.label,
+                )

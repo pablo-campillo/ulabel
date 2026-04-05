@@ -86,7 +86,12 @@ class S3StorageService(StorageService):
             return url
 
     async def upload_file(
-        self, key: str, data: bytes, content_type: str, size: int, metadata: dict[str, str] | None = None
+        self,
+        key: str,
+        data: bytes,
+        content_type: str,
+        size: int,
+        metadata: dict[str, str] | None = None,
     ) -> None:
         """Upload a file to the storage bucket.
 

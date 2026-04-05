@@ -14,7 +14,11 @@ from sqlalchemy.orm import joinedload, selectinload
 from ulabel.domain.pagination import PaginatedResult
 from ulabel.domain.ports.project_repository import ProjectRepository
 from ulabel.domain.projects import Project
-from ulabel.infrastructure.models.project import ProjectLabelModel, ProjectLabelerModel, ProjectModel
+from ulabel.infrastructure.models.project import (
+    ProjectLabelerModel,
+    ProjectLabelModel,
+    ProjectModel,
+)
 
 
 def _load_options():
@@ -95,7 +99,9 @@ class SqlAlchemyProjectRepository(ProjectRepository):
             )
             return [row.to_domain() for row in result.unique().scalars()]
 
-    async def get_all(self, limit: int, offset: int, *, name: str | None = None) -> PaginatedResult[Project]:
+    async def get_all(
+        self, limit: int, offset: int, *, name: str | None = None
+    ) -> PaginatedResult[Project]:
         """Retrieve a paginated list of projects, optionally filtered by name.
 
         Args:

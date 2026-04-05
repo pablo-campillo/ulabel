@@ -6,7 +6,7 @@ class distributions, and daily activity breakdowns.
 
 from uuid import UUID
 
-from sqlalchemy import case, cast, Date, func, select
+from sqlalchemy import Date, case, cast, func, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from ulabel.domain.labels import LabelerSubmitStats
@@ -157,7 +157,11 @@ class SqlAlchemyStatsRepository(StatsRepository):
             labeler_count = (await session.execute(labeler_cnt_stmt)).scalar_one_or_none() or 0
 
             # Ranking: how many labelers have strictly more labels than this one
-            ranking_stmt = select(func.count()).select_from(counts_sq).where(counts_sq.c.cnt > labeler_count)
+            ranking_stmt = (
+                select(func.count())
+                .select_from(counts_sq)
+                .where(counts_sq.c.cnt > labeler_count)
+            )
             above = (await session.execute(ranking_stmt)).scalar_one()
             ranking = above + 1
 

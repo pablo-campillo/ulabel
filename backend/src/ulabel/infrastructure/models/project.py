@@ -4,13 +4,12 @@ Maps the ``projects``, ``project_labels``, and ``project_labelers``
 tables and provides conversion to/from domain Project entities.
 """
 
+from datetime import datetime
 from uuid import UUID
 
 from sqlalchemy import DateTime, ForeignKey, String, func
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
-from datetime import datetime
 
 from ulabel.domain.projects import Project
 from ulabel.infrastructure.models.base import Base
@@ -45,7 +44,9 @@ class ProjectModel(Base):
     __tablename__ = "projects"
 
     id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True)
-    owner_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    owner_id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("users.id"), nullable=False
+    )
     name: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     description: Mapped[str] = mapped_column(String, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
@@ -97,6 +98,9 @@ class ProjectModel(Base):
             ProjectLabelModel(project_id=project.id, label=label) for label in project.labels
         ]
         model.labeler_entries = [
-            ProjectLabelerModel(project_id=project.id, labeler_id=lid) for lid in project.labeler_ids
+            ProjectLabelerModel(
+                project_id=project.id, labeler_id=lid
+            )
+            for lid in project.labeler_ids
         ]
         return model

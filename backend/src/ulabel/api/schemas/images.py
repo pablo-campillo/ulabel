@@ -4,8 +4,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from ulabel.domain.import_jobs import ImportJobStatus
 from ulabel.domain.images import ImageStatus
+from ulabel.domain.import_jobs import ImportJobStatus
 
 
 class AddImageRequest(BaseModel):
@@ -29,7 +29,11 @@ class ImageResponse(BaseModel):
     storage_key: str = Field(..., description="Object key in the storage bucket.")
     status: ImageStatus = Field(
         ...,
-        description="Image status: `pending` (available), `in_progress` (assigned), or `done` (labelled).",
+        description=(
+            "Image status: `pending` (available),"
+            " `in_progress` (assigned),"
+            " or `done` (labelled)."
+        ),
     )
 
     model_config = {
@@ -37,7 +41,10 @@ class ImageResponse(BaseModel):
             "example": {
                 "id": "abc12345-e89b-12d3-a456-426614174003",
                 "project_id": "789e0123-e89b-12d3-a456-426614174002",
-                "storage_key": "789e0123-e89b-12d3-a456-426614174002/abc12345-e89b-12d3-a456-426614174003",
+                "storage_key": (
+                    "789e0123-e89b-12d3-a456-426614174002"
+                    "/abc12345-e89b-12d3-a456-426614174003"
+                ),
                 "status": "pending",
             }
         }
@@ -57,7 +64,11 @@ class SubmitLabelRequest(BaseModel):
     )
     label: str = Field(
         ...,
-        description="The label to assign to the image. Must be one of the project's allowed labels.",
+        description=(
+            "The label to assign to the image."
+            " Must be one of the project's"
+            " allowed labels."
+        ),
         examples=["cat"],
     )
 
@@ -102,9 +113,28 @@ class SubmitLabelResponse(BaseModel):
     image_id: UUID = Field(..., description="ID of the labelled image.")
     labeler_id: UUID = Field(..., description="ID of the labeler who submitted the label.")
     label: str = Field(..., description="The assigned label.")
-    labeler_count: int = Field(..., description="Total number of labels submitted by this labeler in this project.")
-    ranking: int = Field(..., description="Labeler's ranking position in this project (1 = most labels).")
-    total_labelers: int = Field(..., description="Total number of labelers who have submitted at least one label in this project.")
+    labeler_count: int = Field(
+        ...,
+        description=(
+            "Total number of labels submitted"
+            " by this labeler in this project."
+        ),
+    )
+    ranking: int = Field(
+        ...,
+        description=(
+            "Labeler's ranking position in this"
+            " project (1 = most labels)."
+        ),
+    )
+    total_labelers: int = Field(
+        ...,
+        description=(
+            "Total number of labelers who have"
+            " submitted at least one label"
+            " in this project."
+        ),
+    )
 
     model_config = {
         "json_schema_extra": {
@@ -139,12 +169,24 @@ class ImportImagesRequest(BaseModel):
 class ImportJobResponse(BaseModel):
     """Response body for an import job with its current status."""
 
-    import_id: UUID = Field(..., description="Unique import job identifier. Use it to poll for status.")
+    import_id: UUID = Field(
+        ...,
+        description=(
+            "Unique import job identifier."
+            " Use it to poll for status."
+        ),
+    )
     project_id: UUID = Field(..., description="ID of the target project.")
     prefix: str = Field(..., description="Prefix used to filter objects in the bucket.")
     status: ImportJobStatus = Field(..., description="Job status: `running`, `done`, or `failed`.")
     imported: int = Field(..., description="Number of images imported so far.")
-    error: str | None = Field(default=None, description="Error message if status is `failed`. `null` otherwise.")
+    error: str | None = Field(
+        default=None,
+        description=(
+            "Error message if status is `failed`."
+            " `null` otherwise."
+        ),
+    )
 
     model_config = {
         "json_schema_extra": {

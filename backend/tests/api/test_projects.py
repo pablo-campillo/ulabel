@@ -1,12 +1,15 @@
-import pytest
 from datetime import datetime, timezone
 from uuid import uuid4
+
+import pytest
 from fastapi.testclient import TestClient
 
 from ulabel.api.main import app
 from ulabel.domain.projects import Project
 from ulabel.domain.users import User
-from ulabel.infrastructure.repositories.in_memory_project_repository import InMemoryProjectRepository
+from ulabel.infrastructure.repositories.in_memory_project_repository import (
+    InMemoryProjectRepository,
+)
 from ulabel.infrastructure.repositories.in_memory_user_repository import InMemoryUserRepository
 
 
@@ -22,7 +25,10 @@ def labeler():
 
 @pytest.fixture
 def project(admin):
-    return Project.create(id=uuid4(), owner=admin, name="My Project", description="desc", labels={"cat"})
+    return Project.create(
+        id=uuid4(), owner=admin, name="My Project",
+        description="desc", labels={"cat"},
+    )
 
 
 def make_client(users: list[User], projects: list[Project]):
@@ -166,7 +172,9 @@ def test_update_project_name_returns_200(client_with_project, project):
 
 
 def test_update_project_description_returns_200(client_with_project, project):
-    response = client_with_project.patch(f"/v1/projects/{project.id}", json={"description": "New desc"})
+    response = client_with_project.patch(
+        f"/v1/projects/{project.id}", json={"description": "New desc"},
+    )
     assert response.status_code == 200
     assert response.json()["description"] == "New desc"
     assert response.json()["name"] == "My Project"
@@ -264,19 +272,35 @@ def test_list_projects_invalid_offset(client):
 # --- filter by name ---
 
 def test_list_projects_filter_by_name(admin):
-    p1 = Project.create(id=uuid4(), owner=admin, name="Alpha Project", description="d", labels={"a"})
-    p2 = Project.create(id=uuid4(), owner=admin, name="Beta Project", description="d", labels={"a"})
-    p3 = Project.create(id=uuid4(), owner=admin, name="Gamma", description="d", labels={"a"})
-    user_ctx, project_ctx, test_client = make_client(users=[admin], projects=[p1, p2, p3])
+    p1 = Project.create(
+        id=uuid4(), owner=admin, name="Alpha Project",
+        description="d", labels={"a"},
+    )
+    p2 = Project.create(
+        id=uuid4(), owner=admin, name="Beta Project",
+        description="d", labels={"a"},
+    )
+    p3 = Project.create(
+        id=uuid4(), owner=admin, name="Gamma",
+        description="d", labels={"a"},
+    )
+    user_ctx, project_ctx, test_client = make_client(
+        users=[admin], projects=[p1, p2, p3],
+    )
     with user_ctx, project_ctx:
-        response = test_client.get("/v1/projects", params={"name": "alpha"})
+        response = test_client.get(
+            "/v1/projects", params={"name": "alpha"},
+        )
     body = response.json()
     assert body["total"] == 1
     assert body["items"][0]["name"] == "Alpha Project"
 
 
 def test_list_projects_filter_by_name_case_insensitive(admin):
-    p1 = Project.create(id=uuid4(), owner=admin, name="Alpha Project", description="d", labels={"a"})
+    p1 = Project.create(
+        id=uuid4(), owner=admin, name="Alpha Project",
+        description="d", labels={"a"},
+    )
     user_ctx, project_ctx, test_client = make_client(users=[admin], projects=[p1])
     with user_ctx, project_ctx:
         response = test_client.get("/v1/projects", params={"name": "ALPHA"})
@@ -286,9 +310,18 @@ def test_list_projects_filter_by_name_case_insensitive(admin):
 
 
 def test_list_projects_filter_by_name_contains(admin):
-    p1 = Project.create(id=uuid4(), owner=admin, name="Alpha Project", description="d", labels={"a"})
-    p2 = Project.create(id=uuid4(), owner=admin, name="Beta Project", description="d", labels={"a"})
-    p3 = Project.create(id=uuid4(), owner=admin, name="Gamma", description="d", labels={"a"})
+    p1 = Project.create(
+        id=uuid4(), owner=admin, name="Alpha Project",
+        description="d", labels={"a"},
+    )
+    p2 = Project.create(
+        id=uuid4(), owner=admin, name="Beta Project",
+        description="d", labels={"a"},
+    )
+    p3 = Project.create(
+        id=uuid4(), owner=admin, name="Gamma",
+        description="d", labels={"a"},
+    )
     user_ctx, project_ctx, test_client = make_client(users=[admin], projects=[p1, p2, p3])
     with user_ctx, project_ctx:
         response = test_client.get("/v1/projects", params={"name": "Project"})

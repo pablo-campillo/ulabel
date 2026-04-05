@@ -1,12 +1,15 @@
-import pytest
 from uuid import uuid4
+
+import pytest
 
 from ulabel.application.add_labeler_to_project import AddLabelerToProjectUseCase, ProjectNotFound
 from ulabel.application.create_project import Unauthorized
 from ulabel.application.login import UserNotFound
 from ulabel.domain.projects import Project
 from ulabel.domain.users import User
-from ulabel.infrastructure.repositories.in_memory_project_repository import InMemoryProjectRepository
+from ulabel.infrastructure.repositories.in_memory_project_repository import (
+    InMemoryProjectRepository,
+)
 from ulabel.infrastructure.repositories.in_memory_user_repository import InMemoryUserRepository
 
 
@@ -22,7 +25,10 @@ def labeler():
 
 @pytest.fixture
 def project(admin):
-    return Project.create(id=uuid4(), owner=admin, name="My Project", description="desc", labels={"cat"})
+    return Project.create(
+        id=uuid4(), owner=admin, name="My Project",
+        description="desc", labels={"cat"},
+    )
 
 
 @pytest.fixture

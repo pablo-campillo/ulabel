@@ -4,6 +4,7 @@ from ulabel.domain.errors import DomainError
 from ulabel.domain.ports.user_repository import UserRepository
 from ulabel.domain.users import User
 
+
 class UserNotFound(DomainError):
     """Raised when a user with the given identifier does not exist."""
 

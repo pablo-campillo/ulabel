@@ -34,7 +34,17 @@ the cached version unless new labels have been submitted.
         307: {"description": "Redirect to presigned download URL."},
         404: {
             "description": "Project not found or no labels exist yet.",
-            "content": {"application/json": {"example": {"error": {"code": "PROJECT_NOT_FOUND", "message": "Project not found", "details": []}}}},
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": {
+                            "code": "PROJECT_NOT_FOUND",
+                            "message": "Project not found",
+                            "details": [],
+                        }
+                    }
+                }
+            },
         },
     },
 )

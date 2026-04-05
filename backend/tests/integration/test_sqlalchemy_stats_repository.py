@@ -9,10 +9,11 @@ from ulabel.domain.projects import Project
 from ulabel.domain.users import User
 from ulabel.infrastructure.models.label import LabelRecordModel
 from ulabel.infrastructure.repositories.sqlalchemy_image_repository import SqlAlchemyImageRepository
-from ulabel.infrastructure.repositories.sqlalchemy_project_repository import SqlAlchemyProjectRepository
+from ulabel.infrastructure.repositories.sqlalchemy_project_repository import (
+    SqlAlchemyProjectRepository,
+)
 from ulabel.infrastructure.repositories.sqlalchemy_stats_repository import SqlAlchemyStatsRepository
 from ulabel.infrastructure.repositories.sqlalchemy_user_repository import SqlAlchemyUserRepository
-
 
 DAY1 = datetime(2026, 3, 20, 10, 0, 0, tzinfo=timezone.utc)
 DAY2 = datetime(2026, 3, 21, 14, 0, 0, tzinfo=timezone.utc)

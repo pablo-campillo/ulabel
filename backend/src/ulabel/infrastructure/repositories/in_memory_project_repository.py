@@ -30,7 +30,9 @@ class InMemoryProjectRepository(ProjectRepository):
     async def get_by_labeler_id(self, labeler_id: UUID) -> list[Project]:
         return [p for p in self._projects.values() if labeler_id in p.labeler_ids]
 
-    async def get_all(self, limit: int, offset: int, *, name: str | None = None) -> PaginatedResult[Project]:
+    async def get_all(
+        self, limit: int, offset: int, *, name: str | None = None
+    ) -> PaginatedResult[Project]:
         all_projects = sorted(
             self._projects.values(),
             key=lambda p: p.created_at,

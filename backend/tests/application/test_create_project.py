@@ -1,10 +1,13 @@
-import pytest
 from uuid import uuid4
+
+import pytest
 
 from ulabel.application.create_project import CreateProjectUseCase, Unauthorized
 from ulabel.application.login import UserNotFound
 from ulabel.domain.users import User
-from ulabel.infrastructure.repositories.in_memory_project_repository import InMemoryProjectRepository
+from ulabel.infrastructure.repositories.in_memory_project_repository import (
+    InMemoryProjectRepository,
+)
 from ulabel.infrastructure.repositories.in_memory_user_repository import InMemoryUserRepository
 
 

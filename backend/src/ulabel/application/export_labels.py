@@ -92,7 +92,10 @@ class ExportLabelsUseCase:
 
         metadata = await self._storage_service.head_object(storage_key)
         if metadata is not None and metadata.get("label_count") == str(label_count):
-            url = await self._storage_service.get_presigned_url(storage_key, expires_in=self._presigned_url_expiry)
+            url = await self._storage_service.get_presigned_url(
+                storage_key,
+                expires_in=self._presigned_url_expiry,
+            )
             return ExportResult(url=url, cache_hit=True)
 
         rows = self._label_repository.get_export_data(project_id)
@@ -111,7 +114,10 @@ class ExportLabelsUseCase:
             metadata={"label_count": str(label_count)},
         )
 
-        url = await self._storage_service.get_presigned_url(storage_key, expires_in=self._presigned_url_expiry)
+        url = await self._storage_service.get_presigned_url(
+            storage_key,
+            expires_in=self._presigned_url_expiry,
+        )
         return ExportResult(url=url, cache_hit=False)
 
     @staticmethod

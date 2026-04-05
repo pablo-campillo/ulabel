@@ -1,14 +1,21 @@
-import pytest
 from datetime import datetime, timezone
 from uuid import uuid4
 
+import pytest
+
 from ulabel.application.add_labeler_to_project import ProjectNotFound
-from ulabel.application.create_assignment import CreateAssignmentUseCase, LabelerNotInProject, NoImageAvailable
+from ulabel.application.create_assignment import (
+    CreateAssignmentUseCase,
+    LabelerNotInProject,
+    NoImageAvailable,
+)
 from ulabel.domain.images import Image, ImageStatus
 from ulabel.domain.projects import Project
 from ulabel.domain.users import User
 from ulabel.infrastructure.repositories.in_memory_image_repository import InMemoryImageRepository
-from ulabel.infrastructure.repositories.in_memory_project_repository import InMemoryProjectRepository
+from ulabel.infrastructure.repositories.in_memory_project_repository import (
+    InMemoryProjectRepository,
+)
 
 FIXED_NOW = datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
 

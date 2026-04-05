@@ -5,7 +5,7 @@ from uuid import UUID, uuid4
 from ulabel.application.add_labeler_to_project import ProjectNotFound
 from ulabel.domain.errors import DomainError
 from ulabel.domain.images import ImageStatus
-from ulabel.domain.labels import LabelRecord, LabelerSubmitStats
+from ulabel.domain.labels import LabelerSubmitStats, LabelRecord
 from ulabel.domain.ports.image_repository import ImageRepository
 from ulabel.domain.ports.label_repository import LabelRepository
 from ulabel.domain.ports.project_repository import ProjectRepository

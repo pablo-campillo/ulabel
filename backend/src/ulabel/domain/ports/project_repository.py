@@ -47,7 +47,9 @@ class ProjectRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def get_all(self, limit: int, offset: int, *, name: str | None = None) -> PaginatedResult[Project]:
+    async def get_all(
+        self, limit: int, offset: int, *, name: str | None = None
+    ) -> PaginatedResult[Project]:
         """Retrieve a paginated list of projects, optionally filtered by name.
 
         Args:

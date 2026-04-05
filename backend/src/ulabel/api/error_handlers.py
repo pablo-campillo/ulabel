@@ -13,7 +13,6 @@ from ulabel.application.add_labeler_to_project import ProjectNotFound, UserNotFo
 from ulabel.application.create_assignment import LabelerNotInProject, NoImageAvailable
 from ulabel.application.create_project import ProjectNameAlreadyExists, Unauthorized
 from ulabel.application.export_labels import NoLabelsFound
-from ulabel.domain.import_jobs import ImportJobNotFound
 from ulabel.application.submit_label import (
     AssignmentMismatch,
     ImageNotFound,
@@ -22,6 +21,7 @@ from ulabel.application.submit_label import (
     LabelerMismatch,
 )
 from ulabel.domain.errors import DomainError
+from ulabel.domain.import_jobs import ImportJobNotFound
 from ulabel.infrastructure.observability.metrics import DOMAIN_ERRORS_TOTAL
 
 EXCEPTION_MAP: dict[type[DomainError], tuple[int, str, str]] = {

@@ -1,6 +1,7 @@
-import pytest
 from datetime import datetime, timezone
 from uuid import uuid4
+
+import pytest
 
 from ulabel.application.add_labeler_to_project import ProjectNotFound
 from ulabel.application.submit_label import (
@@ -16,7 +17,9 @@ from ulabel.domain.projects import Project
 from ulabel.domain.users import User
 from ulabel.infrastructure.repositories.in_memory_image_repository import InMemoryImageRepository
 from ulabel.infrastructure.repositories.in_memory_label_repository import InMemoryLabelRepository
-from ulabel.infrastructure.repositories.in_memory_project_repository import InMemoryProjectRepository
+from ulabel.infrastructure.repositories.in_memory_project_repository import (
+    InMemoryProjectRepository,
+)
 from ulabel.infrastructure.repositories.in_memory_stats_repository import InMemoryStatsRepository
 
 FIXED_NOW = datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc)

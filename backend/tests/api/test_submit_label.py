@@ -1,6 +1,7 @@
-import pytest
 from datetime import datetime, timezone
 from uuid import uuid4
+
+import pytest
 from fastapi.testclient import TestClient
 
 from ulabel.api.main import app
@@ -9,7 +10,9 @@ from ulabel.domain.projects import Project
 from ulabel.domain.users import User
 from ulabel.infrastructure.repositories.in_memory_image_repository import InMemoryImageRepository
 from ulabel.infrastructure.repositories.in_memory_label_repository import InMemoryLabelRepository
-from ulabel.infrastructure.repositories.in_memory_project_repository import InMemoryProjectRepository
+from ulabel.infrastructure.repositories.in_memory_project_repository import (
+    InMemoryProjectRepository,
+)
 from ulabel.infrastructure.repositories.in_memory_stats_repository import InMemoryStatsRepository
 
 FIXED_NOW = datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
@@ -54,7 +57,10 @@ def client(project, assigned_image, labeler):
         ),
         app.container.label_repository.override(InMemoryLabelRepository()),
         app.container.stats_repository.override(
-            InMemoryStatsRepository(images=images, labels=labels, usernames={labeler.id: labeler.username})
+            InMemoryStatsRepository(
+                images=images, labels=labels,
+                usernames={labeler.id: labeler.username},
+            )
         ),
     ):
         yield TestClient(app)

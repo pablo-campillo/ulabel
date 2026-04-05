@@ -1,5 +1,6 @@
-import pytest
 from uuid import uuid4
+
+import pytest
 
 from ulabel.application.login import LoginUseCase, UserNotFound
 from ulabel.domain.users import User

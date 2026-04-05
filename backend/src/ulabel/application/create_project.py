@@ -40,7 +40,13 @@ class CreateProjectUseCase:
         self.user_repository = user_repository
         self.project_repository = project_repository
 
-    async def execute(self, owner_id: UUID, name: str, description: str, labels: set[str]) -> Project:
+    async def execute(
+        self,
+        owner_id: UUID,
+        name: str,
+        description: str,
+        labels: set[str],
+    ) -> Project:
         """Create a new labeling project.
 
         Args:
@@ -67,6 +73,13 @@ class CreateProjectUseCase:
         if existing is not None:
             raise ProjectNameAlreadyExists("Project name already exists")
 
-        project = Project.create(id=uuid4(), owner=owner, name=name, description=description, labels=labels, created_at=datetime.now(timezone.utc))
+        project = Project.create(
+            id=uuid4(),
+            owner=owner,
+            name=name,
+            description=description,
+            labels=labels,
+            created_at=datetime.now(timezone.utc),
+        )
         await self.project_repository.save(project)
         return project

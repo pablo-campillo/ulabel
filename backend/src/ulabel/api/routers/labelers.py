@@ -68,11 +68,31 @@ labels are available in each one.
         200: {"description": "List of projects assigned to the labeler."},
         403: {
             "description": "The user does not have the `labeler` role.",
-            "content": {"application/json": {"example": {"error": {"code": "UNAUTHORIZED", "message": "User is not a labeler", "details": []}}}},
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": {
+                            "code": "UNAUTHORIZED",
+                            "message": "User is not a labeler",
+                            "details": [],
+                        }
+                    }
+                }
+            },
         },
         404: {
             "description": "Labeler not found.",
-            "content": {"application/json": {"example": {"error": {"code": "USER_NOT_FOUND", "message": "Labeler not found", "details": []}}}},
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": {
+                            "code": "USER_NOT_FOUND",
+                            "message": "Labeler not found",
+                            "details": [],
+                        }
+                    }
+                }
+            },
         },
     },
 )

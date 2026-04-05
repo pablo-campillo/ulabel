@@ -1,6 +1,6 @@
-import pytest
 from uuid import uuid4
 
+import pytest
 from fastapi.testclient import TestClient
 
 from ulabel.api.main import app
@@ -8,7 +8,9 @@ from ulabel.domain.images import Image, ImageStatus
 from ulabel.domain.labels import LabelRecord
 from ulabel.domain.projects import Project
 from ulabel.domain.users import User
-from ulabel.infrastructure.repositories.in_memory_project_repository import InMemoryProjectRepository
+from ulabel.infrastructure.repositories.in_memory_project_repository import (
+    InMemoryProjectRepository,
+)
 from ulabel.infrastructure.repositories.in_memory_stats_repository import InMemoryStatsRepository
 
 

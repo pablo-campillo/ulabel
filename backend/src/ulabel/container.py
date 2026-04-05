@@ -16,8 +16,8 @@ from ulabel.application.create_assignment import CreateAssignmentUseCase
 from ulabel.application.create_project import CreateProjectUseCase
 from ulabel.application.expire_images_task import ExpireImagesTask
 from ulabel.application.export_labels import ExportLabelsUseCase
-from ulabel.application.get_labeler_projects import GetLabelerProjectsUseCase
 from ulabel.application.get_import_job import GetImportJobUseCase
+from ulabel.application.get_labeler_projects import GetLabelerProjectsUseCase
 from ulabel.application.get_project import GetProjectUseCase
 from ulabel.application.get_project_stats import GetProjectStatsUseCase
 from ulabel.application.import_images_from_storage import ImportImagesFromStorageUseCase
@@ -31,7 +31,9 @@ from ulabel.infrastructure.database import build_engine, build_sessionmaker
 from ulabel.infrastructure.observability.logging import configure_logging
 from ulabel.infrastructure.observability.tracing import setup_tracing
 from ulabel.infrastructure.repositories.sqlalchemy_image_repository import SqlAlchemyImageRepository
-from ulabel.infrastructure.repositories.sqlalchemy_import_job_repository import SqlAlchemyImportJobRepository
+from ulabel.infrastructure.repositories.sqlalchemy_import_job_repository import (
+    SqlAlchemyImportJobRepository,
+)
 from ulabel.infrastructure.repositories.sqlalchemy_label_repository import SqlAlchemyLabelRepository
 from ulabel.infrastructure.repositories.sqlalchemy_project_repository import (
     SqlAlchemyProjectRepository,
@@ -96,7 +98,9 @@ class Container(containers.DeclarativeContainer):
     image_repository = providers.Factory(SqlAlchemyImageRepository, sessionmaker=sessionmaker)
     label_repository = providers.Factory(SqlAlchemyLabelRepository, sessionmaker=sessionmaker)
     stats_repository = providers.Factory(SqlAlchemyStatsRepository, sessionmaker=sessionmaker)
-    import_job_repository = providers.Factory(SqlAlchemyImportJobRepository, sessionmaker=sessionmaker)
+    import_job_repository = providers.Factory(
+        SqlAlchemyImportJobRepository, sessionmaker=sessionmaker
+    )
 
     storage_service = providers.Singleton(
         S3StorageService,

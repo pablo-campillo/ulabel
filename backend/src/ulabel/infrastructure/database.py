@@ -4,7 +4,12 @@ Provides factory functions for creating async SQLAlchemy engines and
 session makers with connection pooling.
 """
 
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 
 
 def build_engine(

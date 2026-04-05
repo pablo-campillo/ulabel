@@ -34,7 +34,17 @@ class distribution, per-labeler breakdowns, and daily activity.
     responses={
         404: {
             "description": "Project not found.",
-            "content": {"application/json": {"example": {"error": {"code": "PROJECT_NOT_FOUND", "message": "Project not found", "details": []}}}},
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": {
+                            "code": "PROJECT_NOT_FOUND",
+                            "message": "Project not found",
+                            "details": [],
+                        }
+                    }
+                }
+            },
         },
     },
 )

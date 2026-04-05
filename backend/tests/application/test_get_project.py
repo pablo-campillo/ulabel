@@ -1,11 +1,14 @@
-import pytest
 from uuid import uuid4
+
+import pytest
 
 from ulabel.application.add_labeler_to_project import ProjectNotFound
 from ulabel.application.get_project import GetProjectUseCase
 from ulabel.domain.projects import Project
 from ulabel.domain.users import User
-from ulabel.infrastructure.repositories.in_memory_project_repository import InMemoryProjectRepository
+from ulabel.infrastructure.repositories.in_memory_project_repository import (
+    InMemoryProjectRepository,
+)
 from ulabel.infrastructure.repositories.in_memory_user_repository import InMemoryUserRepository
 
 
@@ -44,7 +47,7 @@ async def test_returns_project_with_resolved_labelers(use_case, project, labeler
     result = await use_case.execute(project_id=project.id)
     assert result.project.id == project.id
     assert len(result.labelers) == 2
-    usernames = {l.username for l in result.labelers}
+    usernames = {lab.username for lab in result.labelers}
     assert usernames == {"labeler1", "labeler2"}
 
 
@@ -64,6 +67,6 @@ async def test_handles_missing_labeler_user(admin, labeler):
     )
     result = await use_case.execute(project_id=p.id)
     assert len(result.labelers) == 2
-    usernames = {l.username for l in result.labelers}
+    usernames = {lab.username for lab in result.labelers}
     assert labeler.username in usernames
     assert str(missing_id) in usernames

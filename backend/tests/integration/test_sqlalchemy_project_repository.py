@@ -4,7 +4,9 @@ import pytest
 
 from ulabel.domain.projects import Project
 from ulabel.domain.users import User
-from ulabel.infrastructure.repositories.sqlalchemy_project_repository import SqlAlchemyProjectRepository
+from ulabel.infrastructure.repositories.sqlalchemy_project_repository import (
+    SqlAlchemyProjectRepository,
+)
 from ulabel.infrastructure.repositories.sqlalchemy_user_repository import SqlAlchemyUserRepository
 
 

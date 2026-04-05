@@ -4,7 +4,7 @@ from collections import defaultdict
 from uuid import UUID
 
 from ulabel.domain.images import Image, ImageStatus
-from ulabel.domain.labels import LabelRecord, LabelerSubmitStats
+from ulabel.domain.labels import LabelerSubmitStats, LabelRecord
 from ulabel.domain.ports.stats_repository import (
     DailyLabelRow,
     ImageCounts,

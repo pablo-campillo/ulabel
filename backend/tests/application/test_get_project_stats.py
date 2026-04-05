@@ -1,5 +1,6 @@
-import pytest
 from uuid import uuid4
+
+import pytest
 
 from ulabel.application.get_project_stats import (
     GetProjectStatsUseCase,
@@ -9,7 +10,9 @@ from ulabel.domain.images import Image, ImageStatus
 from ulabel.domain.labels import LabelRecord
 from ulabel.domain.projects import Project
 from ulabel.domain.users import User
-from ulabel.infrastructure.repositories.in_memory_project_repository import InMemoryProjectRepository
+from ulabel.infrastructure.repositories.in_memory_project_repository import (
+    InMemoryProjectRepository,
+)
 from ulabel.infrastructure.repositories.in_memory_stats_repository import InMemoryStatsRepository
 
 
@@ -63,7 +66,10 @@ def images_and_labels(project, labeler_a, labeler_b):
 
     # 2 pending images
     for i in range(2):
-        images.append(Image.create(id=uuid4(), project_id=project.id, storage_key=f"pending_{i}.jpg"))
+        images.append(Image.create(
+            id=uuid4(), project_id=project.id,
+            storage_key=f"pending_{i}.jpg",
+        ))
 
     return images, labels
 

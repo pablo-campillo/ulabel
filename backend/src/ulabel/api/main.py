@@ -14,7 +14,11 @@ from ulabel.api.error_handlers import domain_error_handler
 from ulabel.container import Container
 from ulabel.domain.errors import DomainError
 from ulabel.infrastructure.observability.metrics import PrometheusMiddleware, metrics_route
-from ulabel.infrastructure.observability.tracing import instrument_fastapi, instrument_libraries, shutdown_tracing
+from ulabel.infrastructure.observability.tracing import (
+    instrument_fastapi,
+    instrument_libraries,
+    shutdown_tracing,
+)
 
 container = Container()
 
@@ -54,10 +58,21 @@ API for managing image labelling projects.
 
 ## Workflow
 
-1. **Authentication** — the user calls `POST /v1/token` with their username and receives their ID and role.
-2. **Admin** creates projects (`POST /v1/projects`) and adds labelers (`POST /v1/projects/{id}/labelers`).
-3. **Image loading** — the admin uploads images one by one (`POST /v1/projects/{id}/images/upload`), registers them by storage key (`POST /v1/projects/{id}/images`), or bulk-imports from the bucket (`POST /v1/projects/{id}/images/import`).
-4. **Labelling** — the labeler creates an assignment (`POST /v1/projects/{id}/assignments`), which returns the next pending image with a presigned URL whose expiry is configured via `tasks.image_assignment_timeout_seconds` in `config.yml`. If not completed in time, the assignment expires and the image becomes available again.
+1. **Authentication** — the user calls `POST /v1/token`
+   with their username and receives their ID and role.
+2. **Admin** creates projects (`POST /v1/projects`)
+   and adds labelers (`POST /v1/projects/{id}/labelers`).
+3. **Image loading** — the admin uploads images one by one
+   (`POST /v1/projects/{id}/images/upload`), registers them
+   by storage key (`POST /v1/projects/{id}/images`), or
+   bulk-imports from the bucket
+   (`POST /v1/projects/{id}/images/import`).
+4. **Labelling** — the labeler creates an assignment
+   (`POST /v1/projects/{id}/assignments`), which returns
+   the next pending image with a presigned URL whose expiry
+   is configured via `tasks.image_assignment_timeout_seconds`
+   in `config.yml`. If not completed in time, the assignment
+   expires and the image becomes available again.
 
 ## Roles
 
@@ -78,7 +93,12 @@ app.include_router(api_router, prefix="/v1")
 app.add_route("/metrics", metrics_route)
 
 
-@app.get("/", tags=["Health"], summary="Health check", description="Verifies the service is up and running.")
+@app.get(
+    "/",
+    tags=["Health"],
+    summary="Health check",
+    description="Verifies the service is up and running.",
+)
 async def root():
     """Return a simple health check response.
 

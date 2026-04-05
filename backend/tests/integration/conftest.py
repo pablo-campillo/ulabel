@@ -1,12 +1,16 @@
 import os
 
 import pytest
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from ulabel.infrastructure.models.base import Base
 from ulabel.infrastructure.models.image import ImageModel  # noqa: F401
 from ulabel.infrastructure.models.label import LabelRecordModel  # noqa: F401
-from ulabel.infrastructure.models.project import ProjectLabelModel, ProjectLabelerModel, ProjectModel  # noqa: F401
+from ulabel.infrastructure.models.project import (  # noqa: F401
+    ProjectLabelerModel,
+    ProjectLabelModel,
+    ProjectModel,
+)
 from ulabel.infrastructure.models.user import UserModel  # noqa: F401
 
 TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL")

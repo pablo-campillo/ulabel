@@ -1,12 +1,15 @@
-import pytest
 from uuid import uuid4
+
+import pytest
 from fastapi.testclient import TestClient
 
 from ulabel.api.main import app
 from ulabel.domain.projects import Project
 from ulabel.domain.users import User
 from ulabel.infrastructure.repositories.in_memory_image_repository import InMemoryImageRepository
-from ulabel.infrastructure.repositories.in_memory_project_repository import InMemoryProjectRepository
+from ulabel.infrastructure.repositories.in_memory_project_repository import (
+    InMemoryProjectRepository,
+)
 from ulabel.infrastructure.storage.fake_storage_service import FakeStorageService
 
 
@@ -17,7 +20,10 @@ def admin():
 
 @pytest.fixture
 def project(admin):
-    return Project.create(id=uuid4(), owner=admin, name="My Project", description="desc", labels={"cat"})
+    return Project.create(
+        id=uuid4(), owner=admin, name="My Project",
+        description="desc", labels={"cat"},
+    )
 
 
 @pytest.fixture

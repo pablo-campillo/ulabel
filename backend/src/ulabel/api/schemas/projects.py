@@ -20,8 +20,14 @@ class CreateProjectRequest(BaseModel):
             "example": {
                 "owner_id": "123e4567-e89b-12d3-a456-426614174000",
                 "name": "Vehicle classification",
-                "description": "Annotate urban traffic images indicating the type of vehicle present.",
-                "labels": ["car", "truck", "motorcycle", "bicycle"],
+                "description": (
+                    "Annotate urban traffic images"
+                    " indicating the type of"
+                    " vehicle present."
+                ),
+                "labels": [
+                    "car", "truck", "motorcycle", "bicycle",
+                ],
             }
         }
     }
@@ -81,8 +87,14 @@ class ProjectSummary(BaseModel):
                 "id": "789e0123-e89b-12d3-a456-426614174002",
                 "owner_id": "123e4567-e89b-12d3-a456-426614174000",
                 "name": "Vehicle classification",
-                "description": "Annotate urban traffic images indicating the type of vehicle present.",
-                "labels": ["car", "truck", "motorcycle", "bicycle"],
+                "description": (
+                    "Annotate urban traffic images"
+                    " indicating the type of"
+                    " vehicle present."
+                ),
+                "labels": [
+                    "car", "truck", "motorcycle", "bicycle",
+                ],
                 "labeler_count": 3,
             }
         }
@@ -97,7 +109,13 @@ class ProjectDetail(BaseModel):
     name: str = Field(..., description="Project name.")
     description: str = Field(..., description="Project description.")
     labels: set[str] = Field(..., description="Labels available in the project.")
-    labelers: list[LabelerInfo] = Field(default_factory=list, description="Assigned labelers with resolved usernames.")
+    labelers: list[LabelerInfo] = Field(
+        default_factory=list,
+        description=(
+            "Assigned labelers with"
+            " resolved usernames."
+        ),
+    )
     created_at: datetime = Field(..., description="Timestamp when the project was created.")
 
     model_config = {
@@ -106,9 +124,20 @@ class ProjectDetail(BaseModel):
                 "id": "789e0123-e89b-12d3-a456-426614174002",
                 "owner_id": "123e4567-e89b-12d3-a456-426614174000",
                 "name": "Vehicle classification",
-                "description": "Annotate urban traffic images indicating the type of vehicle present.",
-                "labels": ["car", "truck", "motorcycle", "bicycle"],
-                "labelers": [{"id": "456e7890-e89b-12d3-a456-426614174001", "username": "labeler1"}],
+                "description": (
+                    "Annotate urban traffic images"
+                    " indicating the type of"
+                    " vehicle present."
+                ),
+                "labels": [
+                    "car", "truck", "motorcycle", "bicycle",
+                ],
+                "labelers": [
+                    {
+                        "id": "456e7890-e89b-12d3-a456-426614174001",
+                        "username": "labeler1",
+                    },
+                ],
             }
         }
     }

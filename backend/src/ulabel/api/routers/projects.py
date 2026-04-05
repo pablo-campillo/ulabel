@@ -54,7 +54,10 @@ def _to_detail(result: ProjectWithLabelers) -> ProjectDetail:
         name=result.project.name,
         description=result.project.description,
         labels=result.project.labels,
-        labelers=[LabelerInfo(id=l.id, username=l.username) for l in result.labelers],
+        labelers=[
+            LabelerInfo(id=lab.id, username=lab.username)
+            for lab in result.labelers
+        ],
         created_at=result.project.created_at,
     )
 
@@ -63,14 +66,20 @@ def _to_detail(result: ProjectWithLabelers) -> ProjectDetail:
     "",
     response_model=PaginatedProjectSummaryResponse,
     summary="List all projects",
-    description="Returns a paginated list of all projects, ordered by creation date (newest first).",
+    description=(
+        "Returns a paginated list of all projects,"
+        " ordered by creation date (newest first)."
+    ),
     responses={200: {"description": "Paginated list of projects."}},
 )
 @inject
 async def list_projects(
     limit: int = Query(default=20, ge=1, le=100, description="Max items per page."),
     offset: int = Query(default=0, ge=0, description="Number of items to skip."),
-    name: str | None = Query(default=None, description="Filter projects by name (case-insensitive, contains match)."),
+    name: str | None = Query(
+        default=None,
+        description="Filter projects by name (case-insensitive, contains match).",
+    ),
     use_case: ListProjectsUseCase = Depends(Provide[Container.list_projects_use_case]),
 ):
     """List all projects with pagination and optional name filtering.
@@ -98,12 +107,25 @@ async def list_projects(
     "/{project_id}",
     response_model=ProjectDetail,
     summary="Get project detail",
-    description="Returns a single project with fully resolved labeler information.",
+    description=(
+        "Returns a single project with fully"
+        " resolved labeler information."
+    ),
     responses={
         200: {"description": "Project detail with resolved labelers."},
         404: {
             "description": "Project not found.",
-            "content": {"application/json": {"example": {"error": {"code": "PROJECT_NOT_FOUND", "message": "Project not found", "details": []}}}},
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": {
+                            "code": "PROJECT_NOT_FOUND",
+                            "message": "Project not found",
+                            "details": [],
+                        }
+                    }
+                }
+            },
         },
     },
 )
@@ -141,15 +163,45 @@ changed after the project is created.
         201: {"description": "Project created successfully."},
         403: {
             "description": "The specified owner does not have the `admin` role.",
-            "content": {"application/json": {"example": {"error": {"code": "UNAUTHORIZED", "message": "Owner is not an admin", "details": []}}}},
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": {
+                            "code": "UNAUTHORIZED",
+                            "message": "Owner is not an admin",
+                            "details": [],
+                        }
+                    }
+                }
+            },
         },
         404: {
             "description": "No user found with the given `owner_id`.",
-            "content": {"application/json": {"example": {"error": {"code": "USER_NOT_FOUND", "message": "Owner not found", "details": []}}}},
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": {
+                            "code": "USER_NOT_FOUND",
+                            "message": "Owner not found",
+                            "details": [],
+                        }
+                    }
+                }
+            },
         },
         409: {
             "description": "A project with the same name already exists.",
-            "content": {"application/json": {"example": {"error": {"code": "PROJECT_NAME_ALREADY_EXISTS", "message": "Project name already exists", "details": []}}}},
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": {
+                            "code": "PROJECT_NAME_ALREADY_EXISTS",
+                            "message": "Project name already exists",
+                            "details": [],
+                        }
+                    }
+                }
+            },
         },
     },
 )
@@ -175,7 +227,10 @@ async def create_project(
         description=request.description,
         labels=request.labels,
     )
-    logger.info("Project created: id=%s name=%s owner=%s labels=%d", project.id, request.name, request.owner_id, len(request.labels))
+    logger.info(
+        "Project created: id=%s name=%s owner=%s labels=%d",
+        project.id, request.name, request.owner_id, len(request.labels),
+    )
     result = await get_project_use_case.execute(project_id=project.id)
     return _to_detail(result)
 
@@ -195,16 +250,45 @@ role.
     responses={
         200: {"description": "Project updated successfully."},
         403: {
-            "description": "One of the provided labeler IDs does not have the `labeler` role.",
-            "content": {"application/json": {"example": {"error": {"code": "UNAUTHORIZED", "message": "User is not a labeler", "details": []}}}},
+            "description": (
+                "One of the provided labeler IDs does"
+                " not have the `labeler` role."
+            ),
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": {
+                            "code": "UNAUTHORIZED",
+                            "message": "User is not a labeler",
+                            "details": [],
+                        }
+                    }
+                }
+            },
         },
         404: {
             "description": "Project or labeler not found.",
             "content": {
                 "application/json": {
                     "examples": {
-                        "project_not_found": {"value": {"error": {"code": "PROJECT_NOT_FOUND", "message": "Project not found", "details": []}}},
-                        "labeler_not_found": {"value": {"error": {"code": "USER_NOT_FOUND", "message": "Labeler not found", "details": []}}},
+                        "project_not_found": {
+                            "value": {
+                                "error": {
+                                    "code": "PROJECT_NOT_FOUND",
+                                    "message": "Project not found",
+                                    "details": [],
+                                }
+                            }
+                        },
+                        "labeler_not_found": {
+                            "value": {
+                                "error": {
+                                    "code": "USER_NOT_FOUND",
+                                    "message": "Labeler not found",
+                                    "details": [],
+                                }
+                            }
+                        },
                     }
                 }
             },
@@ -255,15 +339,41 @@ a 403 is returned.
         200: {"description": "Labeler added. Returns the updated project."},
         403: {
             "description": "The specified user does not have the `labeler` role.",
-            "content": {"application/json": {"example": {"error": {"code": "UNAUTHORIZED", "message": "User is not a labeler", "details": []}}}},
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": {
+                            "code": "UNAUTHORIZED",
+                            "message": "User is not a labeler",
+                            "details": [],
+                        }
+                    }
+                }
+            },
         },
         404: {
             "description": "Project or labeler not found.",
             "content": {
                 "application/json": {
                     "examples": {
-                        "project_not_found": {"value": {"error": {"code": "PROJECT_NOT_FOUND", "message": "Project not found", "details": []}}},
-                        "labeler_not_found": {"value": {"error": {"code": "USER_NOT_FOUND", "message": "Labeler not found", "details": []}}},
+                        "project_not_found": {
+                            "value": {
+                                "error": {
+                                    "code": "PROJECT_NOT_FOUND",
+                                    "message": "Project not found",
+                                    "details": [],
+                                }
+                            }
+                        },
+                        "labeler_not_found": {
+                            "value": {
+                                "error": {
+                                    "code": "USER_NOT_FOUND",
+                                    "message": "Labeler not found",
+                                    "details": [],
+                                }
+                            }
+                        },
                     }
                 }
             },
@@ -274,7 +384,9 @@ a 403 is returned.
 async def add_labeler(
     project_id: UUID,
     request: AddLabelerRequest,
-    use_case: AddLabelerToProjectUseCase = Depends(Provide[Container.add_labeler_to_project_use_case]),
+    use_case: AddLabelerToProjectUseCase = Depends(
+        Provide[Container.add_labeler_to_project_use_case]
+    ),
     get_project_use_case: GetProjectUseCase = Depends(Provide[Container.get_project_use_case]),
 ):
     """Add a labeler to an existing project.

@@ -1,14 +1,17 @@
 import json
+from datetime import timedelta
+from uuid import uuid4
 
 import pytest
-from uuid import uuid4
 
 from ulabel.application.add_labeler_to_project import ProjectNotFound
 from ulabel.application.export_labels import ExportFormat, ExportLabelsUseCase, NoLabelsFound
 from ulabel.domain.labels import LabelRecord
 from ulabel.domain.users import User
 from ulabel.infrastructure.repositories.in_memory_label_repository import InMemoryLabelRepository
-from ulabel.infrastructure.repositories.in_memory_project_repository import InMemoryProjectRepository
+from ulabel.infrastructure.repositories.in_memory_project_repository import (
+    InMemoryProjectRepository,
+)
 from ulabel.infrastructure.storage.fake_storage_service import FakeStorageService
 
 
@@ -35,7 +38,10 @@ def label_records(project):
     image_ids = [uuid4(), uuid4(), uuid4()]
     labeler_id = uuid4()
     return [
-        LabelRecord.create(id=uuid4(), project_id=project.id, image_id=img_id, labeler_id=labeler_id, label=label)
+        LabelRecord.create(
+            id=uuid4(), project_id=project.id, image_id=img_id,
+            labeler_id=labeler_id, label=label,
+        )
         for img_id, label in zip(image_ids, ["cat", "dog", "cat"])
     ]
 
@@ -59,6 +65,7 @@ def use_case(project, label_repo, storage):
         project_repository=InMemoryProjectRepository(projects=[project]),
         label_repository=label_repo,
         storage_service=storage,
+        presigned_url_expiry=timedelta(hours=1),
     )
 
 
@@ -85,7 +92,10 @@ async def test_export_json(use_case, project, storage, label_records):
     parsed = json.loads(data)
     assert isinstance(parsed, list)
     assert len(parsed) == len(label_records)
-    assert all("image_id" in entry and "storage_key" in entry and "value" in entry for entry in parsed)
+    assert all(
+        "image_id" in entry and "storage_key" in entry
+        and "value" in entry for entry in parsed
+    )
 
 
 async def test_export_cache_hit(use_case, project, storage, label_records):
@@ -99,6 +109,7 @@ async def test_export_no_labels(project, storage):
         project_repository=InMemoryProjectRepository(projects=[project]),
         label_repository=InMemoryLabelRepository(),
         storage_service=storage,
+        presigned_url_expiry=timedelta(hours=1),
     )
     with pytest.raises(NoLabelsFound):
         await use_case.execute(project.id, ExportFormat.CSV)
@@ -109,6 +120,7 @@ async def test_export_project_not_found(label_repo, storage):
         project_repository=InMemoryProjectRepository(),
         label_repository=label_repo,
         storage_service=storage,
+        presigned_url_expiry=timedelta(hours=1),
     )
     with pytest.raises(ProjectNotFound):
         await use_case.execute(uuid4(), ExportFormat.CSV)

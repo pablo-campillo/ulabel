@@ -10,7 +10,14 @@ from uuid import UUID
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, BackgroundTasks, Depends, UploadFile, status
 
-from ulabel.api.schemas.images import AddImageRequest, ImageResponse, ImportImagesRequest, ImportJobResponse, SubmitLabelRequest, SubmitLabelResponse
+from ulabel.api.schemas.images import (
+    AddImageRequest,
+    ImageResponse,
+    ImportImagesRequest,
+    ImportJobResponse,
+    SubmitLabelRequest,
+    SubmitLabelResponse,
+)
 from ulabel.application.add_image_to_project import AddImageToProjectUseCase
 from ulabel.application.get_import_job import GetImportJobUseCase
 from ulabel.application.import_images_from_storage import ImportImagesFromStorageUseCase
@@ -40,7 +47,17 @@ To bulk-import from a bucket prefix, use `POST /{project_id}/images/import`.
         201: {"description": "Image registered with status `pending`."},
         404: {
             "description": "Project not found.",
-            "content": {"application/json": {"example": {"error": {"code": "PROJECT_NOT_FOUND", "message": "Project not found", "details": []}}}},
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": {
+                            "code": "PROJECT_NOT_FOUND",
+                            "message": "Project not found",
+                            "details": [],
+                        }
+                    }
+                }
+            },
         },
     },
 )
@@ -61,7 +78,10 @@ async def add_image(
         An ImageResponse with the registered image details.
     """
     image = await use_case.execute(project_id=project_id, storage_key=request.storage_key)
-    logger.info("Image registered: project=%s image=%s key=%s", project_id, image.id, request.storage_key)
+    logger.info(
+        "Image registered: project=%s image=%s key=%s",
+        project_id, image.id, request.storage_key,
+    )
     return ImageResponse(
         id=image.id,
         project_id=image.project_id,
@@ -88,7 +108,17 @@ available for labelers to request.
         201: {"description": "Image uploaded and registered with status `pending`."},
         404: {
             "description": "Project not found.",
-            "content": {"application/json": {"example": {"error": {"code": "PROJECT_NOT_FOUND", "message": "Project not found", "details": []}}}},
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": {
+                            "code": "PROJECT_NOT_FOUND",
+                            "message": "Project not found",
+                            "details": [],
+                        }
+                    }
+                }
+            },
         },
     },
 )
@@ -96,7 +126,9 @@ available for labelers to request.
 async def upload_image(
     project_id: UUID,
     file: UploadFile,
-    use_case: UploadImageToProjectUseCase = Depends(Provide[Container.upload_image_to_project_use_case]),
+    use_case: UploadImageToProjectUseCase = Depends(
+        Provide[Container.upload_image_to_project_use_case]
+    ),
 ):
     """Upload an image file and register it in the project.
 
@@ -142,10 +174,25 @@ Objects are processed in batches of 1,000. If an error occurs during the import,
 the job moves to `status: "failed"` and the `error` field contains the message.
 """,
     responses={
-        202: {"description": "Import job started. Poll for progress using the returned `import_id`."},
+        202: {
+            "description": (
+                "Import job started. Poll for progress"
+                " using the returned `import_id`."
+            ),
+        },
         404: {
             "description": "Project not found.",
-            "content": {"application/json": {"example": {"error": {"code": "PROJECT_NOT_FOUND", "message": "Project not found", "details": []}}}},
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": {
+                            "code": "PROJECT_NOT_FOUND",
+                            "message": "Project not found",
+                            "details": [],
+                        }
+                    }
+                }
+            },
         },
     },
 )
@@ -199,8 +246,21 @@ Possible `status` values:
     responses={
         200: {"description": "Current import job state."},
         404: {
-            "description": "Import job not found or does not belong to the given project.",
-            "content": {"application/json": {"example": {"error": {"code": "IMPORT_JOB_NOT_FOUND", "message": "Import job not found", "details": []}}}},
+            "description": (
+                "Import job not found or does not"
+                " belong to the given project."
+            ),
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": {
+                            "code": "IMPORT_JOB_NOT_FOUND",
+                            "message": "Import job not found",
+                            "details": [],
+                        }
+                    }
+                }
+            },
         },
     },
 )
@@ -249,19 +309,62 @@ On success the image transitions to `done` and cannot be re-assigned.
         201: {"description": "Label recorded and image marked as `done`."},
         403: {
             "description": "The labeler does not match the assigned labeler.",
-            "content": {"application/json": {"example": {"error": {"code": "LABELER_MISMATCH", "message": "Labeler mismatch", "details": []}}}},
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": {
+                            "code": "LABELER_MISMATCH",
+                            "message": "Labeler mismatch",
+                            "details": [],
+                        }
+                    }
+                }
+            },
         },
         404: {
             "description": "Project or image not found.",
-            "content": {"application/json": {"example": {"error": {"code": "IMAGE_NOT_FOUND", "message": "Image not found", "details": []}}}},
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": {
+                            "code": "IMAGE_NOT_FOUND",
+                            "message": "Image not found",
+                            "details": [],
+                        }
+                    }
+                }
+            },
         },
         409: {
-            "description": "Image is not in progress or assignment ID does not match.",
-            "content": {"application/json": {"example": {"error": {"code": "IMAGE_NOT_IN_PROGRESS", "message": "Image is not in progress", "details": []}}}},
+            "description": (
+                "Image is not in progress or"
+                " assignment ID does not match."
+            ),
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": {
+                            "code": "IMAGE_NOT_IN_PROGRESS",
+                            "message": "Image is not in progress",
+                            "details": [],
+                        }
+                    }
+                }
+            },
         },
         422: {
             "description": "Label is not valid for this project.",
-            "content": {"application/json": {"example": {"error": {"code": "INVALID_LABEL", "message": "Invalid label", "details": []}}}},
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": {
+                            "code": "INVALID_LABEL",
+                            "message": "Invalid label",
+                            "details": [],
+                        }
+                    }
+                }
+            },
         },
     },
 )

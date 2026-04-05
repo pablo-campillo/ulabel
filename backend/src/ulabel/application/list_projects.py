@@ -16,7 +16,12 @@ class ListProjectsUseCase:
         """
         self.project_repository = project_repository
 
-    async def execute(self, limit: int, offset: int, name: str | None = None) -> PaginatedResult[Project]:
+    async def execute(
+        self,
+        limit: int,
+        offset: int,
+        name: str | None = None,
+    ) -> PaginatedResult[Project]:
         """List projects with pagination.
 
         Args:

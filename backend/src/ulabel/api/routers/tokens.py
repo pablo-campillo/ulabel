@@ -32,7 +32,17 @@ Authenticates a user by username and returns their session information (ID and r
         200: {"description": "Sign-in successful. Returns the user's ID and role."},
         404: {
             "description": "User not found.",
-            "content": {"application/json": {"example": {"error": {"code": "USER_NOT_FOUND", "message": "User not found", "details": []}}}},
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": {
+                            "code": "USER_NOT_FOUND",
+                            "message": "User not found",
+                            "details": [],
+                        }
+                    }
+                }
+            },
         },
     },
 )
