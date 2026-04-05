@@ -6,21 +6,10 @@ from ulabel.application.add_labeler_to_project import AddLabelerToProjectUseCase
 from ulabel.application.create_project import Unauthorized
 from ulabel.application.login import UserNotFound
 from ulabel.domain.projects import Project
-from ulabel.domain.users import User
 from ulabel.infrastructure.repositories.in_memory_project_repository import (
     InMemoryProjectRepository,
 )
 from ulabel.infrastructure.repositories.in_memory_user_repository import InMemoryUserRepository
-
-
-@pytest.fixture
-def admin():
-    return User.create_admin(id=uuid4(), username="admin")
-
-
-@pytest.fixture
-def labeler():
-    return User.create_labeler(id=uuid4(), username="labeler")
 
 
 @pytest.fixture

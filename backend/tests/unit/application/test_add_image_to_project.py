@@ -6,16 +6,10 @@ from ulabel.application.add_image_to_project import AddImageToProjectUseCase
 from ulabel.application.add_labeler_to_project import ProjectNotFound
 from ulabel.domain.images import ImageStatus
 from ulabel.domain.projects import Project
-from ulabel.domain.users import User
 from ulabel.infrastructure.repositories.in_memory_image_repository import InMemoryImageRepository
 from ulabel.infrastructure.repositories.in_memory_project_repository import (
     InMemoryProjectRepository,
 )
-
-
-@pytest.fixture
-def admin():
-    return User.create_admin(id=uuid4(), username="admin")
 
 
 @pytest.fixture

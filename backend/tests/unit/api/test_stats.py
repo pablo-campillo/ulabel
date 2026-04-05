@@ -15,11 +15,6 @@ from ulabel.infrastructure.repositories.in_memory_stats_repository import InMemo
 
 
 @pytest.fixture
-def admin():
-    return User.create_admin(id=uuid4(), username="admin")
-
-
-@pytest.fixture
 def labeler():
     return User.create_labeler(id=uuid4(), username="ana")
 

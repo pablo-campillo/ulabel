@@ -13,16 +13,6 @@ from ulabel.infrastructure.repositories.in_memory_user_repository import InMemor
 
 
 @pytest.fixture
-def admin():
-    return User.create_admin(id=uuid4(), username="admin")
-
-
-@pytest.fixture
-def labeler():
-    return User.create_labeler(id=uuid4(), username="labeler")
-
-
-@pytest.fixture
 def project(admin, labeler):
     p = Project.create(
         id=uuid4(), owner=admin, name="Project A",

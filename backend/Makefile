@@ -46,7 +46,7 @@ shell:               ## Open an interactive shell inside the dev container
 # ── Quality ──────────────────────────────────────────────────────────────────
 
 test:                ## Run unit tests inside the dev container
-	docker run --rm $(DEV_IMAGE) uv run --group dev pytest tests/application tests/api -v
+	docker run --rm $(DEV_IMAGE) uv run --group dev pytest tests/unit -v
 
 test-cov:            ## Run all tests with coverage report (shows missing lines per file)
 	docker run --rm \

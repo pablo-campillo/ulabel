@@ -5,7 +5,6 @@ from fastapi.testclient import TestClient
 
 from ulabel.api.main import app
 from ulabel.domain.projects import Project
-from ulabel.domain.users import User
 from ulabel.infrastructure.repositories.in_memory_image_repository import InMemoryImageRepository
 from ulabel.infrastructure.repositories.in_memory_import_job_repository import (
     InMemoryImportJobRepository,
@@ -21,11 +20,6 @@ STORAGE_OBJECTS = [
     "dataset/train/img003.jpg",
     "dataset/val/img004.jpg",
 ]
-
-
-@pytest.fixture
-def admin():
-    return User.create_admin(id=uuid4(), username="admin")
 
 
 @pytest.fixture

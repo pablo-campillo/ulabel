@@ -11,23 +11,12 @@ from ulabel.application.create_assignment import (
 )
 from ulabel.domain.images import Image, ImageStatus
 from ulabel.domain.projects import Project
-from ulabel.domain.users import User
 from ulabel.infrastructure.repositories.in_memory_image_repository import InMemoryImageRepository
 from ulabel.infrastructure.repositories.in_memory_project_repository import (
     InMemoryProjectRepository,
 )
 
 FIXED_NOW = datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
-
-
-@pytest.fixture
-def admin():
-    return User.create_admin(id=uuid4(), username="admin")
-
-
-@pytest.fixture
-def labeler():
-    return User.create_labeler(id=uuid4(), username="labeler")
 
 
 @pytest.fixture

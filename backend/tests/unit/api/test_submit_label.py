@@ -7,7 +7,6 @@ from fastapi.testclient import TestClient
 from ulabel.api.main import app
 from ulabel.domain.images import Image
 from ulabel.domain.projects import Project
-from ulabel.domain.users import User
 from ulabel.infrastructure.repositories.in_memory_image_repository import InMemoryImageRepository
 from ulabel.infrastructure.repositories.in_memory_label_repository import InMemoryLabelRepository
 from ulabel.infrastructure.repositories.in_memory_project_repository import (
@@ -16,16 +15,6 @@ from ulabel.infrastructure.repositories.in_memory_project_repository import (
 from ulabel.infrastructure.repositories.in_memory_stats_repository import InMemoryStatsRepository
 
 FIXED_NOW = datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
-
-
-@pytest.fixture
-def admin():
-    return User.create_admin(id=uuid4(), username="admin")
-
-
-@pytest.fixture
-def labeler():
-    return User.create_labeler(id=uuid4(), username="labeler")
 
 
 @pytest.fixture
