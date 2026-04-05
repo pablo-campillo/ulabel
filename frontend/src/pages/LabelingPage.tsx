@@ -29,7 +29,7 @@ export function LabelingPage() {
     totalLabelers,
     previousRanking,
     phase,
-    setProject,
+    setProjectSummary: setProject,
     setImage,
     setInitialStats,
     onLabelSubmitted,

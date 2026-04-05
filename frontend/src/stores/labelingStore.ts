@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { ProjectSummarySummary, AssignedImage, SubmitLabelResult } from '../types/api'
+import type { ProjectSummary, AssignedImage, SubmitLabelResult } from '../types/api'
 
 export type LabelingPhase = 'idle' | 'labeling' | 'submitted' | 'no_more_images'
 
