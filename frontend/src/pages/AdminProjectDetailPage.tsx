@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router'
 import { Header } from '../components/Header'
 import { ProjectFormDialog } from '../components/admin/ProjectFormDialog'
+import { RefreshControl } from '../components/admin/RefreshControl'
 import { DailyProgressChart } from '../components/admin/charts/DailyProgressChart'
 import { LabelDistributionChart } from '../components/admin/charts/LabelDistributionChart'
 import { LabelerActivityChart } from '../components/admin/charts/LabelerActivityChart'
@@ -17,6 +18,8 @@ export function AdminProjectDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [showEdit, setShowEdit] = useState(false)
+  const [exportError, setExportError] = useState('')
+  const [refreshing, setRefreshing] = useState(false)
 
   const fetchData = async () => {
     if (!projectId) return
@@ -38,6 +41,19 @@ export function AdminProjectDetailPage() {
 
   useEffect(() => {
     fetchData()
+  }, [projectId])
+
+  const refreshStats = useCallback(async () => {
+    if (!projectId) return
+    setRefreshing(true)
+    try {
+      const statsRes = await getProjectStats(projectId)
+      setStats(statsRes)
+    } catch {
+      // silently fail on auto-refresh to avoid disrupting the view
+    } finally {
+      setRefreshing(false)
+    }
   }, [projectId])
 
   const handleEditClose = (refreshNeeded?: boolean) => {
@@ -176,26 +192,44 @@ export function AdminProjectDetailPage() {
           </div>
         </div>
 
-        {/* Export buttons */}
-        <div className="flex gap-2 mb-6">
-          <button
-            onClick={() => exportProject(projectId!, 'json')}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer flex items-center gap-2"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-            </svg>
-            Export JSON
-          </button>
-          <button
-            onClick={() => exportProject(projectId!, 'csv')}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer flex items-center gap-2"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-            </svg>
-            Export CSV
-          </button>
+        {/* Export & Refresh controls */}
+        <div className="flex flex-col gap-2 mb-6">
+          <div className="flex items-center gap-2">
+            <div className="flex gap-2">
+            <button
+              onClick={() => {
+                setExportError('')
+                exportProject(projectId!, 'json').catch((e) => setExportError(e.message))
+              }}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+              </svg>
+              Export JSON
+            </button>
+            <button
+              onClick={() => {
+                setExportError('')
+                exportProject(projectId!, 'csv').catch((e) => setExportError(e.message))
+              }}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+              </svg>
+              Export CSV
+            </button>
+            </div>
+            <div className="ml-auto">
+              <RefreshControl onRefresh={refreshStats} refreshing={refreshing} />
+            </div>
+          </div>
+          {exportError && (
+            <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-2">
+              {exportError}
+            </div>
+          )}
         </div>
 
         {/* Charts grid */}

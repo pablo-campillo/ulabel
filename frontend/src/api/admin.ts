@@ -57,8 +57,31 @@ export function getImportStatus(projectId: string, importId: string) {
   )
 }
 
-export function exportProject(projectId: string, format: 'json' | 'csv') {
-  window.open(`/v1/projects/${projectId}/export?format=${format}`, '_blank')
+export async function exportProject(projectId: string, format: 'json' | 'csv'): Promise<void> {
+  const res = await fetch(`/v1/projects/${projectId}/export?format=${format}`, {
+    redirect: 'follow',
+  })
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    const code = body?.error?.code
+    if (code === 'STORAGE_FULL') {
+      throw new ApiError(res.status, 'Storage is full. Please free up space and try again.')
+    }
+    if (code === 'NO_LABELS_FOUND') {
+      throw new ApiError(res.status, 'No labels to export yet.')
+    }
+    throw new ApiError(res.status, body?.error?.message || 'Export failed')
+  }
+
+  // The response followed the redirect to MinIO — trigger download from the blob
+  const blob = await res.blob()
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `labels.${format}`
+  a.click()
+  URL.revokeObjectURL(url)
 }
 
 export function searchLabelers(query: string, limit = 10) {
