@@ -148,6 +148,7 @@ This means:
 - **Production** uses real PostgreSQL repositories and S3 storage.
 - **Unit tests** swap in in-memory repositories and fake storage with no container changes needed — just construct use cases with test doubles directly.
 - **Integration tests** use the real container pointed at a test database.
+- **E2E tests** use a test FastAPI app with the real container pointed at a test database, verifying the full HTTP → use case → repository → database flow.
 
 ## Key Design Decisions
 

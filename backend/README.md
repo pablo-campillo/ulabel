@@ -7,7 +7,6 @@ Backend for the image labelling platform. REST API built with FastAPI, PostgreSQ
 - [Requirements](#requirements)
 - [Getting started](#getting-started)
 - [Configuration](#configuration)
-- [API](#api)
 - [Importing images from object storage](#importing-images-from-object-storage)
 - [Sample dataset](#sample-dataset)
 - [Local development](#local-development)
@@ -21,7 +20,6 @@ Backend for the image labelling platform. REST API built with FastAPI, PostgreSQ
 
 - Docker and Docker Compose
 - [uv](https://docs.astral.sh/uv/) (for local development without Docker)
-- `wget` and `unzip` (only needed for `make seed-dataset`)
 
 ---
 
@@ -31,6 +29,9 @@ Backend for the image labelling platform. REST API built with FastAPI, PostgreSQ
 # Copy and adjust environment variables
 cp .env.example .env
 
+# Build the dev Docker image
+make setup
+
 # Start the database, MinIO, and the application
 docker compose up
 ```
@@ -38,29 +39,7 @@ docker compose up
 The API will be available at `http://localhost:8000`.
 The MinIO console at `http://localhost:9001` (user: `minioadmin` / `minioadmin`).
 
----
-
-## Configuration
-
-All variables are read from the `.env` file (or from the environment). See `.env.example` for the full list.
-
-| Variable | Default | Description |
-|---|---|---|
-| `DATABASE_URL` | `postgresql+asyncpg://ulabel:secret@localhost:5432/ulabel` | PostgreSQL connection string |
-| `STORAGE_ENDPOINT` | `http://localhost:9000` | Object storage URL (MinIO / S3) |
-| `STORAGE_ACCESS_KEY` | `minioadmin` | Storage access key |
-| `STORAGE_SECRET_KEY` | `minioadmin` | Storage secret key |
-| `STORAGE_BUCKET` | `ulabel` | Bucket where images are stored |
-| `IMAGE_ASSIGNMENT_TIMEOUT_SECONDS` | `60` | Seconds before an assigned image is released back to pending (see `tasks.image_assignment_timeout_seconds` in `config.yml`) |
-| `IMAGE_EXPIRY_INTERVAL_SECONDS` | `300` | How often the assignment expiry task runs |
-
----
-
-## API
-
-All endpoints are prefixed with `/v1/`.
-
-### Interactive documentation
+Interactive API documentation:
 
 | URL | Interface |
 |---|---|
@@ -68,270 +47,42 @@ All endpoints are prefixed with `/v1/`.
 | `http://localhost:8000/redoc` | ReDoc — cleaner reference view |
 | `http://localhost:8000/openapi.json` | OpenAPI 3.1 schema in JSON |
 
-### Roles
-
-| Role | Capabilities |
-|---|---|
-| `admin` | Create projects, add labelers, upload and import images |
-| `labeler` | View their projects, fetch images to label |
-
 ---
 
-### Authentication — `/v1/token`
+## Configuration
 
-#### `POST /v1/token` — Sign in
+Configuration is split between two files:
 
-Authenticates a user by username and returns their session information.
+- **`.env`** — secrets and environment-specific overrides (gitignored). See `.env.example` for the full list.
+- **`config.yml`** — non-secret settings with `${ENV_VAR}` interpolation for values that come from `.env`.
 
-**Request**
-```json
-{ "username": "john_doe" }
-```
+### Environment variables (`.env`)
 
-**Response `200`**
-```json
-{
-  "username": "john_doe",
-  "id": "123e4567-e89b-12d3-a456-426614174000",
-  "role": "admin"
-}
-```
-
-| Code | Description |
-|---|---|
-| `200` | Sign-in successful. Returns the user's `id` and `role`. |
-| `404` | User not found. |
-
----
-
-### Projects — `/v1/projects`
-
-#### `POST /v1/projects` — Create project
-
-Creates a new project. The `owner_id` must belong to a user with the `admin` role.
-
-**Request**
-```json
-{
-  "owner_id": "123e4567-e89b-12d3-a456-426614174000",
-  "name": "Vehicle classification",
-  "description": "Annotate urban traffic images indicating the type of vehicle.",
-  "labels": ["car", "truck", "motorcycle", "bicycle"]
-}
-```
-
-**Response `201`**
-```json
-{
-  "id": "789e0123-e89b-12d3-a456-426614174002",
-  "owner_id": "123e4567-e89b-12d3-a456-426614174000",
-  "name": "Vehicle classification",
-  "description": "Annotate urban traffic images indicating the type of vehicle.",
-  "labels": ["car", "truck", "motorcycle", "bicycle"]
-}
-```
-
-| Code | Description |
-|---|---|
-| `201` | Project created. |
-| `403` | The `owner_id` does not have the `admin` role. |
-| `404` | No user found with that `owner_id`. |
-
----
-
-#### `POST /v1/projects/{project_id}/labelers` — Add labeler to project
-
-Assigns a user with the `labeler` role to a project. From that point on they can request pending images.
-
-**Path params:** `project_id` (UUID)
-
-**Request**
-```json
-{ "labeler_id": "456e7890-e89b-12d3-a456-426614174001" }
-```
-
-**Response `200`** — updated project (same schema as `POST /v1/projects`)
-
-| Code | Description |
-|---|---|
-| `200` | Labeler added. |
-| `403` | The user does not have the `labeler` role. |
-| `404` | Project or labeler not found. |
-
----
-
-### Images — `/v1/projects/{project_id}/images`
-
-#### `POST /v1/projects/{project_id}/images` — Register image by storage key
-
-Registers an image that **already exists** in the bucket into the project. Useful when images are uploaded to the storage externally.
-
-**Path params:** `project_id` (UUID)
-
-**Request**
-```json
-{ "storage_key": "raw/image001.jpg" }
-```
-
-**Response `201`**
-```json
-{
-  "id": "abc12345-e89b-12d3-a456-426614174003",
-  "project_id": "789e0123-e89b-12d3-a456-426614174002",
-  "storage_key": "raw/image001.jpg",
-  "status": "pending"
-}
-```
-
-| Code | Description |
-|---|---|
-| `201` | Image registered with status `pending`. |
-| `404` | Project not found. |
-
----
-
-#### `POST /v1/projects/{project_id}/images/upload` — Upload image directly
-
-Uploads an image file to the bucket and registers it in the project in a single step.
-
-**Path params:** `project_id` (UUID)
-
-**Request** — `multipart/form-data`, field name `file`
-
-```
-POST /v1/projects/{project_id}/images/upload
-Content-Type: multipart/form-data
-
-file=<binary>
-```
-
-**Response `201`** — same schema as the endpoint above, with an auto-generated `storage_key` (`{project_id}/{image_id}`).
-
-| Code | Description |
-|---|---|
-| `201` | Image uploaded and registered with status `pending`. |
-| `404` | Project not found. |
-
----
-
-#### `POST /v1/projects/{project_id}/images/import` — Bulk import from storage
-
-Starts an **asynchronous** job that lists all objects in the bucket under a given prefix and registers them as project images. The response is returned immediately; use the `import_id` to poll for progress.
-
-**Path params:** `project_id` (UUID)
-
-**Request**
-```json
-{ "prefix": "raw/batch-01/" }
-```
-
-**Response `202`**
-```json
-{
-  "import_id": "fed54321-e89b-12d3-a456-426614174005",
-  "project_id": "789e0123-e89b-12d3-a456-426614174002",
-  "prefix": "raw/batch-01/",
-  "status": "running",
-  "imported": 0,
-  "error": null
-}
-```
-
-| Code | Description |
-|---|---|
-| `202` | Import job started. |
-| `404` | Project not found. |
-
----
-
-#### `GET /v1/projects/{project_id}/images/imports/{import_id}` — Import job status
-
-Returns the current state of a previously started import job.
-
-**Path params:** `project_id` (UUID), `import_id` (UUID)
-
-**Response `200`**
-```json
-{
-  "import_id": "fed54321-e89b-12d3-a456-426614174005",
-  "project_id": "789e0123-e89b-12d3-a456-426614174002",
-  "prefix": "raw/batch-01/",
-  "status": "done",
-  "imported": 250,
-  "error": null
-}
-```
-
-`status` values: `running` · `done` · `failed`. When `status` is `failed`, the `error` field contains the error message.
-
-| Code | Description |
-|---|---|
-| `200` | Current job state. |
-| `404` | Job not found or does not belong to the given project. |
-
----
-
-#### `GET /v1/projects/{project_id}/images/next` — Get next pending image
-
-Assigns and returns the next `pending` image in the project to the given labeler. Includes a **presigned URL** whose expiry is configured via `tasks.image_assignment_timeout_seconds` in `config.yml` (default: 60 seconds).
-
-If the labeler does not finish within that time, the image is automatically reset to `pending` and becomes available again.
-
-**Path params:** `project_id` (UUID)
-
-**Query params:**
-
-| Parameter | Type | Description |
+| Variable | Default | Description |
 |---|---|---|
-| `labeler_id` | UUID | ID of the labeler requesting the image |
+| `DATABASE_URL` | `postgresql+asyncpg://ulabel:secret@localhost:5432/ulabel` | PostgreSQL connection string |
+| `TEST_DATABASE_URL` | same as `DATABASE_URL` | Connection string used by integration tests |
+| `STORAGE_ACCESS_KEY` | `minioadmin` | Object storage access key |
+| `STORAGE_SECRET_KEY` | `minioadmin` | Object storage secret key |
+| `STORAGE_ENDPOINT` | `localhost:9000` | Object storage endpoint (overrides `config.yml`) |
+| `STORAGE_PUBLIC_ENDPOINT` | _(empty)_ | Public-facing storage URL for presigned URLs |
+| `OTEL_TRACING_ENABLED` | `false` | Enable OpenTelemetry distributed tracing |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | `http://localhost:4317` | OTLP gRPC endpoint (Tempo) |
+| `OTEL_TRACES_SAMPLE_RATIO` | `1.0` | Tracing sample ratio (`0.0`–`1.0`) |
+| `OTEL_METRICS_ENABLED` | `false` | Enable Prometheus metrics collection |
+| `LOG_LEVEL` | `INFO` | Logging level |
 
-**Response `200`**
-```json
-{
-  "id": "abc12345-e89b-12d3-a456-426614174003",
-  "project_id": "789e0123-e89b-12d3-a456-426614174002",
-  "status": "in_progress",
-  "assignment_id": "def67890-e89b-12d3-a456-426614174004",
-  "presigned_url": "https://storage.example.com/ulabel/...?X-Amz-Expires=60&...",
-  "presigned_url_expires_in": 60
-}
-```
+### Application config (`config.yml`)
 
-| Code | Description |
-|---|---|
-| `200` | Image assigned with presigned URL. |
-| `204` | No pending images available at this time. |
-| `403` | The labeler is not assigned to this project. |
-| `404` | Project not found. |
-
----
-
-### Labelers — `/v1/labelers`
-
-#### `GET /v1/labelers/{labeler_id}/projects` — List labeler projects
-
-Returns all projects the labeler is assigned to, including the available labels for each one.
-
-**Path params:** `labeler_id` (UUID)
-
-**Response `200`** — array of projects
-```json
-[
-  {
-    "id": "789e0123-e89b-12d3-a456-426614174002",
-    "owner_id": "123e4567-e89b-12d3-a456-426614174000",
-    "name": "Vehicle classification",
-    "description": "Annotate urban traffic images.",
-    "labels": ["car", "truck", "motorcycle", "bicycle"]
-  }
-]
-```
-
-| Code | Description |
-|---|---|
-| `200` | List of assigned projects. May be an empty array `[]`. |
-| `403` | The user does not have the `labeler` role. |
-| `404` | Labeler not found. |
+| Key | Default | Description |
+|---|---|---|
+| `database.pool_size` | `10` | Connection pool size |
+| `database.max_overflow` | `20` | Extra connections allowed beyond pool size |
+| `database.pool_recycle` | `3600` | Seconds before a connection is recycled |
+| `storage.bucket` | `ulabel` | Bucket where images are stored |
+| `storage.presigned_url_expiry_seconds` | `3600` | Presigned URL lifetime (seconds) |
+| `tasks.image_assignment_timeout_seconds` | `60` | Seconds before an assigned image is released back to `pending` |
+| `tasks.image_expiry_interval_seconds` | `30` | How often the assignment expiry task runs (seconds) |
 
 ---
 
@@ -420,7 +171,10 @@ curl -X POST http://localhost:8000/v1/projects/{project_id}/images/import \
 ## Local development
 
 ```bash
-# Install dependencies (creates .venv automatically)
+# Build the dev Docker image (required once)
+make setup
+
+# Install dependencies into local .venv (for IDE support)
 make install
 
 # Start only the infrastructure services
@@ -438,32 +192,54 @@ make help
 
 | Command | Description |
 |---|---|
-| `make install` | Install dependencies into `.venv` |
-| `make dev` | Local server with hot reload |
-| `make test` | Unit and API tests |
-| `make test-integration` | Integration tests (requires a real database) |
+| `make setup` | Build the dev Docker image |
+| `make install` | Sync all dependencies (including dev) into local `.venv` |
+| `make pre-commit-install` | Install pre-commit hooks into `.git/hooks` |
+| `make dev` | Start dev server with hot reload |
+| `make shell` | Open an interactive shell inside the dev container |
+| `make test-unit` | Run unit tests |
+| `make test-cov` | Run all tests with coverage report |
+| `make test-integration` | Integration tests (requires `TEST_DATABASE_URL`) |
+| `make test-e2e` | E2E API tests (requires `TEST_DATABASE_URL`) |
 | `make format` | Format code with ruff |
 | `make lint` | Lint with ruff |
+| `make lint-fix` | Lint and auto-fix with ruff |
 | `make typecheck` | Type-check with mypy |
 | `make check` | Run format + lint + typecheck + test |
 | `make build` | Build the production Docker image |
+| `make run` | Start the app with docker compose |
 | `make migrate` | Apply pending migrations |
+| `make migrate-create msg="..."` | Create a new auto-generated migration |
+| `make migrate-down` | Roll back the last migration |
 | `make seed-dataset` | Download and upload the Dogs vs. Cats dataset to MinIO |
+| `make docs` | Serve documentation locally with hot reload |
+| `make docs-build` | Build documentation as a static site |
+
+All commands run inside Docker containers — no local Python installation is required beyond IDE support.
 
 ---
 
 ## Tests
 
 ```bash
-# Unit and API tests (no external infrastructure required)
-make test
+# Unit tests (no external infrastructure required)
+make test-unit
 
-# Integration tests (requires PostgreSQL)
+# Integration tests (requires a running PostgreSQL instance)
 TEST_DATABASE_URL=postgresql+asyncpg://ulabel:secret@localhost:5432/ulabel \
   make test-integration
+
+# E2E API tests (requires a running PostgreSQL instance)
+TEST_DATABASE_URL=postgresql+asyncpg://ulabel:secret@localhost:5432/ulabel \
+  make test-e2e
+
+# All tests with coverage report
+make test-cov
 ```
 
-API tests use in-memory repositories and a `FakeStorageService`, so they do not require Docker or a real database.
+Unit and API tests use in-memory repositories and a `FakeStorageService`, so they do not require a real database or object storage.
+
+E2E tests exercise full API workflows (HTTP → use case → database) with a real PostgreSQL and `FakeStorageService`.
 
 ---
 
@@ -492,24 +268,35 @@ src/ulabel/
 ├── application/    # Use cases: orchestrate domain and infrastructure
 ├── domain/         # Domain models and ports (interfaces)
 │   └── ports/      # Contracts: ImageRepository, StorageService, …
-└── infrastructure/ # Implementations: SQLAlchemy, MinIO, in-memory repositories
+├── infrastructure/ # Implementations: SQLAlchemy, MinIO, in-memory repositories
+│   └── observability/  # Tracing, logging, and metrics (OpenTelemetry)
+└── container.py    # Dependency injection (dependency-injector)
 ```
 
 **Image assignment flow:**
 
-```
-Admin                         Labeler
-  │                              │
-  ├─ POST /images/import ──────► background task
-  │   lists storage objects      │
-  │   inserts in DB in chunks ◄──┘
-  │
-  │                         GET /images/next
-  │                              ├─ assigns image (status → in_progress)
-  │                              └─ returns presigned URL (30 min)
-  │
-  │         (if not labelled within 30 min)
-  │         periodic task releases image (status → pending)
+```mermaid
+sequenceDiagram
+    actor Admin
+    participant API
+    participant DB
+    participant Storage
+    actor Labeler
+
+    Admin->>API: POST /images/import {prefix}
+    API-->>Admin: 202 Accepted (import_id)
+    API->>Storage: List objects under prefix
+    Storage-->>API: Object keys
+    API->>DB: Insert images in batches (status: pending)
+
+    Labeler->>API: GET /images/next?labeler_id=...
+    API->>DB: Assign next pending image (status → in_progress)
+    API->>Storage: Generate presigned URL (1 h)
+    Storage-->>API: Presigned URL
+    API-->>Labeler: Image + presigned URL
+
+    Note over API,DB: If not labelled within timeout
+    API->>DB: Release image (status → pending)
 ```
 
 **Technology stack:**
@@ -519,7 +306,9 @@ Admin                         Labeler
 | Web framework | FastAPI + Uvicorn |
 | ORM | SQLAlchemy 2 (async) + asyncpg |
 | Migrations | Alembic |
-| Object storage | MinIO (S3-compatible) |
+| Object storage | MinIO (S3-compatible) via aioboto3 |
 | Dependency injection | dependency-injector |
+| Observability | OpenTelemetry + Prometheus + Grafana + Loki + Tempo |
+| Documentation | MkDocs (Material theme) |
 | Packaging | uv + hatchling |
 | Code quality | ruff + mypy + pre-commit |

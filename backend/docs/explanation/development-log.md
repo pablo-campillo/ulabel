@@ -300,6 +300,28 @@ Chronological record of all features implemented and design decisions made durin
 
 ---
 
+## Day 8 - April 7, 2026: End-to-end API tests
+
+### E2E test infrastructure
+
+**Gap identified**: Unit tests used in-memory repositories (mocks) and integration tests only verified individual SQLAlchemy repositories against PostgreSQL. No test exercised the full HTTP → use case → repository → database flow. A bug in DI wiring, SQLAlchemy mapping, or layer interaction would go undetected.
+
+**Solution**: New `tests/e2e/` directory with a test FastAPI app that shares the real DI container but overrides its config to point at a test database:
+- `conftest.py`: Container config override via `from_dict()`, singleton reset (`engine.reset()`, `sessionmaker.reset()`), `FakeStorageService` for storage, simplified lifespan (no tracing, metrics, or background tasks), `httpx.AsyncClient` with `ASGITransport`
+- `test_labeling_workflow.py`: Single sequential test covering the complete labeling flow — login → create project → add labeler → register image → create assignment → submit label → verify stats → confirm no pending images
+
+**Design decisions**:
+- **Separate test app instead of importing the production `app`**: The production app has `PrometheusMiddleware` and `instrument_fastapi` baked in at module level, which would fail or produce side effects during tests
+- **`FakeStorageService` instead of real MinIO**: The goal is testing HTTP-to-DB flow; storage is not the layer under test. Keeps test infrastructure to just PostgreSQL
+- **Flow-based tests, not per-endpoint**: Unit tests already cover individual endpoints exhaustively. E2E tests verify the integration between layers through real workflows
+
+### Makefile improvements
+
+- All test targets (`test-unit`, `test-integration`, `test-cov`, `test-e2e`) now mount `src` and `tests` as volumes — no `make setup` needed after code changes
+- `TEST_DATABASE_URL` default value added (`?=`) matching the docker-compose PostgreSQL config
+
+---
+
 ## Cross-cutting sessions
 
 ### Unified make bootstrap and Docker Compose
@@ -332,3 +354,5 @@ Chronological record of all features implemented and design decisions made durin
 | Batch `get_by_ids` in UserRepository | Single `WHERE IN` query instead of N individual lookups |
 | Labeler resolution in use case, not API | Hexagonal: business logic belongs in application layer, not routers |
 | Composite indexes for hot queries | Individual indexes don't cover multi-column WHERE/ORDER BY; composites eliminate sequential scans |
+| E2E flow tests, not per-endpoint | Unit tests cover endpoints individually; E2E tests verify layer integration through real workflows |
+| Volume mounts in test targets | Avoid rebuilding Docker image after every code change |

@@ -191,6 +191,7 @@ Testing uses `pytest` with `pytest-anyio` for async test support.
 - **Unit tests** (`tests/application/`, `tests/api/`): Use in-memory repositories and fake storage. Fast (milliseconds), no infrastructure needed.
 - **Integration tests** (`tests/integration/`): Run against a real PostgreSQL database to verify SQL queries and migrations.
 - **API tests** (`tests/api/`): Use `httpx.AsyncClient` with FastAPI's `TestClient` for full HTTP request/response testing.
+- **E2E tests** (`tests/e2e/`): Exercise full API workflows against a real PostgreSQL database using `httpx.AsyncClient` with the FastAPI app. Storage is replaced by `FakeStorageService`.
 
 ## Documentation
 

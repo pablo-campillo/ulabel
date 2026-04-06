@@ -12,6 +12,7 @@ STORAGE_ENDPOINT   ?= http://localhost:9000
 STORAGE_ACCESS_KEY ?= minioadmin
 STORAGE_SECRET_KEY ?= minioadmin
 STORAGE_BUCKET     ?= ulabel
+TEST_DATABASE_URL  ?= postgresql+asyncpg://ulabel:secret@localhost:5432/ulabel
 
 .PHONY: help setup install pre-commit-install test test-integration format lint lint-fix typecheck check build run dev shell migrate migrate-create migrate-down seed-dataset docs docs-build
 
@@ -45,20 +46,35 @@ shell:               ## Open an interactive shell inside the dev container
 
 # ── Quality ──────────────────────────────────────────────────────────────────
 
-test:                ## Run unit tests inside the dev container
-	docker run --rm $(DEV_IMAGE) uv run --group dev pytest tests/unit -v
+test-unit:                ## Run unit tests inside the dev container
+	docker run --rm \
+		-v $(PWD)/$(SRC):/app/$(SRC) \
+		-v $(PWD)/$(TESTS):/app/$(TESTS) \
+		$(DEV_IMAGE) uv run --group dev pytest tests/unit -v
 
 test-cov:            ## Run all tests with coverage report (shows missing lines per file)
 	docker run --rm \
 		--network host \
 		-e TEST_DATABASE_URL=$(TEST_DATABASE_URL) \
+		-v $(PWD)/$(SRC):/app/$(SRC) \
+		-v $(PWD)/$(TESTS):/app/$(TESTS) \
 		$(DEV_IMAGE) uv run --group dev pytest tests/ --cov=ulabel --cov-report=term-missing -v
 
 test-integration:    ## Run integration tests (requires TEST_DATABASE_URL)
 	docker run --rm \
 		--network host \
 		-e TEST_DATABASE_URL=$(TEST_DATABASE_URL) \
+		-v $(PWD)/$(SRC):/app/$(SRC) \
+		-v $(PWD)/$(TESTS):/app/$(TESTS) \
 		$(DEV_IMAGE) uv run --group dev pytest tests/integration -v
+
+test-e2e:            ## Run end-to-end API tests (requires TEST_DATABASE_URL)
+	docker run --rm \
+		--network host \
+		-e TEST_DATABASE_URL=$(TEST_DATABASE_URL) \
+		-v $(PWD)/$(SRC):/app/$(SRC) \
+		-v $(PWD)/$(TESTS):/app/$(TESTS) \
+		$(DEV_IMAGE) uv run --group dev pytest tests/e2e -v
 
 format:              ## Format code with ruff (edits files on host via volume mount)
 	docker run --rm \

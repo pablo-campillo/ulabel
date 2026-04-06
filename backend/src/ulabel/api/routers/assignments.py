@@ -29,9 +29,10 @@ router = APIRouter()
     description="""
 Assigns the next `pending` image in the project to the given labeler.
 
-The image transitions to `in_progress` and a **presigned URL** valid for 30 minutes
-is generated for direct file access from the browser or client. The expiry time
-is controlled by ``tasks.image_assignment_timeout_seconds`` in ``config.yml``.
+The image transitions to `in_progress` and a **presigned URL** is generated for
+direct file access from the browser or client. The URL lifetime is controlled by
+``storage.presigned_url_expiry_seconds`` in ``config.yml``, and the assignment
+timeout by ``tasks.image_assignment_timeout_seconds``.
 
 If the labeler does not complete the task before the time expires, the image is
 automatically reset to `pending` and becomes available for another labeler.
