@@ -14,12 +14,12 @@ from ulabel.application.submit_label import (
 )
 from ulabel.domain.images import Image, ImageStatus
 from ulabel.domain.projects import Project
-from ulabel.infrastructure.repositories.in_memory_image_repository import InMemoryImageRepository
-from ulabel.infrastructure.repositories.in_memory_label_repository import InMemoryLabelRepository
-from ulabel.infrastructure.repositories.in_memory_project_repository import (
+from ulabel.infrastructure.repositories.in_memory.image_repository import InMemoryImageRepository
+from ulabel.infrastructure.repositories.in_memory.label_repository import InMemoryLabelRepository
+from ulabel.infrastructure.repositories.in_memory.project_repository import (
     InMemoryProjectRepository,
 )
-from ulabel.infrastructure.repositories.in_memory_stats_repository import InMemoryStatsRepository
+from ulabel.infrastructure.repositories.in_memory.stats_repository import InMemoryStatsRepository
 
 FIXED_NOW = datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
 

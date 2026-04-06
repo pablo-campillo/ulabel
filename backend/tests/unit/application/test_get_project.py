@@ -6,10 +6,10 @@ from ulabel.application.add_labeler_to_project import ProjectNotFound
 from ulabel.application.get_project import GetProjectUseCase
 from ulabel.domain.projects import Project
 from ulabel.domain.users import User
-from ulabel.infrastructure.repositories.in_memory_project_repository import (
+from ulabel.infrastructure.repositories.in_memory.project_repository import (
     InMemoryProjectRepository,
 )
-from ulabel.infrastructure.repositories.in_memory_user_repository import InMemoryUserRepository
+from ulabel.infrastructure.repositories.in_memory.user_repository import InMemoryUserRepository
 
 
 @pytest.fixture

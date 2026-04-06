@@ -8,10 +8,10 @@ from ulabel.application.login import UserNotFound
 from ulabel.application.update_project import UpdateProjectUseCase
 from ulabel.domain.projects import Project
 from ulabel.domain.users import User
-from ulabel.infrastructure.repositories.in_memory_project_repository import (
+from ulabel.infrastructure.repositories.in_memory.project_repository import (
     InMemoryProjectRepository,
 )
-from ulabel.infrastructure.repositories.in_memory_user_repository import InMemoryUserRepository
+from ulabel.infrastructure.repositories.in_memory.user_repository import InMemoryUserRepository
 
 
 @pytest.fixture

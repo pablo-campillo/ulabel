@@ -8,8 +8,8 @@ from ulabel.api.main import app
 from ulabel.domain.errors import StorageFull
 from ulabel.domain.labels import LabelRecord
 from ulabel.domain.projects import Project
-from ulabel.infrastructure.repositories.in_memory_label_repository import InMemoryLabelRepository
-from ulabel.infrastructure.repositories.in_memory_project_repository import (
+from ulabel.infrastructure.repositories.in_memory.label_repository import InMemoryLabelRepository
+from ulabel.infrastructure.repositories.in_memory.project_repository import (
     InMemoryProjectRepository,
 )
 from ulabel.infrastructure.storage.fake_storage_service import FakeStorageService

@@ -6,8 +6,8 @@ from ulabel.application.add_labeler_to_project import ProjectNotFound
 from ulabel.application.upload_image_to_project import UploadImageToProjectUseCase
 from ulabel.domain.images import ImageStatus
 from ulabel.domain.projects import Project
-from ulabel.infrastructure.repositories.in_memory_image_repository import InMemoryImageRepository
-from ulabel.infrastructure.repositories.in_memory_project_repository import (
+from ulabel.infrastructure.repositories.in_memory.image_repository import InMemoryImageRepository
+from ulabel.infrastructure.repositories.in_memory.project_repository import (
     InMemoryProjectRepository,
 )
 from ulabel.infrastructure.storage.fake_storage_service import FakeStorageService

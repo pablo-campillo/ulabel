@@ -3,7 +3,7 @@ from uuid import uuid4
 import pytest
 
 from ulabel.domain.users import User
-from ulabel.infrastructure.repositories.sqlalchemy_user_repository import SqlAlchemyUserRepository
+from ulabel.infrastructure.repositories.sql.user_repository import SqlAlchemyUserRepository
 
 
 @pytest.fixture

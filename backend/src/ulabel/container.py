@@ -30,16 +30,16 @@ from ulabel.application.upload_image_to_project import UploadImageToProjectUseCa
 from ulabel.infrastructure.database import build_engine, build_sessionmaker
 from ulabel.infrastructure.observability.logging import configure_logging
 from ulabel.infrastructure.observability.tracing import setup_tracing
-from ulabel.infrastructure.repositories.sqlalchemy_image_repository import SqlAlchemyImageRepository
-from ulabel.infrastructure.repositories.sqlalchemy_import_job_repository import (
+from ulabel.infrastructure.repositories.sql.image_repository import SqlAlchemyImageRepository
+from ulabel.infrastructure.repositories.sql.import_job_repository import (
     SqlAlchemyImportJobRepository,
 )
-from ulabel.infrastructure.repositories.sqlalchemy_label_repository import SqlAlchemyLabelRepository
-from ulabel.infrastructure.repositories.sqlalchemy_project_repository import (
+from ulabel.infrastructure.repositories.sql.label_repository import SqlAlchemyLabelRepository
+from ulabel.infrastructure.repositories.sql.project_repository import (
     SqlAlchemyProjectRepository,
 )
-from ulabel.infrastructure.repositories.sqlalchemy_stats_repository import SqlAlchemyStatsRepository
-from ulabel.infrastructure.repositories.sqlalchemy_user_repository import SqlAlchemyUserRepository
+from ulabel.infrastructure.repositories.sql.stats_repository import SqlAlchemyStatsRepository
+from ulabel.infrastructure.repositories.sql.user_repository import SqlAlchemyUserRepository
 from ulabel.infrastructure.storage.s3_storage_service import S3StorageService
 
 CONFIG_PATH = Path(__file__).resolve().parent.parent.parent / "config.yml"

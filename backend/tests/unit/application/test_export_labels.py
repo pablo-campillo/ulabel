@@ -7,8 +7,8 @@ import pytest
 from ulabel.application.add_labeler_to_project import ProjectNotFound
 from ulabel.application.export_labels import ExportFormat, ExportLabelsUseCase, NoLabelsFound
 from ulabel.domain.labels import LabelRecord
-from ulabel.infrastructure.repositories.in_memory_label_repository import InMemoryLabelRepository
-from ulabel.infrastructure.repositories.in_memory_project_repository import (
+from ulabel.infrastructure.repositories.in_memory.label_repository import InMemoryLabelRepository
+from ulabel.infrastructure.repositories.in_memory.project_repository import (
     InMemoryProjectRepository,
 )
 from ulabel.infrastructure.storage.fake_storage_service import FakeStorageService

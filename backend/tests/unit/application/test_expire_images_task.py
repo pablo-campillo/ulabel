@@ -5,7 +5,7 @@ import pytest
 
 from ulabel.application.expire_images_task import ExpireImagesTask
 from ulabel.domain.images import Image, ImageStatus
-from ulabel.infrastructure.repositories.in_memory_image_repository import InMemoryImageRepository
+from ulabel.infrastructure.repositories.in_memory.image_repository import InMemoryImageRepository
 
 TIMEOUT = timedelta(minutes=30)
 NOW = datetime(2026, 1, 1, 13, 0, 0, tzinfo=timezone.utc)

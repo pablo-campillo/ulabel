@@ -11,8 +11,8 @@ from ulabel.application.create_assignment import (
 )
 from ulabel.domain.images import Image, ImageStatus
 from ulabel.domain.projects import Project
-from ulabel.infrastructure.repositories.in_memory_image_repository import InMemoryImageRepository
-from ulabel.infrastructure.repositories.in_memory_project_repository import (
+from ulabel.infrastructure.repositories.in_memory.image_repository import InMemoryImageRepository
+from ulabel.infrastructure.repositories.in_memory.project_repository import (
     InMemoryProjectRepository,
 )
 

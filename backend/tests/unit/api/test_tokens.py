@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 
 from ulabel.api.main import app
 from ulabel.domain.users import User, UserRole
-from ulabel.infrastructure.repositories.in_memory_user_repository import InMemoryUserRepository
+from ulabel.infrastructure.repositories.in_memory.user_repository import InMemoryUserRepository
 
 
 @pytest.fixture

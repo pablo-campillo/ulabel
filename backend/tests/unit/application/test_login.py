@@ -4,7 +4,7 @@ import pytest
 
 from ulabel.application.login import LoginUseCase, UserNotFound
 from ulabel.domain.users import User
-from ulabel.infrastructure.repositories.in_memory_user_repository import InMemoryUserRepository
+from ulabel.infrastructure.repositories.in_memory.user_repository import InMemoryUserRepository
 
 
 @pytest.fixture

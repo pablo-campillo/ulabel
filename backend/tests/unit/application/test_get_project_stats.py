@@ -10,10 +10,10 @@ from ulabel.domain.images import Image, ImageStatus
 from ulabel.domain.labels import LabelRecord
 from ulabel.domain.projects import Project
 from ulabel.domain.users import User
-from ulabel.infrastructure.repositories.in_memory_project_repository import (
+from ulabel.infrastructure.repositories.in_memory.project_repository import (
     InMemoryProjectRepository,
 )
-from ulabel.infrastructure.repositories.in_memory_stats_repository import InMemoryStatsRepository
+from ulabel.infrastructure.repositories.in_memory.stats_repository import InMemoryStatsRepository
 
 
 @pytest.fixture

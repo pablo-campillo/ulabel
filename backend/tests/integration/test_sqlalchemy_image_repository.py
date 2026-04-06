@@ -6,11 +6,11 @@ import pytest
 from ulabel.domain.images import Image, ImageStatus
 from ulabel.domain.projects import Project
 from ulabel.domain.users import User
-from ulabel.infrastructure.repositories.sqlalchemy_image_repository import SqlAlchemyImageRepository
-from ulabel.infrastructure.repositories.sqlalchemy_project_repository import (
+from ulabel.infrastructure.repositories.sql.image_repository import SqlAlchemyImageRepository
+from ulabel.infrastructure.repositories.sql.project_repository import (
     SqlAlchemyProjectRepository,
 )
-from ulabel.infrastructure.repositories.sqlalchemy_user_repository import SqlAlchemyUserRepository
+from ulabel.infrastructure.repositories.sql.user_repository import SqlAlchemyUserRepository
 
 NOW = datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
 
