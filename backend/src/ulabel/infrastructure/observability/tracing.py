@@ -26,7 +26,7 @@ from opentelemetry.sdk.trace.sampling import (
     SamplingResult,
     TraceIdRatioBased,
 )
-from opentelemetry.trace import Link, SpanKind
+from opentelemetry.trace import Link, SpanKind, TraceState
 from opentelemetry.util.types import Attributes
 
 if TYPE_CHECKING:
@@ -58,6 +58,7 @@ class ForceTraceSampler(Sampler):
         kind: SpanKind | None = None,
         attributes: Attributes | None = None,
         links: Sequence[Link] | None = None,
+        trace_state: TraceState | None = None,
     ) -> SamplingResult:
         """Decide whether to sample a span.
 
@@ -79,16 +80,12 @@ class ForceTraceSampler(Sampler):
             header_values = attributes.get(self._force_key)
             if header_values:
                 values = (
-                    header_values
-                    if isinstance(header_values, (list, tuple))
-                    else [header_values]
+                    header_values if isinstance(header_values, (list, tuple)) else [header_values]
                 )
                 if any(str(v).lower() == "true" for v in values):
                     return SamplingResult(Decision.RECORD_AND_SAMPLE, attributes)
 
-        return self._delegate.should_sample(
-            parent_context, trace_id, name, kind, attributes, links
-        )
+        return self._delegate.should_sample(parent_context, trace_id, name, kind, attributes, links)
 
     def get_description(self) -> str:
         """Return a human-readable description of this sampler.

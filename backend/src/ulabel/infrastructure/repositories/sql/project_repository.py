@@ -10,6 +10,7 @@ from sqlalchemy import delete, func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from sqlalchemy.orm import joinedload, selectinload
+from sqlalchemy.orm.strategy_options import _AbstractLoad
 
 from ulabel.domain.pagination import PaginatedResult
 from ulabel.domain.ports.project_repository import ProjectRepository
@@ -21,7 +22,7 @@ from ulabel.infrastructure.models.project import (
 )
 
 
-def _load_options():
+def _load_options() -> list[_AbstractLoad]:
     """Return SQLAlchemy eager-loading options for project queries.
 
     Returns:
@@ -56,9 +57,7 @@ class SqlAlchemyProjectRepository(ProjectRepository):
         """
         async with self._sessionmaker() as session:
             result = await session.execute(
-                select(ProjectModel)
-                .where(ProjectModel.id == project_id)
-                .options(*_load_options())
+                select(ProjectModel).where(ProjectModel.id == project_id).options(*_load_options())
             )
             model = result.unique().scalar_one_or_none()
             return model.to_domain() if model else None
@@ -74,9 +73,7 @@ class SqlAlchemyProjectRepository(ProjectRepository):
         """
         async with self._sessionmaker() as session:
             result = await session.execute(
-                select(ProjectModel)
-                .where(ProjectModel.name == name)
-                .options(*_load_options())
+                select(ProjectModel).where(ProjectModel.name == name).options(*_load_options())
             )
             model = result.unique().scalar_one_or_none()
             return model.to_domain() if model else None

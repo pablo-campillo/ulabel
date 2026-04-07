@@ -194,7 +194,7 @@ make help
 |---|---|
 | `make setup` | Build the dev Docker image |
 | `make install` | Sync all dependencies (including dev) into local `.venv` |
-| `make pre-commit-install` | Install pre-commit hooks into `.git/hooks` |
+| `pre-commit install` | Install pre-commit hooks (run from repo root) |
 | `make dev` | Start dev server with hot reload |
 | `make shell` | Open an interactive shell inside the dev container |
 | `make test-unit` | Run unit tests |

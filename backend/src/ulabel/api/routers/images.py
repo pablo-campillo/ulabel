@@ -66,7 +66,7 @@ async def add_image(
     project_id: UUID,
     request: AddImageRequest,
     use_case: AddImageToProjectUseCase = Depends(Provide[Container.add_image_to_project_use_case]),
-):
+) -> ImageResponse:
     """Register an existing storage object as a project image.
 
     Args:
@@ -80,7 +80,9 @@ async def add_image(
     image = await use_case.execute(project_id=project_id, storage_key=request.storage_key)
     logger.info(
         "Image registered: project=%s image=%s key=%s",
-        project_id, image.id, request.storage_key,
+        project_id,
+        image.id,
+        request.storage_key,
     )
     return ImageResponse(
         id=image.id,
@@ -129,7 +131,7 @@ async def upload_image(
     use_case: UploadImageToProjectUseCase = Depends(
         Provide[Container.upload_image_to_project_use_case]
     ),
-):
+) -> ImageResponse:
     """Upload an image file and register it in the project.
 
     Args:
@@ -148,7 +150,10 @@ async def upload_image(
     )
     logger.info(
         "Image uploaded: project=%s image=%s size_bytes=%d content_type=%s",
-        project_id, image.id, len(data), file.content_type,
+        project_id,
+        image.id,
+        len(data),
+        file.content_type,
     )
     return ImageResponse(
         id=image.id,
@@ -176,8 +181,7 @@ the job moves to `status: "failed"` and the `error` field contains the message.
     responses={
         202: {
             "description": (
-                "Import job started. Poll for progress"
-                " using the returned `import_id`."
+                "Import job started. Poll for progress using the returned `import_id`."
             ),
         },
         404: {
@@ -202,7 +206,7 @@ async def import_images(
     request: ImportImagesRequest,
     background_tasks: BackgroundTasks,
     use_case: ImportImagesFromStorageUseCase = Depends(Provide[Container.import_images_use_case]),
-):
+) -> ImportJobResponse:
     """Start an asynchronous bulk import of images from a storage prefix.
 
     Args:
@@ -216,7 +220,7 @@ async def import_images(
     """
     job = await use_case.execute(project_id=project_id, prefix=request.prefix)
 
-    async def _run_import():
+    async def _run_import() -> None:
         await use_case.run_import(job.id)
 
     background_tasks.add_task(_run_import)
@@ -246,10 +250,7 @@ Possible `status` values:
     responses={
         200: {"description": "Current import job state."},
         404: {
-            "description": (
-                "Import job not found or does not"
-                " belong to the given project."
-            ),
+            "description": ("Import job not found or does not belong to the given project."),
             "content": {
                 "application/json": {
                     "example": {
@@ -269,7 +270,7 @@ async def get_import_status(
     project_id: UUID,
     import_id: UUID,
     use_case: GetImportJobUseCase = Depends(Provide[Container.get_import_job_use_case]),
-):
+) -> ImportJobResponse:
     """Retrieve the current status of a bulk import job.
 
     Args:
@@ -336,10 +337,7 @@ On success the image transitions to `done` and cannot be re-assigned.
             },
         },
         409: {
-            "description": (
-                "Image is not in progress or"
-                " assignment ID does not match."
-            ),
+            "description": ("Image is not in progress or assignment ID does not match."),
             "content": {
                 "application/json": {
                     "example": {
@@ -374,7 +372,7 @@ async def submit_label(
     image_id: UUID,
     request: SubmitLabelRequest,
     use_case: SubmitLabelUseCase = Depends(Provide[Container.submit_label_use_case]),
-):
+) -> SubmitLabelResponse:
     """Submit a label for an assigned image.
 
     Args:
@@ -395,7 +393,10 @@ async def submit_label(
     )
     logger.info(
         "Label submitted: project=%s image=%s labeler=%s label=%s",
-        project_id, image_id, request.labeler_id, request.label,
+        project_id,
+        image_id,
+        request.labeler_id,
+        request.label,
     )
     return SubmitLabelResponse(
         id=label_record.id,

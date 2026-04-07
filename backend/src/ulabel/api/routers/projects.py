@@ -54,10 +54,7 @@ def _to_detail(result: ProjectWithLabelers) -> ProjectDetail:
         name=result.project.name,
         description=result.project.description,
         labels=result.project.labels,
-        labelers=[
-            LabelerInfo(id=lab.id, username=lab.username)
-            for lab in result.labelers
-        ],
+        labelers=[LabelerInfo(id=lab.id, username=lab.username) for lab in result.labelers],
         created_at=result.project.created_at,
     )
 
@@ -67,8 +64,7 @@ def _to_detail(result: ProjectWithLabelers) -> ProjectDetail:
     response_model=PaginatedProjectSummaryResponse,
     summary="List all projects",
     description=(
-        "Returns a paginated list of all projects,"
-        " ordered by creation date (newest first)."
+        "Returns a paginated list of all projects, ordered by creation date (newest first)."
     ),
     responses={200: {"description": "Paginated list of projects."}},
 )
@@ -81,7 +77,7 @@ async def list_projects(
         description="Filter projects by name (case-insensitive, contains match).",
     ),
     use_case: ListProjectsUseCase = Depends(Provide[Container.list_projects_use_case]),
-):
+) -> PaginatedProjectSummaryResponse:
     """List all projects with pagination and optional name filtering.
 
     Args:
@@ -107,10 +103,7 @@ async def list_projects(
     "/{project_id}",
     response_model=ProjectDetail,
     summary="Get project detail",
-    description=(
-        "Returns a single project with fully"
-        " resolved labeler information."
-    ),
+    description=("Returns a single project with fully resolved labeler information."),
     responses={
         200: {"description": "Project detail with resolved labelers."},
         404: {
@@ -133,7 +126,7 @@ async def list_projects(
 async def get_project(
     project_id: UUID,
     use_case: GetProjectUseCase = Depends(Provide[Container.get_project_use_case]),
-):
+) -> ProjectDetail:
     """Retrieve a single project with resolved labeler details.
 
     Args:
@@ -210,7 +203,7 @@ async def create_project(
     request: CreateProjectRequest,
     use_case: CreateProjectUseCase = Depends(Provide[Container.create_project_use_case]),
     get_project_use_case: GetProjectUseCase = Depends(Provide[Container.get_project_use_case]),
-):
+) -> ProjectDetail:
     """Create a new labelling project.
 
     Args:
@@ -229,7 +222,10 @@ async def create_project(
     )
     logger.info(
         "Project created: id=%s name=%s owner=%s labels=%d",
-        project.id, request.name, request.owner_id, len(request.labels),
+        project.id,
+        request.name,
+        request.owner_id,
+        len(request.labels),
     )
     result = await get_project_use_case.execute(project_id=project.id)
     return _to_detail(result)
@@ -250,10 +246,7 @@ role.
     responses={
         200: {"description": "Project updated successfully."},
         403: {
-            "description": (
-                "One of the provided labeler IDs does"
-                " not have the `labeler` role."
-            ),
+            "description": ("One of the provided labeler IDs does not have the `labeler` role."),
             "content": {
                 "application/json": {
                     "example": {
@@ -301,7 +294,7 @@ async def update_project(
     request: UpdateProjectRequest,
     use_case: UpdateProjectUseCase = Depends(Provide[Container.update_project_use_case]),
     get_project_use_case: GetProjectUseCase = Depends(Provide[Container.get_project_use_case]),
-):
+) -> ProjectDetail:
     """Update a project's name, description, or labeler assignments.
 
     Args:
@@ -388,7 +381,7 @@ async def add_labeler(
         Provide[Container.add_labeler_to_project_use_case]
     ),
     get_project_use_case: GetProjectUseCase = Depends(Provide[Container.get_project_use_case]),
-):
+) -> ProjectDetail:
     """Add a labeler to an existing project.
 
     Args:

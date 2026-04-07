@@ -34,8 +34,7 @@ class InMemoryUserRepository(UserRepository):
         results = [
             u
             for u in self._by_username.values()
-            if u.username.lower().startswith(prefix_lower)
-            and (role is None or u.role == role)
+            if u.username.lower().startswith(prefix_lower) and (role is None or u.role == role)
         ]
         results.sort(key=lambda u: u.username)
         return results[:limit]

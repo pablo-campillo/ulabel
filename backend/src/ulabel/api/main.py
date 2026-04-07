@@ -5,7 +5,9 @@ and manages the application lifecycle including background tasks.
 """
 
 import asyncio
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from typing import Any
 
 from fastapi import FastAPI
 
@@ -24,7 +26,7 @@ container = Container()
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Manage application startup and shutdown lifecycle.
 
     On startup, initializes logging, tracing, storage, and starts the
@@ -84,10 +86,10 @@ API for managing image labelling projects.
     version="1.0.0",
     lifespan=lifespan,
 )
-app.container = container
+app.container = container  # type: ignore[attr-defined]
 app.add_middleware(PrometheusMiddleware)
 instrument_fastapi(app)
-app.add_exception_handler(DomainError, domain_error_handler)
+app.add_exception_handler(DomainError, domain_error_handler)  # type: ignore[arg-type]
 app.add_exception_handler(Exception, unhandled_error_handler)
 
 app.include_router(api_router, prefix="/v1")
@@ -100,7 +102,7 @@ app.add_route("/metrics", metrics_route)
     summary="Health check",
     description="Verifies the service is up and running.",
 )
-async def root():
+async def root() -> dict[str, Any]:
     """Return a simple health check response.
 
     Returns:

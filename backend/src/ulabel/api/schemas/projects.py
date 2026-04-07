@@ -10,6 +10,7 @@ from ulabel.api.schemas.pagination import PaginatedResponse
 
 class CreateProjectRequest(BaseModel):
     """Request body for creating a new labelling project."""
+
     owner_id: UUID = Field(..., description="ID of the `admin` user who will own the project.")
     name: str = Field(..., description="Project name.", examples=["Vehicle classification"])
     description: str = Field(..., description="Detailed description of the project goal.")
@@ -21,12 +22,13 @@ class CreateProjectRequest(BaseModel):
                 "owner_id": "123e4567-e89b-12d3-a456-426614174000",
                 "name": "Vehicle classification",
                 "description": (
-                    "Annotate urban traffic images"
-                    " indicating the type of"
-                    " vehicle present."
+                    "Annotate urban traffic images indicating the type of vehicle present."
                 ),
                 "labels": [
-                    "car", "truck", "motorcycle", "bicycle",
+                    "car",
+                    "truck",
+                    "motorcycle",
+                    "bicycle",
                 ],
             }
         }
@@ -39,9 +41,7 @@ class AddLabelerRequest(BaseModel):
     labeler_id: UUID = Field(..., description="ID of the `labeler` user to add to the project.")
 
     model_config = {
-        "json_schema_extra": {
-            "example": {"labeler_id": "456e7890-e89b-12d3-a456-426614174001"}
-        }
+        "json_schema_extra": {"example": {"labeler_id": "456e7890-e89b-12d3-a456-426614174001"}}
     }
 
 
@@ -79,7 +79,7 @@ class ProjectSummary(BaseModel):
     description: str = Field(..., description="Project description.")
     labels: set[str] = Field(..., description="Labels available in the project.")
     labeler_count: int = Field(..., description="Number of assigned labelers.")
-    created_at: datetime = Field(..., description="Timestamp when the project was created.")
+    created_at: datetime | None = Field(None, description="Timestamp when the project was created.")
 
     model_config = {
         "json_schema_extra": {
@@ -88,12 +88,13 @@ class ProjectSummary(BaseModel):
                 "owner_id": "123e4567-e89b-12d3-a456-426614174000",
                 "name": "Vehicle classification",
                 "description": (
-                    "Annotate urban traffic images"
-                    " indicating the type of"
-                    " vehicle present."
+                    "Annotate urban traffic images indicating the type of vehicle present."
                 ),
                 "labels": [
-                    "car", "truck", "motorcycle", "bicycle",
+                    "car",
+                    "truck",
+                    "motorcycle",
+                    "bicycle",
                 ],
                 "labeler_count": 3,
             }
@@ -111,12 +112,9 @@ class ProjectDetail(BaseModel):
     labels: set[str] = Field(..., description="Labels available in the project.")
     labelers: list[LabelerInfo] = Field(
         default_factory=list,
-        description=(
-            "Assigned labelers with"
-            " resolved usernames."
-        ),
+        description=("Assigned labelers with resolved usernames."),
     )
-    created_at: datetime = Field(..., description="Timestamp when the project was created.")
+    created_at: datetime | None = Field(None, description="Timestamp when the project was created.")
 
     model_config = {
         "json_schema_extra": {
@@ -125,12 +123,13 @@ class ProjectDetail(BaseModel):
                 "owner_id": "123e4567-e89b-12d3-a456-426614174000",
                 "name": "Vehicle classification",
                 "description": (
-                    "Annotate urban traffic images"
-                    " indicating the type of"
-                    " vehicle present."
+                    "Annotate urban traffic images indicating the type of vehicle present."
                 ),
                 "labels": [
-                    "car", "truck", "motorcycle", "bicycle",
+                    "car",
+                    "truck",
+                    "motorcycle",
+                    "bicycle",
                 ],
                 "labelers": [
                     {

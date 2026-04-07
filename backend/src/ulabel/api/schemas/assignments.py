@@ -9,15 +9,14 @@ from ulabel.domain.images import ImageStatus
 
 class CreateAssignmentRequest(BaseModel):
     """Request body for creating a new image assignment."""
+
     labeler_id: UUID = Field(
         ...,
         description="ID of the labeler to assign the next pending image to.",
     )
 
     model_config = {
-        "json_schema_extra": {
-            "example": {"labeler_id": "abc12345-e89b-12d3-a456-426614174001"}
-        }
+        "json_schema_extra": {"example": {"labeler_id": "abc12345-e89b-12d3-a456-426614174001"}}
     }
 
 
@@ -28,10 +27,7 @@ class AssignmentResponse(BaseModel):
     project_id: UUID = Field(..., description="ID of the project this image belongs to.")
     status: ImageStatus = Field(
         ...,
-        description=(
-            "Current image status"
-            " (always `in_progress` in this response)."
-        ),
+        description=("Current image status (always `in_progress` in this response)."),
     )
     assignment_id: UUID = Field(
         ...,
@@ -40,8 +36,7 @@ class AssignmentResponse(BaseModel):
     presigned_url: str = Field(
         ...,
         description=(
-            "Time-limited URL for direct access to the"
-            " image file from the browser or client."
+            "Time-limited URL for direct access to the image file from the browser or client."
         ),
     )
     presigned_url_expires_in: int = Field(

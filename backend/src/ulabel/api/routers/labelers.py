@@ -36,7 +36,7 @@ async def autocomplete_labelers(
     q: str = Query(min_length=1, description="Username prefix to search for"),
     limit: int = Query(default=10, ge=1, le=50),
     use_case: SearchLabelersUseCase = Depends(Provide[Container.search_labelers_use_case]),
-):
+) -> list[LabelerAutocompleteItem]:
     """Search labelers by username prefix for autocomplete.
 
     Args:
@@ -100,7 +100,7 @@ labels are available in each one.
 async def get_labeler_projects(
     labeler_id: UUID,
     use_case: GetLabelerProjectsUseCase = Depends(Provide[Container.get_labeler_projects_use_case]),
-):
+) -> list[ProjectSummary]:
     """List all projects assigned to a labeler.
 
     Args:

@@ -46,25 +46,38 @@ def images_and_labels(project, labeler_a, labeler_b):
         img = Image.create(id=uuid4(), project_id=project.id, storage_key=f"ana_{i}.jpg")
         img.status = ImageStatus.DONE
         images.append(img)
-        labels.append(LabelRecord.create(
-            id=uuid4(), project_id=project.id, image_id=img.id,
-            labeler_id=labeler_a.id, label="cat",
-        ))
+        labels.append(
+            LabelRecord.create(
+                id=uuid4(),
+                project_id=project.id,
+                image_id=img.id,
+                labeler_id=labeler_a.id,
+                label="cat",
+            )
+        )
 
     img = Image.create(id=uuid4(), project_id=project.id, storage_key="pedro_0.jpg")
     img.status = ImageStatus.DONE
     images.append(img)
-    labels.append(LabelRecord.create(
-        id=uuid4(), project_id=project.id, image_id=img.id,
-        labeler_id=labeler_b.id, label="dog",
-    ))
+    labels.append(
+        LabelRecord.create(
+            id=uuid4(),
+            project_id=project.id,
+            image_id=img.id,
+            labeler_id=labeler_b.id,
+            label="dog",
+        )
+    )
 
     # 2 pending images
     for i in range(2):
-        images.append(Image.create(
-            id=uuid4(), project_id=project.id,
-            storage_key=f"pending_{i}.jpg",
-        ))
+        images.append(
+            Image.create(
+                id=uuid4(),
+                project_id=project.id,
+                storage_key=f"pending_{i}.jpg",
+            )
+        )
 
     return images, labels
 
@@ -75,9 +88,7 @@ def use_case(project, images_and_labels, labeler_a, labeler_b):
     usernames = {labeler_a.id: labeler_a.username, labeler_b.id: labeler_b.username}
     return GetProjectStatsUseCase(
         project_repository=InMemoryProjectRepository(projects=[project]),
-        stats_repository=InMemoryStatsRepository(
-            images=images, labels=labels, usernames=usernames
-        ),
+        stats_repository=InMemoryStatsRepository(images=images, labels=labels, usernames=usernames),
     )
 
 

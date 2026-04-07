@@ -9,13 +9,10 @@ from ulabel.domain.users import UserRole
 
 class LoginRequest(BaseModel):
     """Request body for user sign-in by username."""
+
     username: str = Field(..., description="Username registered in the system.")
 
-    model_config = {
-        "json_schema_extra": {
-            "example": {"username": "john_doe"}
-        }
-    }
+    model_config = {"json_schema_extra": {"example": {"username": "john_doe"}}}
 
 
 class Claim(BaseModel):

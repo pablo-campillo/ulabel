@@ -23,9 +23,7 @@ def admin():
 
 @pytest.fixture
 def use_case(labelers, admin):
-    return SearchLabelersUseCase(
-        user_repository=InMemoryUserRepository(users=[*labelers, admin])
-    )
+    return SearchLabelersUseCase(user_repository=InMemoryUserRepository(users=[*labelers, admin]))
 
 
 async def test_returns_labelers_matching_prefix(use_case):

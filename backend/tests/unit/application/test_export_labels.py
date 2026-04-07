@@ -33,8 +33,11 @@ def label_records(project):
     labeler_id = uuid4()
     return [
         LabelRecord.create(
-            id=uuid4(), project_id=project.id, image_id=img_id,
-            labeler_id=labeler_id, label=label,
+            id=uuid4(),
+            project_id=project.id,
+            image_id=img_id,
+            labeler_id=labeler_id,
+            label=label,
         )
         for img_id, label in zip(image_ids, ["cat", "dog", "cat"])
     ]
@@ -87,8 +90,7 @@ async def test_export_json(use_case, project, storage, label_records):
     assert isinstance(parsed, list)
     assert len(parsed) == len(label_records)
     assert all(
-        "image_id" in entry and "storage_key" in entry
-        and "value" in entry for entry in parsed
+        "image_id" in entry and "storage_key" in entry and "value" in entry for entry in parsed
     )
 
 

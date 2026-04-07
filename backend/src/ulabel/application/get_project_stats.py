@@ -8,7 +8,12 @@ from uuid import UUID
 
 from ulabel.application.add_labeler_to_project import ProjectNotFound
 from ulabel.domain.ports.project_repository import ProjectRepository
-from ulabel.domain.ports.stats_repository import StatsRepository
+from ulabel.domain.ports.stats_repository import (
+    DailyLabelRow,
+    ImageCounts,
+    LabelerClassRow,
+    StatsRepository,
+)
 
 
 @dataclass
@@ -103,34 +108,39 @@ class GetProjectStatsUseCase:
         if project is None:
             raise ProjectNotFound("Project not found")
 
-        image_counts, labeler_class_rows, daily_rows = await asyncio.gather(
+        results = await asyncio.gather(
             self._stats_repository.get_image_counts(project_id),
             self._stats_repository.get_labeler_class_counts(project_id),
             self._stats_repository.get_daily_label_counts(project_id),
         )
+        image_counts: ImageCounts = results[0]
+        labeler_class_rows: list[LabelerClassRow] = results[1]
+        daily_rows: list[DailyLabelRow] = results[2]
 
         # class_distribution: aggregate from labeler_class_rows
         class_distribution: dict[str, int] = defaultdict(int)
-        for row in labeler_class_rows:
-            class_distribution[row.label] += row.count
+        for lc_row in labeler_class_rows:
+            class_distribution[lc_row.label] += lc_row.count
 
         # labeler_class_counts: group by labeler
         labeler_map: dict[UUID, LabelerClassCount] = {}
-        for row in labeler_class_rows:
-            if row.labeler_id not in labeler_map:
-                labeler_map[row.labeler_id] = LabelerClassCount(
-                    labeler_id=row.labeler_id, username=row.username, counts={}
+        for lc_row in labeler_class_rows:
+            if lc_row.labeler_id not in labeler_map:
+                labeler_map[lc_row.labeler_id] = LabelerClassCount(
+                    labeler_id=lc_row.labeler_id, username=lc_row.username, counts={}
                 )
-            labeler_map[row.labeler_id].counts[row.label] = row.count
+            labeler_map[lc_row.labeler_id].counts[lc_row.label] = lc_row.count
 
         # labeler_daily_activity: group by labeler -> day -> label
         daily_by_labeler: dict[UUID, dict[date, dict[str, int]]] = defaultdict(
             lambda: defaultdict(lambda: defaultdict(int))
         )
         labeler_usernames: dict[UUID, str] = {}
-        for row in daily_rows:
-            daily_by_labeler[row.labeler_id][row.day][row.label] += row.count
-            labeler_usernames[row.labeler_id] = row.username
+        for daily_row in daily_rows:
+            daily_by_labeler[daily_row.labeler_id][daily_row.day][
+                daily_row.label
+            ] += daily_row.count
+            labeler_usernames[daily_row.labeler_id] = daily_row.username
 
         labeler_daily_activity = [
             LabelerDailyActivity(
@@ -146,13 +156,13 @@ class GetProjectStatsUseCase:
 
         # daily_totals: group by day -> labeler
         day_labeler: dict[date, dict[UUID, DailyLabelerTotal]] = defaultdict(dict)
-        for row in daily_rows:
-            key = row.labeler_id
-            if key not in day_labeler[row.day]:
-                day_labeler[row.day][key] = DailyLabelerTotal(
-                    labeler_id=row.labeler_id, username=row.username, count=0
+        for daily_row in daily_rows:
+            key = daily_row.labeler_id
+            if key not in day_labeler[daily_row.day]:
+                day_labeler[daily_row.day][key] = DailyLabelerTotal(
+                    labeler_id=daily_row.labeler_id, username=daily_row.username, count=0
                 )
-            day_labeler[row.day][key].count += row.count
+            day_labeler[daily_row.day][key].count += daily_row.count
 
         daily_totals = [
             DailyTotal(date=day, labelers=list(labelers.values()))

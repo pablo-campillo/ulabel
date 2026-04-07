@@ -26,7 +26,8 @@ class InMemoryImageRepository(ImageRepository):
 
     async def get_next_pending(self, project_id: UUID) -> Image | None:
         pending = [
-            i for i in self._images.values()
+            i
+            for i in self._images.values()
             if i.project_id == project_id and i.status == ImageStatus.PENDING
         ]
         pending.sort(key=lambda i: i.id)
@@ -49,7 +50,8 @@ class InMemoryImageRepository(ImageRepository):
 
     async def get_expired_in_progress(self, cutoff: datetime) -> list[Image]:
         return [
-            i for i in self._images.values()
+            i
+            for i in self._images.values()
             if i.status == ImageStatus.IN_PROGRESS
             and i.assigned_at is not None
             and i.assigned_at < cutoff

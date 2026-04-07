@@ -104,7 +104,7 @@ class S3StorageService(StorageService):
             metadata: Optional metadata to attach to the object.
         """
         async with self._client() as client:
-            kwargs: dict = dict(
+            kwargs: dict[str, Any] = dict(
                 Bucket=self._bucket,
                 Key=key,
                 Body=data,
@@ -134,7 +134,7 @@ class S3StorageService(StorageService):
             metadata: Optional metadata to attach to the object.
         """
         async with self._client() as client:
-            create_kwargs: dict = {
+            create_kwargs: dict[str, Any] = {
                 "Bucket": self._bucket,
                 "Key": key,
                 "ContentType": content_type,
@@ -145,7 +145,7 @@ class S3StorageService(StorageService):
             response = await client.create_multipart_upload(**create_kwargs)
             upload_id = response["UploadId"]
 
-            parts: list[dict] = []
+            parts: list[dict[str, Any]] = []
             part_number = 1
             buffer = bytearray()
 
@@ -210,7 +210,8 @@ class S3StorageService(StorageService):
         async with self._client() as client:
             try:
                 response = await client.head_object(Bucket=self._bucket, Key=key)
-                return response.get("Metadata", {})
+                metadata: dict[str, str] = response.get("Metadata", {})
+                return metadata
             except ClientError as e:
                 if e.response["Error"]["Code"] == "404":
                     return None

@@ -37,9 +37,7 @@ class SqlAlchemyImageRepository(ImageRepository):
             The domain Image if found, otherwise None.
         """
         async with self._sessionmaker() as session:
-            result = await session.execute(
-                select(ImageModel).where(ImageModel.id == image_id)
-            )
+            result = await session.execute(select(ImageModel).where(ImageModel.id == image_id))
             model = result.scalar_one_or_none()
             return model.to_domain() if model else None
 
@@ -243,18 +241,20 @@ class SqlAlchemyImageRepository(ImageRepository):
                 chunk = images[i : i + chunk_size]
                 await session.execute(
                     insert(ImageModel)
-                    .values([
-                        {
-                            "id": img.id,
-                            "project_id": img.project_id,
-                            "storage_key": img.storage_key,
-                            "status": img.status.value,
-                            "labeler_id": img.labeler_id,
-                            "assigned_at": img.assigned_at,
-                            "assignment_id": img.assignment_id,
-                        }
-                        for img in chunk
-                    ])
+                    .values(
+                        [
+                            {
+                                "id": img.id,
+                                "project_id": img.project_id,
+                                "storage_key": img.storage_key,
+                                "status": img.status.value,
+                                "labeler_id": img.labeler_id,
+                                "assigned_at": img.assigned_at,
+                                "assignment_id": img.assignment_id,
+                            }
+                            for img in chunk
+                        ]
+                    )
                     .on_conflict_do_nothing()
                 )
             await session.commit()

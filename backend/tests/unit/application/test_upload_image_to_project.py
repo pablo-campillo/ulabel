@@ -16,8 +16,11 @@ from ulabel.infrastructure.storage.fake_storage_service import FakeStorageServic
 @pytest.fixture
 def project(admin):
     return Project.create(
-        id=uuid4(), owner=admin, name="My Project",
-        description="desc", labels={"cat"},
+        id=uuid4(),
+        owner=admin,
+        name="My Project",
+        description="desc",
+        labels={"cat"},
     )
 
 
@@ -32,7 +35,8 @@ def use_case(project):
 
 async def test_upload_image_returns_image_with_correct_project(use_case, project):
     image = await use_case.execute(
-        project_id=project.id, data=b"fake-image",
+        project_id=project.id,
+        data=b"fake-image",
         content_type="image/jpeg",
     )
     assert image.project_id == project.id
@@ -40,7 +44,8 @@ async def test_upload_image_returns_image_with_correct_project(use_case, project
 
 async def test_upload_image_returns_image_with_pending_status(use_case, project):
     image = await use_case.execute(
-        project_id=project.id, data=b"fake-image",
+        project_id=project.id,
+        data=b"fake-image",
         content_type="image/jpeg",
     )
     assert image.status == ImageStatus.PENDING
@@ -48,7 +53,8 @@ async def test_upload_image_returns_image_with_pending_status(use_case, project)
 
 async def test_upload_image_storage_key_contains_project_id(use_case, project):
     image = await use_case.execute(
-        project_id=project.id, data=b"fake-image",
+        project_id=project.id,
+        data=b"fake-image",
         content_type="image/jpeg",
     )
     assert str(project.id) in image.storage_key
@@ -57,6 +63,7 @@ async def test_upload_image_storage_key_contains_project_id(use_case, project):
 async def test_upload_image_raises_when_project_not_found(use_case):
     with pytest.raises(ProjectNotFound):
         await use_case.execute(
-            project_id=uuid4(), data=b"fake-image",
+            project_id=uuid4(),
+            data=b"fake-image",
             content_type="image/jpeg",
         )

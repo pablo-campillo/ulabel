@@ -158,9 +158,7 @@ class SqlAlchemyStatsRepository(StatsRepository):
 
             # Ranking: how many labelers have strictly more labels than this one
             ranking_stmt = (
-                select(func.count())
-                .select_from(counts_sq)
-                .where(counts_sq.c.cnt > labeler_count)
+                select(func.count()).select_from(counts_sq).where(counts_sq.c.cnt > labeler_count)
             )
             above = (await session.execute(ranking_stmt)).scalar_one()
             ranking = above + 1

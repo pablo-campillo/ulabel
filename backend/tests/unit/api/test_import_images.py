@@ -25,8 +25,11 @@ STORAGE_OBJECTS = [
 @pytest.fixture
 def project(admin):
     return Project.create(
-        id=uuid4(), owner=admin, name="My Project",
-        description="desc", labels={"cat"},
+        id=uuid4(),
+        owner=admin,
+        name="My Project",
+        description="desc",
+        labels={"cat"},
     )
 
 

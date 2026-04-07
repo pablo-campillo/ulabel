@@ -14,8 +14,11 @@ from ulabel.infrastructure.repositories.in_memory.project_repository import (
 @pytest.fixture
 def project(admin):
     return Project.create(
-        id=uuid4(), owner=admin, name="My Project",
-        description="desc", labels={"cat"},
+        id=uuid4(),
+        owner=admin,
+        name="My Project",
+        description="desc",
+        labels={"cat"},
     )
 
 
@@ -29,9 +32,12 @@ def client(project):
 
 
 def test_add_image_returns_201(client, project):
-    response = client.post(f"/v1/projects/{project.id}/images", json={
-        "storage_key": "images/photo.jpg",
-    })
+    response = client.post(
+        f"/v1/projects/{project.id}/images",
+        json={
+            "storage_key": "images/photo.jpg",
+        },
+    )
     assert response.status_code == 201
     body = response.json()
     assert body["project_id"] == str(project.id)
@@ -40,7 +46,10 @@ def test_add_image_returns_201(client, project):
 
 
 def test_add_image_returns_404_when_project_not_found(client):
-    response = client.post(f"/v1/projects/{uuid4()}/images", json={
-        "storage_key": "images/photo.jpg",
-    })
+    response = client.post(
+        f"/v1/projects/{uuid4()}/images",
+        json={
+            "storage_key": "images/photo.jpg",
+        },
+    )
     assert response.status_code == 404

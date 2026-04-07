@@ -9,6 +9,7 @@ from ulabel.domain.ports.image_repository import ImageRepository
 
 logger = logging.getLogger(__name__)
 
+
 class ExpireImagesTask:
     """Periodically checks for and expires in-progress images that have exceeded their timeout.
 

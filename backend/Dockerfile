@@ -47,6 +47,9 @@ CMD ["uvicorn", "ulabel.api.main:app", "--host", "0.0.0.0", "--port", "8000", "-
 # Use this stage for local development and CI.
 FROM builder AS dev
 
+RUN apt-get update && apt-get install -y --no-install-recommends git \
+    && rm -rf /var/lib/apt/lists/*
+
 RUN uv sync --frozen --group docs
 
 COPY config.yml ./

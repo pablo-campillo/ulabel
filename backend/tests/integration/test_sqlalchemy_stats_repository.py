@@ -89,16 +89,28 @@ async def seeded_data(sessionmaker, project, labeler_ana, labeler_pedro):
 
     # ana: 2 labels on day1 (cat, dog), 1 label on day2 (cat)
     await _insert_label(
-        sessionmaker, project_id=project.id, image_id=done_images[0].id,
-        labeler_id=labeler_ana.id, label="cat", created_at=DAY1,
+        sessionmaker,
+        project_id=project.id,
+        image_id=done_images[0].id,
+        labeler_id=labeler_ana.id,
+        label="cat",
+        created_at=DAY1,
     )
     await _insert_label(
-        sessionmaker, project_id=project.id, image_id=done_images[1].id,
-        labeler_id=labeler_ana.id, label="dog", created_at=DAY1,
+        sessionmaker,
+        project_id=project.id,
+        image_id=done_images[1].id,
+        labeler_id=labeler_ana.id,
+        label="dog",
+        created_at=DAY1,
     )
     await _insert_label(
-        sessionmaker, project_id=project.id, image_id=done_images[2].id,
-        labeler_id=labeler_pedro.id, label="cat", created_at=DAY2,
+        sessionmaker,
+        project_id=project.id,
+        image_id=done_images[2].id,
+        labeler_id=labeler_pedro.id,
+        label="cat",
+        created_at=DAY2,
     )
 
 

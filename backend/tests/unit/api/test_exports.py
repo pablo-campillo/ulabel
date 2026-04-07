@@ -27,12 +27,18 @@ def label_records(project):
     labeler_id = uuid4()
     return [
         LabelRecord.create(
-            id=uuid4(), project_id=project.id, image_id=uuid4(),
-            labeler_id=labeler_id, label="cat",
+            id=uuid4(),
+            project_id=project.id,
+            image_id=uuid4(),
+            labeler_id=labeler_id,
+            label="cat",
         ),
         LabelRecord.create(
-            id=uuid4(), project_id=project.id, image_id=uuid4(),
-            labeler_id=labeler_id, label="dog",
+            id=uuid4(),
+            project_id=project.id,
+            image_id=uuid4(),
+            labeler_id=labeler_id,
+            label="dog",
         ),
     ]
 

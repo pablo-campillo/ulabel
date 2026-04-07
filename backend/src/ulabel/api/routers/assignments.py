@@ -83,7 +83,7 @@ async def create_assignment(
     assignment_timeout_seconds: int = Depends(
         Provide[Container.config.tasks.image_assignment_timeout_seconds.as_int()]
     ),
-):
+) -> AssignmentResponse:
     """Assign the next pending image to a labeler and return a presigned URL.
 
     Args:
@@ -96,11 +96,14 @@ async def create_assignment(
         An AssignmentResponse with image details and a presigned URL.
     """
     image = await use_case.execute(project_id=project_id, labeler_id=request.labeler_id)
+    assert image.assignment_id is not None
     timeout = timedelta(seconds=assignment_timeout_seconds)
     presigned_url = await storage.get_presigned_url(image.storage_key, expires_in=timeout)
     logger.info(
         "Assignment created: project=%s image=%s labeler=%s",
-        project_id, image.id, request.labeler_id,
+        project_id,
+        image.id,
+        request.labeler_id,
     )
     return AssignmentResponse(
         id=image.id,

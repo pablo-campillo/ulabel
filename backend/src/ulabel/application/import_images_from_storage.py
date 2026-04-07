@@ -82,11 +82,13 @@ class ImportImagesFromStorageUseCase:
         try:
             chunk: list[Image] = []
             async for storage_key in self._storage_service.list_objects(job.prefix):
-                chunk.append(Image.create(
-                    id=uuid4(),
-                    project_id=job.project_id,
-                    storage_key=storage_key,
-                ))
+                chunk.append(
+                    Image.create(
+                        id=uuid4(),
+                        project_id=job.project_id,
+                        storage_key=storage_key,
+                    )
+                )
                 if len(chunk) >= _CHUNK_SIZE:
                     await self._image_repository.save_bulk(chunk)
                     job.mark_progress(len(chunk))

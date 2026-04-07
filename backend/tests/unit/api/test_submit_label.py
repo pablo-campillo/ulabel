@@ -38,16 +38,13 @@ def client(project, assigned_image, labeler):
     images = [assigned_image]
     labels = []
     with (
-        app.container.project_repository.override(
-            InMemoryProjectRepository(projects=[project])
-        ),
-        app.container.image_repository.override(
-            InMemoryImageRepository(images=images)
-        ),
+        app.container.project_repository.override(InMemoryProjectRepository(projects=[project])),
+        app.container.image_repository.override(InMemoryImageRepository(images=images)),
         app.container.label_repository.override(InMemoryLabelRepository()),
         app.container.stats_repository.override(
             InMemoryStatsRepository(
-                images=images, labels=labels,
+                images=images,
+                labels=labels,
                 usernames={labeler.id: labeler.username},
             )
         ),
@@ -102,12 +99,8 @@ def test_submit_label_returns_404_when_image_not_found(client, project, labeler,
 def test_submit_label_returns_409_when_image_not_in_progress(project, labeler):
     pending_image = Image.create(id=uuid4(), project_id=project.id, storage_key="img2.jpg")
     with (
-        app.container.project_repository.override(
-            InMemoryProjectRepository(projects=[project])
-        ),
-        app.container.image_repository.override(
-            InMemoryImageRepository(images=[pending_image])
-        ),
+        app.container.project_repository.override(InMemoryProjectRepository(projects=[project])),
+        app.container.image_repository.override(InMemoryImageRepository(images=[pending_image])),
         app.container.label_repository.override(InMemoryLabelRepository()),
         app.container.stats_repository.override(
             InMemoryStatsRepository(images=[pending_image], labels=[], usernames={})
@@ -138,9 +131,7 @@ def test_submit_label_returns_403_when_labeler_mismatch(client, project, assigne
     assert response.status_code == 403
 
 
-def test_submit_label_returns_422_when_invalid_label(
-    client, project, assigned_image, labeler
-):
+def test_submit_label_returns_422_when_invalid_label(client, project, assigned_image, labeler):
     response = client.post(
         _url(project.id, assigned_image.id),
         json=_payload(labeler.id, assigned_image.assignment_id, label="airplane"),

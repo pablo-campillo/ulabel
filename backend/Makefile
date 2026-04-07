@@ -29,11 +29,20 @@ install:             ## Sync all dependencies (including dev) into local .venv
 		-v $(PWD):/app \
 		$(DEV_IMAGE) uv sync
 
-pre-commit-install:  ## Install pre-commit hooks into .git/hooks
-	docker run --rm \
-		-v $(PWD):/app \
-		-v $(PWD)/../.git:/app/../.git \
-		$(DEV_IMAGE) uv run --group dev pre-commit install
+REPO_ROOT := $(shell git rev-parse --show-toplevel)
+
+pre-commit-install:  ## Install pre-commit hook that runs inside Docker
+	@printf '%s\n' \
+		'#!/usr/bin/env bash' \
+		'REPO_ROOT="$$(git rev-parse --show-toplevel)"' \
+		'exec docker run --rm \' \
+		'  -v "$$REPO_ROOT":/repo \' \
+		'  -w /repo/backend \' \
+		'  $(DEV_IMAGE) \' \
+		'  bash -c "git config --global --add safe.directory /repo && uv run --group dev pre-commit run --all-files"' \
+		> $(REPO_ROOT)/.git/hooks/pre-commit
+	@chmod +x $(REPO_ROOT)/.git/hooks/pre-commit
+	@echo "pre-commit hook installed"
 
 dev:                 ## Start dev server with hot reload
 	docker compose up app
@@ -143,17 +152,15 @@ BENCHMARK_DURATION ?= 60s
 BENCHMARK_USERS    ?= 0
 BENCHMARK_URL      ?= http://localhost:8000
 
-# Resolve user count: if BENCHMARK_USERS=0, query the project API for the labeler count
-_BENCHMARK_USERS = $(shell \
-	if [ "$(BENCHMARK_USERS)" = "0" ]; then \
-		curl -s $(BENCHMARK_URL)/v1/projects/$(PROJECT_ID) | python3 -c "import sys,json; print(len(json.load(sys.stdin).get('labelers',[])))"; \
-	else \
-		echo $(BENCHMARK_USERS); \
-	fi)
-
 benchmark:           ## Run labeling load test (usage: make benchmark PROJECT_ID=<uuid> [BENCHMARK_DURATION=60s])
 	@test -n "$(PROJECT_ID)" || { echo "ERROR: PROJECT_ID is required"; exit 1; }
-	@echo "→ Spawning $(_BENCHMARK_USERS) users for $(BENCHMARK_DURATION)..."
+	$(eval _USERS := $(shell \
+		if [ "$(BENCHMARK_USERS)" = "0" ]; then \
+			curl -s $(BENCHMARK_URL)/v1/projects/$(PROJECT_ID) | python3 -c "import sys,json; print(len(json.load(sys.stdin).get('labelers',[])))"; \
+		else \
+			echo $(BENCHMARK_USERS); \
+		fi))
+	@echo "→ Spawning $(_USERS) users for $(BENCHMARK_DURATION)..."
 	docker run --rm \
 		--network host \
 		-e PROJECT_ID=$(PROJECT_ID) \
@@ -162,8 +169,8 @@ benchmark:           ## Run labeling load test (usage: make benchmark PROJECT_ID
 		locust -f benchmarks/locustfile.py \
 			--host $(BENCHMARK_URL) \
 			--headless \
-			--users $(_BENCHMARK_USERS) \
-			--spawn-rate $(_BENCHMARK_USERS) \
+			--users $(_USERS) \
+			--spawn-rate $(_USERS) \
 			--run-time $(BENCHMARK_DURATION) \
 			--only-summary
 

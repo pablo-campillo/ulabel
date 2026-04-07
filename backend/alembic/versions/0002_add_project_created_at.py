@@ -5,8 +5,9 @@ Revises: 0001_add_label_created_at
 Create Date: 2026-03-27
 """
 
-from alembic import op
 import sqlalchemy as sa
+
+from alembic import op
 
 revision = "0002_add_project_created_at"
 down_revision = "0001_add_label_created_at"

@@ -22,8 +22,11 @@ def labeler2():
 @pytest.fixture
 def project(admin):
     return Project.create(
-        id=uuid4(), owner=admin, name="Original",
-        description="Original desc", labels={"cat"},
+        id=uuid4(),
+        owner=admin,
+        name="Original",
+        description="Original desc",
+        labels={"cat"},
     )
 
 

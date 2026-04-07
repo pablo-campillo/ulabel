@@ -9,12 +9,15 @@ async def test_full_labeling_workflow(client, seed_users):
     assert resp.json()["id"] == str(admin_id)
 
     # 2. Create project
-    resp = await client.post("/v1/projects", json={
-        "owner_id": str(admin_id),
-        "name": "Dogs vs Cats",
-        "description": "Classify images as dog or cat",
-        "labels": ["dog", "cat"],
-    })
+    resp = await client.post(
+        "/v1/projects",
+        json={
+            "owner_id": str(admin_id),
+            "name": "Dogs vs Cats",
+            "description": "Classify images as dog or cat",
+            "labels": ["dog", "cat"],
+        },
+    )
     assert resp.status_code == 201
     project = resp.json()
     project_id = project["id"]
@@ -22,16 +25,22 @@ async def test_full_labeling_workflow(client, seed_users):
     assert set(project["labels"]) == {"dog", "cat"}
 
     # 3. Add labeler to project
-    resp = await client.post(f"/v1/projects/{project_id}/labelers", json={
-        "labeler_id": str(labeler_id),
-    })
+    resp = await client.post(
+        f"/v1/projects/{project_id}/labelers",
+        json={
+            "labeler_id": str(labeler_id),
+        },
+    )
     assert resp.status_code == 200
     assert len(resp.json()["labelers"]) == 1
 
     # 4. Register image by storage key
-    resp = await client.post(f"/v1/projects/{project_id}/images", json={
-        "storage_key": "datasets/img001.jpg",
-    })
+    resp = await client.post(
+        f"/v1/projects/{project_id}/images",
+        json={
+            "storage_key": "datasets/img001.jpg",
+        },
+    )
     assert resp.status_code == 201
     assert resp.json()["status"] == "pending"
 
@@ -41,9 +50,12 @@ async def test_full_labeling_workflow(client, seed_users):
     assert resp.json()["role"] == "labeler"
 
     # 6. Create assignment (get next pending image)
-    resp = await client.post(f"/v1/projects/{project_id}/assignments", json={
-        "labeler_id": str(labeler_id),
-    })
+    resp = await client.post(
+        f"/v1/projects/{project_id}/assignments",
+        json={
+            "labeler_id": str(labeler_id),
+        },
+    )
     assert resp.status_code == 201
     assignment = resp.json()
     image_id = assignment["id"]
@@ -75,7 +87,10 @@ async def test_full_labeling_workflow(client, seed_users):
     assert stats["labeled_images"] == 1
 
     # 9. No more pending images
-    resp = await client.post(f"/v1/projects/{project_id}/assignments", json={
-        "labeler_id": str(labeler_id),
-    })
+    resp = await client.post(
+        f"/v1/projects/{project_id}/assignments",
+        json={
+            "labeler_id": str(labeler_id),
+        },
+    )
     assert resp.status_code == 204

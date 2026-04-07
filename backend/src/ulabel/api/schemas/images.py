@@ -10,15 +10,14 @@ from ulabel.domain.import_jobs import ImportJobStatus
 
 class AddImageRequest(BaseModel):
     """Request body for registering an existing storage object as a project image."""
+
     storage_key: str = Field(
         ...,
         description="Key of an object already present in the storage bucket (MinIO/S3).",
         examples=["raw/image001.jpg"],
     )
 
-    model_config = {
-        "json_schema_extra": {"example": {"storage_key": "raw/image001.jpg"}}
-    }
+    model_config = {"json_schema_extra": {"example": {"storage_key": "raw/image001.jpg"}}}
 
 
 class ImageResponse(BaseModel):
@@ -30,9 +29,7 @@ class ImageResponse(BaseModel):
     status: ImageStatus = Field(
         ...,
         description=(
-            "Image status: `pending` (available),"
-            " `in_progress` (assigned),"
-            " or `done` (labelled)."
+            "Image status: `pending` (available), `in_progress` (assigned), or `done` (labelled)."
         ),
     )
 
@@ -42,8 +39,7 @@ class ImageResponse(BaseModel):
                 "id": "abc12345-e89b-12d3-a456-426614174003",
                 "project_id": "789e0123-e89b-12d3-a456-426614174002",
                 "storage_key": (
-                    "789e0123-e89b-12d3-a456-426614174002"
-                    "/abc12345-e89b-12d3-a456-426614174003"
+                    "789e0123-e89b-12d3-a456-426614174002/abc12345-e89b-12d3-a456-426614174003"
                 ),
                 "status": "pending",
             }
@@ -65,9 +61,7 @@ class SubmitLabelRequest(BaseModel):
     label: str = Field(
         ...,
         description=(
-            "The label to assign to the image."
-            " Must be one of the project's"
-            " allowed labels."
+            "The label to assign to the image. Must be one of the project's allowed labels."
         ),
         examples=["cat"],
     )
@@ -115,24 +109,16 @@ class SubmitLabelResponse(BaseModel):
     label: str = Field(..., description="The assigned label.")
     labeler_count: int = Field(
         ...,
-        description=(
-            "Total number of labels submitted"
-            " by this labeler in this project."
-        ),
+        description=("Total number of labels submitted by this labeler in this project."),
     )
     ranking: int = Field(
         ...,
-        description=(
-            "Labeler's ranking position in this"
-            " project (1 = most labels)."
-        ),
+        description=("Labeler's ranking position in this project (1 = most labels)."),
     )
     total_labelers: int = Field(
         ...,
         description=(
-            "Total number of labelers who have"
-            " submitted at least one label"
-            " in this project."
+            "Total number of labelers who have submitted at least one label in this project."
         ),
     )
 
@@ -161,9 +147,7 @@ class ImportImagesRequest(BaseModel):
         examples=["raw/batch-01/"],
     )
 
-    model_config = {
-        "json_schema_extra": {"example": {"prefix": "raw/batch-01/"}}
-    }
+    model_config = {"json_schema_extra": {"example": {"prefix": "raw/batch-01/"}}}
 
 
 class ImportJobResponse(BaseModel):
@@ -171,10 +155,7 @@ class ImportJobResponse(BaseModel):
 
     import_id: UUID = Field(
         ...,
-        description=(
-            "Unique import job identifier."
-            " Use it to poll for status."
-        ),
+        description=("Unique import job identifier. Use it to poll for status."),
     )
     project_id: UUID = Field(..., description="ID of the target project.")
     prefix: str = Field(..., description="Prefix used to filter objects in the bucket.")
@@ -182,10 +163,7 @@ class ImportJobResponse(BaseModel):
     imported: int = Field(..., description="Number of images imported so far.")
     error: str | None = Field(
         default=None,
-        description=(
-            "Error message if status is `failed`."
-            " `null` otherwise."
-        ),
+        description=("Error message if status is `failed`. `null` otherwise."),
     )
 
     model_config = {

@@ -36,9 +36,7 @@ class SqlAlchemyUserRepository(UserRepository):
             The domain User if found, otherwise None.
         """
         async with self._sessionmaker() as session:
-            result = await session.execute(
-                select(UserModel).where(UserModel.username == username)
-            )
+            result = await session.execute(select(UserModel).where(UserModel.username == username))
             model = result.scalar_one_or_none()
             return model.to_domain() if model else None
 
@@ -52,9 +50,7 @@ class SqlAlchemyUserRepository(UserRepository):
             The domain User if found, otherwise None.
         """
         async with self._sessionmaker() as session:
-            result = await session.execute(
-                select(UserModel).where(UserModel.id == user_id)
-            )
+            result = await session.execute(select(UserModel).where(UserModel.id == user_id))
             model = result.scalar_one_or_none()
             return model.to_domain() if model else None
 
@@ -70,9 +66,7 @@ class SqlAlchemyUserRepository(UserRepository):
         if not user_ids:
             return []
         async with self._sessionmaker() as session:
-            result = await session.execute(
-                select(UserModel).where(UserModel.id.in_(user_ids))
-            )
+            result = await session.execute(select(UserModel).where(UserModel.id.in_(user_ids)))
             return [row.to_domain() for row in result.scalars()]
 
     async def search_by_username_prefix(

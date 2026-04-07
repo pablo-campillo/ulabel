@@ -21,9 +21,7 @@ def labeler():
 
 @pytest.fixture
 def project(admin, labeler):
-    p = Project.create(
-        id=uuid4(), owner=admin, name="Proj", description="d", labels={"cat", "dog"}
-    )
+    p = Project.create(id=uuid4(), owner=admin, name="Proj", description="d", labels={"cat", "dog"})
     p.add_labeler(labeler.id)
     return p
 
@@ -37,8 +35,11 @@ def images_and_labels(project, labeler):
     images[0].status = ImageStatus.DONE
     labels = [
         LabelRecord.create(
-            id=uuid4(), project_id=project.id, image_id=images[0].id,
-            labeler_id=labeler.id, label="cat",
+            id=uuid4(),
+            project_id=project.id,
+            image_id=images[0].id,
+            labeler_id=labeler.id,
+            label="cat",
         )
     ]
     return images, labels
@@ -49,9 +50,7 @@ def client(project, images_and_labels, labeler):
     images, labels = images_and_labels
     usernames = {labeler.id: labeler.username}
     with (
-        app.container.project_repository.override(
-            InMemoryProjectRepository(projects=[project])
-        ),
+        app.container.project_repository.override(InMemoryProjectRepository(projects=[project])),
         app.container.stats_repository.override(
             InMemoryStatsRepository(images=images, labels=labels, usernames=usernames)
         ),

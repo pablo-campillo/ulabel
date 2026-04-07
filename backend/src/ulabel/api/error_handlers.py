@@ -9,10 +9,11 @@ import logging
 from fastapi import Request
 from starlette.responses import JSONResponse, Response
 
-from ulabel.application.add_labeler_to_project import ProjectNotFound, UserNotFound
+from ulabel.application.add_labeler_to_project import ProjectNotFound
 from ulabel.application.create_assignment import LabelerNotInProject, NoImageAvailable
 from ulabel.application.create_project import ProjectNameAlreadyExists, Unauthorized
 from ulabel.application.export_labels import NoLabelsFound
+from ulabel.application.login import UserNotFound
 from ulabel.application.submit_label import (
     AssignmentMismatch,
     ImageNotFound,

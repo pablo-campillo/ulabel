@@ -100,9 +100,9 @@ class PrometheusMiddleware(BaseHTTPMiddleware):
         REQUEST_DURATION_SECONDS.labels(method=method, path=path).observe(
             duration, exemplar=exemplar
         )
-        REQUESTS_TOTAL.labels(
-            method=method, path=path, status=response.status_code
-        ).inc(exemplar=exemplar)
+        REQUESTS_TOTAL.labels(method=method, path=path, status=response.status_code).inc(
+            exemplar=exemplar
+        )
         return response
 
 
@@ -118,6 +118,6 @@ async def metrics_route(request: Request) -> Response:
         A response with all collected Prometheus metrics in OpenMetrics format.
     """
     return Response(
-        content=generate_latest(REGISTRY),
+        content=generate_latest(REGISTRY),  # type: ignore[no-untyped-call]
         media_type=CONTENT_TYPE_LATEST,
     )

@@ -79,12 +79,24 @@ python_version = "3.12"
 
 ### pre-commit
 
-[pre-commit](https://pre-commit.com/) runs quality checks automatically before each commit.
+[pre-commit](https://pre-commit.com/) runs quality checks automatically before each commit. The configuration file (`.pre-commit-config.yaml`) lives in the **repository root** (not in `backend/`) so that Git can find it. All hooks are scoped to `backend/` files via the `files: ^backend/` filter.
+
+**Installation** (from the repo root):
+
+```bash
+pre-commit install
+```
 
 **Configured hooks:**
 
-- `ruff check` — linting.
+- `trailing-whitespace` — removes trailing whitespace.
+- `end-of-file-fixer` — ensures files end with a newline.
+- `check-yaml` / `check-toml` — validates YAML/TOML syntax.
+- `check-merge-conflict` — prevents committing unresolved merge conflicts.
+- `debug-statements` — catches leftover `breakpoint()` / `pdb` calls.
+- `ruff check --fix` — linting with auto-fix.
 - `ruff format` — formatting.
+- `mypy` — type checking (runs via `make typecheck` inside Docker).
 
 **Why:** Prevents poorly formatted or linted code from entering the repository. Fast enough (ruff runs in milliseconds) that it doesn't slow down the development workflow.
 

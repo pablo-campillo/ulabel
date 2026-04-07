@@ -18,7 +18,9 @@ def upgrade() -> None:
     op.create_index("ix_images_status_assigned_at", "images", ["status", "assigned_at"])
     op.create_index("ix_project_labelers_labeler_id", "project_labelers", ["labeler_id"])
     op.create_index("ix_label_records_project_image", "label_records", ["project_id", "image_id"])
-    op.create_index("ix_label_records_project_labeler", "label_records", ["project_id", "labeler_id"])
+    op.create_index(
+        "ix_label_records_project_labeler", "label_records", ["project_id", "labeler_id"]
+    )
     op.create_index(
         "ix_projects_created_at",
         "projects",

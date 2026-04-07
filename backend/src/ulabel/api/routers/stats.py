@@ -52,7 +52,7 @@ class distribution, per-labeler breakdowns, and daily activity.
 async def get_project_stats(
     project_id: UUID,
     use_case: GetProjectStatsUseCase = Depends(Provide[Container.get_project_stats_use_case]),
-):
+) -> ProjectStatsResponse:
     """Retrieve labelling statistics for a project.
 
     Args:
@@ -79,9 +79,7 @@ async def get_project_stats(
             LabelerDailyActivitySchema(
                 labeler_id=la.labeler_id,
                 username=la.username,
-                daily=[
-                    DailyCountSchema(date=d.date, counts=d.counts) for d in la.daily
-                ],
+                daily=[DailyCountSchema(date=d.date, counts=d.counts) for d in la.daily],
             )
             for la in stats.labeler_daily_activity
         ],

@@ -1,5 +1,6 @@
 """In-memory implementation of the project repository for testing."""
 
+from datetime import datetime
 from uuid import UUID
 
 from ulabel.domain.pagination import PaginatedResult
@@ -35,13 +36,13 @@ class InMemoryProjectRepository(ProjectRepository):
     ) -> PaginatedResult[Project]:
         all_projects = sorted(
             self._projects.values(),
-            key=lambda p: p.created_at,
+            key=lambda p: p.created_at or datetime.min,
             reverse=True,
         )
         if name is not None:
             all_projects = [p for p in all_projects if name.lower() in p.name.lower()]
         return PaginatedResult(
-            items=all_projects[offset:offset + limit],
+            items=all_projects[offset : offset + limit],
             total=len(all_projects),
         )
 

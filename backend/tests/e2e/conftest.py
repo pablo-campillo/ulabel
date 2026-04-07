@@ -53,39 +53,41 @@ async def clean_tables(engine, create_tables):
 def test_app(engine):
     from fastapi import FastAPI
 
-    container.config.from_dict({
-        "database": {
-            "url": TEST_DATABASE_URL,
-            "pool_size": 2,
-            "max_overflow": 0,
-            "pool_recycle": 3600,
-        },
-        "storage": {
-            "endpoint": "http://fake:9000",
-            "access_key": "fake",
-            "secret_key": "fake",
-            "bucket": "test",
-            "secure": False,
-            "public_endpoint": "",
-            "presigned_url_expiry_seconds": 3600,
-        },
-        "tasks": {
-            "image_assignment_timeout_seconds": 60,
-            "image_expiry_interval_seconds": 30,
-        },
-        "observability": {
-            "service_name": "ulabel-test",
-            "log_level": "WARNING",
-            "log_format": "text",
-            "tracing": {
-                "enabled": False,
-                "endpoint": "http://localhost:4317",
-                "sample_ratio": 0.0,
-                "force_trace_header": "X-Force-Trace",
+    container.config.from_dict(
+        {
+            "database": {
+                "url": TEST_DATABASE_URL,
+                "pool_size": 2,
+                "max_overflow": 0,
+                "pool_recycle": 3600,
             },
-            "metrics": {"enabled": False},
-        },
-    })
+            "storage": {
+                "endpoint": "http://fake:9000",
+                "access_key": "fake",
+                "secret_key": "fake",
+                "bucket": "test",
+                "secure": False,
+                "public_endpoint": "",
+                "presigned_url_expiry_seconds": 3600,
+            },
+            "tasks": {
+                "image_assignment_timeout_seconds": 60,
+                "image_expiry_interval_seconds": 30,
+            },
+            "observability": {
+                "service_name": "ulabel-test",
+                "log_level": "WARNING",
+                "log_format": "text",
+                "tracing": {
+                    "enabled": False,
+                    "endpoint": "http://localhost:4317",
+                    "sample_ratio": 0.0,
+                    "force_trace_header": "X-Force-Trace",
+                },
+                "metrics": {"enabled": False},
+            },
+        }
+    )
 
     container.engine.reset()
     container.sessionmaker.reset()

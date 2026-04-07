@@ -5,6 +5,7 @@ Returns predictable URLs and performs no actual I/O.
 
 from collections.abc import AsyncIterator
 from datetime import timedelta
+from typing import Any
 
 from ulabel.domain.ports.storage_service import StorageService
 
@@ -19,7 +20,7 @@ class FakeStorageService(StorageService):
             objects: Optional list of object keys to simulate in the bucket.
         """
         self._objects = objects or []
-        self._uploaded: dict[str, dict] = {}
+        self._uploaded: dict[str, dict[str, Any]] = {}
 
     async def get_presigned_url(self, storage_key: str, expires_in: timedelta) -> str:
         return f"http://fake-storage/{storage_key}?expires_in={int(expires_in.total_seconds())}"
@@ -48,7 +49,8 @@ class FakeStorageService(StorageService):
 
     async def head_object(self, key: str) -> dict[str, str] | None:
         if key in self._uploaded:
-            return self._uploaded[key]["metadata"]
+            metadata: dict[str, str] = self._uploaded[key]["metadata"]
+            return metadata
         return None
 
     async def list_objects(self, prefix: str) -> AsyncIterator[str]:

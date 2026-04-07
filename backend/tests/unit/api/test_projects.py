@@ -16,8 +16,11 @@ from ulabel.infrastructure.repositories.in_memory.user_repository import InMemor
 @pytest.fixture
 def project(admin):
     return Project.create(
-        id=uuid4(), owner=admin, name="My Project",
-        description="desc", labels={"cat"},
+        id=uuid4(),
+        owner=admin,
+        name="My Project",
+        description="desc",
+        labels={"cat"},
     )
 
 
@@ -47,13 +50,17 @@ def client_with_project(admin, labeler, project):
 
 # --- create project ---
 
+
 def test_create_project_returns_201(client, admin):
-    response = client.post("/v1/projects", json={
-        "owner_id": str(admin.id),
-        "name": "My Project",
-        "description": "A test project",
-        "labels": ["cat", "dog"],
-    })
+    response = client.post(
+        "/v1/projects",
+        json={
+            "owner_id": str(admin.id),
+            "name": "My Project",
+            "description": "A test project",
+            "labels": ["cat", "dog"],
+        },
+    )
     assert response.status_code == 201
     body = response.json()
     assert body["name"] == "My Project"
@@ -62,56 +69,76 @@ def test_create_project_returns_201(client, admin):
 
 
 def test_create_project_returns_404_when_owner_not_found(client):
-    response = client.post("/v1/projects", json={
-        "owner_id": str(uuid4()),
-        "name": "x",
-        "description": "x",
-        "labels": [],
-    })
+    response = client.post(
+        "/v1/projects",
+        json={
+            "owner_id": str(uuid4()),
+            "name": "x",
+            "description": "x",
+            "labels": [],
+        },
+    )
     assert response.status_code == 404
 
 
 def test_create_project_returns_403_when_owner_is_not_admin(client, labeler):
-    response = client.post("/v1/projects", json={
-        "owner_id": str(labeler.id),
-        "name": "x",
-        "description": "x",
-        "labels": [],
-    })
+    response = client.post(
+        "/v1/projects",
+        json={
+            "owner_id": str(labeler.id),
+            "name": "x",
+            "description": "x",
+            "labels": [],
+        },
+    )
     assert response.status_code == 403
 
 
 # --- add labeler ---
 
+
 def test_add_labeler_returns_200(client_with_project, project, labeler):
-    response = client_with_project.post(f"/v1/projects/{project.id}/labelers", json={
-        "labeler_id": str(labeler.id),
-    })
+    response = client_with_project.post(
+        f"/v1/projects/{project.id}/labelers",
+        json={
+            "labeler_id": str(labeler.id),
+        },
+    )
     assert response.status_code == 200
 
 
 def test_add_labeler_returns_404_when_project_not_found(client_with_project, labeler):
-    response = client_with_project.post(f"/v1/projects/{uuid4()}/labelers", json={
-        "labeler_id": str(labeler.id),
-    })
+    response = client_with_project.post(
+        f"/v1/projects/{uuid4()}/labelers",
+        json={
+            "labeler_id": str(labeler.id),
+        },
+    )
     assert response.status_code == 404
 
 
 def test_add_labeler_returns_404_when_labeler_not_found(client_with_project, project):
-    response = client_with_project.post(f"/v1/projects/{project.id}/labelers", json={
-        "labeler_id": str(uuid4()),
-    })
+    response = client_with_project.post(
+        f"/v1/projects/{project.id}/labelers",
+        json={
+            "labeler_id": str(uuid4()),
+        },
+    )
     assert response.status_code == 404
 
 
 def test_add_labeler_returns_403_when_user_is_not_labeler(client_with_project, project, admin):
-    response = client_with_project.post(f"/v1/projects/{project.id}/labelers", json={
-        "labeler_id": str(admin.id),
-    })
+    response = client_with_project.post(
+        f"/v1/projects/{project.id}/labelers",
+        json={
+            "labeler_id": str(admin.id),
+        },
+    )
     assert response.status_code == 403
 
 
 # --- list projects ---
+
 
 def test_list_projects_returns_labeler_count(admin, labeler):
     p = Project.create(id=uuid4(), owner=admin, name="P1", description="d", labels={"a"})
@@ -125,6 +152,7 @@ def test_list_projects_returns_labeler_count(admin, labeler):
 
 
 # --- get project detail ---
+
 
 def test_get_project_returns_200(client_with_project, project):
     response = client_with_project.get(f"/v1/projects/{project.id}")
@@ -154,6 +182,7 @@ def test_get_project_returns_404_when_not_found(client):
 
 # --- update project ---
 
+
 def test_update_project_name_returns_200(client_with_project, project):
     response = client_with_project.patch(f"/v1/projects/{project.id}", json={"name": "Updated"})
     assert response.status_code == 200
@@ -163,7 +192,8 @@ def test_update_project_name_returns_200(client_with_project, project):
 
 def test_update_project_description_returns_200(client_with_project, project):
     response = client_with_project.patch(
-        f"/v1/projects/{project.id}", json={"description": "New desc"},
+        f"/v1/projects/{project.id}",
+        json={"description": "New desc"},
     )
     assert response.status_code == 200
     assert response.json()["description"] == "New desc"
@@ -171,9 +201,12 @@ def test_update_project_description_returns_200(client_with_project, project):
 
 
 def test_update_project_labelers_returns_200(client_with_project, project, labeler):
-    response = client_with_project.patch(f"/v1/projects/{project.id}", json={
-        "labeler_ids": [str(labeler.id)],
-    })
+    response = client_with_project.patch(
+        f"/v1/projects/{project.id}",
+        json={
+            "labeler_ids": [str(labeler.id)],
+        },
+    )
     assert response.status_code == 200
 
 
@@ -183,20 +216,27 @@ def test_update_project_returns_404_when_project_not_found(client_with_project):
 
 
 def test_update_project_returns_404_when_labeler_not_found(client_with_project, project):
-    response = client_with_project.patch(f"/v1/projects/{project.id}", json={
-        "labeler_ids": [str(uuid4())],
-    })
+    response = client_with_project.patch(
+        f"/v1/projects/{project.id}",
+        json={
+            "labeler_ids": [str(uuid4())],
+        },
+    )
     assert response.status_code == 404
 
 
 def test_update_project_returns_403_when_user_is_not_labeler(client_with_project, project, admin):
-    response = client_with_project.patch(f"/v1/projects/{project.id}", json={
-        "labeler_ids": [str(admin.id)],
-    })
+    response = client_with_project.patch(
+        f"/v1/projects/{project.id}",
+        json={
+            "labeler_ids": [str(admin.id)],
+        },
+    )
     assert response.status_code == 403
 
 
 # --- list projects ---
+
 
 def test_list_projects_returns_empty_list(client):
     response = client.get("/v1/projects")
@@ -225,7 +265,11 @@ def test_list_projects_returns_all_projects(admin):
 def test_list_projects_pagination(admin):
     projects = [
         Project.create(
-            id=uuid4(), owner=admin, name=f"P{i}", description="d", labels={"a"},
+            id=uuid4(),
+            owner=admin,
+            name=f"P{i}",
+            description="d",
+            labels={"a"},
             created_at=datetime(2024, 1, i + 1, tzinfo=timezone.utc),
         )
         for i in range(3)
@@ -261,25 +305,37 @@ def test_list_projects_invalid_offset(client):
 
 # --- filter by name ---
 
+
 def test_list_projects_filter_by_name(admin):
     p1 = Project.create(
-        id=uuid4(), owner=admin, name="Alpha Project",
-        description="d", labels={"a"},
+        id=uuid4(),
+        owner=admin,
+        name="Alpha Project",
+        description="d",
+        labels={"a"},
     )
     p2 = Project.create(
-        id=uuid4(), owner=admin, name="Beta Project",
-        description="d", labels={"a"},
+        id=uuid4(),
+        owner=admin,
+        name="Beta Project",
+        description="d",
+        labels={"a"},
     )
     p3 = Project.create(
-        id=uuid4(), owner=admin, name="Gamma",
-        description="d", labels={"a"},
+        id=uuid4(),
+        owner=admin,
+        name="Gamma",
+        description="d",
+        labels={"a"},
     )
     user_ctx, project_ctx, test_client = make_client(
-        users=[admin], projects=[p1, p2, p3],
+        users=[admin],
+        projects=[p1, p2, p3],
     )
     with user_ctx, project_ctx:
         response = test_client.get(
-            "/v1/projects", params={"name": "alpha"},
+            "/v1/projects",
+            params={"name": "alpha"},
         )
     body = response.json()
     assert body["total"] == 1
@@ -288,8 +344,11 @@ def test_list_projects_filter_by_name(admin):
 
 def test_list_projects_filter_by_name_case_insensitive(admin):
     p1 = Project.create(
-        id=uuid4(), owner=admin, name="Alpha Project",
-        description="d", labels={"a"},
+        id=uuid4(),
+        owner=admin,
+        name="Alpha Project",
+        description="d",
+        labels={"a"},
     )
     user_ctx, project_ctx, test_client = make_client(users=[admin], projects=[p1])
     with user_ctx, project_ctx:
@@ -301,16 +360,25 @@ def test_list_projects_filter_by_name_case_insensitive(admin):
 
 def test_list_projects_filter_by_name_contains(admin):
     p1 = Project.create(
-        id=uuid4(), owner=admin, name="Alpha Project",
-        description="d", labels={"a"},
+        id=uuid4(),
+        owner=admin,
+        name="Alpha Project",
+        description="d",
+        labels={"a"},
     )
     p2 = Project.create(
-        id=uuid4(), owner=admin, name="Beta Project",
-        description="d", labels={"a"},
+        id=uuid4(),
+        owner=admin,
+        name="Beta Project",
+        description="d",
+        labels={"a"},
     )
     p3 = Project.create(
-        id=uuid4(), owner=admin, name="Gamma",
-        description="d", labels={"a"},
+        id=uuid4(),
+        owner=admin,
+        name="Gamma",
+        description="d",
+        labels={"a"},
     )
     user_ctx, project_ctx, test_client = make_client(users=[admin], projects=[p1, p2, p3])
     with user_ctx, project_ctx:
@@ -334,7 +402,11 @@ def test_list_projects_filter_by_name_no_match(admin):
 def test_list_projects_filter_by_name_with_pagination(admin):
     projects = [
         Project.create(
-            id=uuid4(), owner=admin, name=f"Test {i}", description="d", labels={"a"},
+            id=uuid4(),
+            owner=admin,
+            name=f"Test {i}",
+            description="d",
+            labels={"a"},
             created_at=datetime(2024, 1, i + 1, tzinfo=timezone.utc),
         )
         for i in range(3)

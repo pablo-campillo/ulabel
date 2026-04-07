@@ -50,7 +50,7 @@ Authenticates a user by username and returns their session information (ID and r
 async def login(
     request: LoginRequest,
     use_case: LoginUseCase = Depends(Provide[Container.login_use_case]),
-):
+) -> Claim:
     """Authenticate a user by username and return their claim.
 
     Args:

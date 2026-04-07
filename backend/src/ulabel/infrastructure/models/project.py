@@ -31,9 +31,7 @@ class ProjectLabelerModel(Base):
     """Association model linking a project to an assigned labeler."""
 
     __tablename__ = "project_labelers"
-    __table_args__ = (
-        Index("ix_project_labelers_labeler_id", "labeler_id"),
-    )
+    __table_args__ = (Index("ix_project_labelers_labeler_id", "labeler_id"),)
 
     project_id: Mapped[UUID] = mapped_column(
         PG_UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), primary_key=True
@@ -104,9 +102,7 @@ class ProjectModel(Base):
             ProjectLabelModel(project_id=project.id, label=label) for label in project.labels
         ]
         model.labeler_entries = [
-            ProjectLabelerModel(
-                project_id=project.id, labeler_id=lid
-            )
+            ProjectLabelerModel(project_id=project.id, labeler_id=lid)
             for lid in project.labeler_ids
         ]
         return model
