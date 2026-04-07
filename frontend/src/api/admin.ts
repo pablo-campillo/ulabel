@@ -1,4 +1,4 @@
-import { request, requestMultipart } from './client'
+import { request, requestMultipart, ApiError } from './client'
 import type {
   ProjectSummary,
   ProjectDetail,
