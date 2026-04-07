@@ -1,19 +1,22 @@
 """Use case for searching labeler users by username prefix."""
 
-from dataclasses import dataclass
-
-from ulabel.domain.ports.user_repository import UserRepository
+from ulabel.domain.ports.unit_of_work import UnitOfWork
 from ulabel.domain.users import User, UserRole
 
 
-@dataclass
 class SearchLabelersUseCase:
     """Searches for users with the labeler role by username prefix.
 
     Useful for autocomplete when assigning labelers to projects.
     """
 
-    user_repository: UserRepository
+    def __init__(self, uow: UnitOfWork):
+        """Initialize the use case.
+
+        Args:
+            uow: Unit of Work for transactional repository access.
+        """
+        self._uow = uow
 
     async def execute(self, prefix: str, limit: int = 10) -> list[User]:
         """Search for labelers whose username starts with the given prefix.
@@ -25,6 +28,7 @@ class SearchLabelersUseCase:
         Returns:
             A list of matching labeler users.
         """
-        return await self.user_repository.search_by_username_prefix(
-            prefix, role=UserRole.LABELER, limit=limit
-        )
+        async with self._uow as uow:
+            return await uow.user_repository.search_by_username_prefix(
+                prefix, role=UserRole.LABELER, limit=limit
+            )

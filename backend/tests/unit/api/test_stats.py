@@ -3,6 +3,7 @@ from uuid import uuid4
 import pytest
 from fastapi.testclient import TestClient
 
+from tests.unit.conftest import make_uow
 from ulabel.api.main import app
 from ulabel.domain.images import Image, ImageStatus
 from ulabel.domain.labels import LabelRecord
@@ -49,12 +50,11 @@ def images_and_labels(project, labeler):
 def client(project, images_and_labels, labeler):
     images, labels = images_and_labels
     usernames = {labeler.id: labeler.username}
-    with (
-        app.container.project_repository.override(InMemoryProjectRepository(projects=[project])),
-        app.container.stats_repository.override(
-            InMemoryStatsRepository(images=images, labels=labels, usernames=usernames)
-        ),
-    ):
+    uow = make_uow(
+        project_repository=InMemoryProjectRepository(projects=[project]),
+        stats_repository=InMemoryStatsRepository(images=images, labels=labels, usernames=usernames),
+    )
+    with app.container.unit_of_work.override(uow):
         yield TestClient(app)
 
 

@@ -12,9 +12,8 @@ from uuid import UUID
 from ulabel.application.add_labeler_to_project import ProjectNotFound
 from ulabel.domain.errors import DomainError
 from ulabel.domain.labels import LabelExportRow
-from ulabel.domain.ports.label_repository import LabelRepository
-from ulabel.domain.ports.project_repository import ProjectRepository
 from ulabel.domain.ports.storage_service import StorageService
+from ulabel.domain.ports.unit_of_work import UnitOfWork
 
 
 class ExportFormat(str, Enum):
@@ -47,21 +46,18 @@ class ExportLabelsUseCase:
 
     def __init__(
         self,
-        project_repository: ProjectRepository,
-        label_repository: LabelRepository,
+        uow: UnitOfWork,
         storage_service: StorageService,
         presigned_url_expiry: timedelta,
     ):
         """Initialize the use case.
 
         Args:
-            project_repository: Repository for project lookups.
-            label_repository: Repository for label data retrieval.
+            uow: Unit of Work for transactional repository access.
             storage_service: Service for file upload and presigned URL generation.
             presigned_url_expiry: How long presigned download URLs remain valid.
         """
-        self._project_repository = project_repository
-        self._label_repository = label_repository
+        self._uow = uow
         self._storage_service = storage_service
         self._presigned_url_expiry = presigned_url_expiry
 
@@ -79,46 +75,47 @@ class ExportLabelsUseCase:
             ProjectNotFound: If the project does not exist.
             NoLabelsFound: If the project has no labels to export.
         """
-        project = await self._project_repository.get_by_id(project_id)
-        if project is None:
-            raise ProjectNotFound("Project not found")
+        async with self._uow as uow:
+            project = await uow.project_repository.get_by_id(project_id)
+            if project is None:
+                raise ProjectNotFound("Project not found")
 
-        label_count = await self._label_repository.count_by_project(project_id)
-        if label_count == 0:
-            raise NoLabelsFound("No labels to export")
+            label_count = await uow.label_repository.count_by_project(project_id)
+            if label_count == 0:
+                raise NoLabelsFound("No labels to export")
 
-        filename = f"{project_id}.{fmt.value}"
-        storage_key = f"exports/{project_id}/{filename}"
+            filename = f"{project_id}.{fmt.value}"
+            storage_key = f"exports/{project_id}/{filename}"
 
-        metadata = await self._storage_service.head_object(storage_key)
-        if metadata is not None and metadata.get("label_count") == str(label_count):
+            metadata = await self._storage_service.head_object(storage_key)
+            if metadata is not None and metadata.get("label_count") == str(label_count):
+                url = await self._storage_service.get_presigned_url(
+                    storage_key,
+                    expires_in=self._presigned_url_expiry,
+                )
+                return ExportResult(url=url, cache_hit=True)
+
+            rows = uow.label_repository.get_export_data(project_id)
+
+            if fmt == ExportFormat.CSV:
+                chunks = self._generate_csv(rows)
+                content_type = "text/csv"
+            else:
+                chunks = self._generate_json(rows)
+                content_type = "application/json"
+
+            await self._storage_service.upload_file_streaming(
+                key=storage_key,
+                chunks=chunks,
+                content_type=content_type,
+                metadata={"label_count": str(label_count)},
+            )
+
             url = await self._storage_service.get_presigned_url(
                 storage_key,
                 expires_in=self._presigned_url_expiry,
             )
-            return ExportResult(url=url, cache_hit=True)
-
-        rows = self._label_repository.get_export_data(project_id)
-
-        if fmt == ExportFormat.CSV:
-            chunks = self._generate_csv(rows)
-            content_type = "text/csv"
-        else:
-            chunks = self._generate_json(rows)
-            content_type = "application/json"
-
-        await self._storage_service.upload_file_streaming(
-            key=storage_key,
-            chunks=chunks,
-            content_type=content_type,
-            metadata={"label_count": str(label_count)},
-        )
-
-        url = await self._storage_service.get_presigned_url(
-            storage_key,
-            expires_in=self._presigned_url_expiry,
-        )
-        return ExportResult(url=url, cache_hit=False)
+            return ExportResult(url=url, cache_hit=False)
 
     @staticmethod
     async def _generate_csv(rows: AsyncIterator[LabelExportRow]) -> AsyncIterator[bytes]:

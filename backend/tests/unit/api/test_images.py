@@ -3,6 +3,7 @@ from uuid import uuid4
 import pytest
 from fastapi.testclient import TestClient
 
+from tests.unit.conftest import make_uow
 from ulabel.api.main import app
 from ulabel.domain.projects import Project
 from ulabel.infrastructure.repositories.in_memory.image_repository import InMemoryImageRepository
@@ -24,10 +25,11 @@ def project(admin):
 
 @pytest.fixture
 def client(project):
-    with (
-        app.container.project_repository.override(InMemoryProjectRepository(projects=[project])),
-        app.container.image_repository.override(InMemoryImageRepository()),
-    ):
+    uow = make_uow(
+        project_repository=InMemoryProjectRepository(projects=[project]),
+        image_repository=InMemoryImageRepository(),
+    )
+    with app.container.unit_of_work.override(uow):
         yield TestClient(app)
 
 

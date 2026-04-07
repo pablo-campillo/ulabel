@@ -127,7 +127,7 @@ SQLAlchemy 2.0 with `mapped_column` provides:
 - Native async session support via `AsyncSession` and `async_sessionmaker`.
 - Compatibility with Alembic for migrations.
 
-Each repository creates its own session via the shared `async_sessionmaker`, keeping transactions scoped to individual operations.
+Repositories receive an `AsyncSession` from the Unit of Work, which manages a single session per use case execution. This keeps all operations within one transaction and avoids creating multiple connections per request.
 
 ### ORM-Domain Mapping
 

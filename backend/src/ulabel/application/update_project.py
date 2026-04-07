@@ -5,8 +5,7 @@ from uuid import UUID
 from ulabel.application.add_labeler_to_project import ProjectNotFound
 from ulabel.application.create_project import ProjectNameAlreadyExists, Unauthorized
 from ulabel.application.login import UserNotFound
-from ulabel.domain.ports.project_repository import ProjectRepository
-from ulabel.domain.ports.user_repository import UserRepository
+from ulabel.domain.ports.unit_of_work import UnitOfWork
 from ulabel.domain.projects import Project
 from ulabel.domain.users import UserRole
 
@@ -17,15 +16,13 @@ class UpdateProjectUseCase:
     Validates name uniqueness and labeler roles before persisting changes.
     """
 
-    def __init__(self, user_repository: UserRepository, project_repository: ProjectRepository):
+    def __init__(self, uow: UnitOfWork):
         """Initialize the use case.
 
         Args:
-            user_repository: Repository for user lookups.
-            project_repository: Repository for project lookups and persistence.
+            uow: Unit of Work for transactional repository access.
         """
-        self.user_repository = user_repository
-        self.project_repository = project_repository
+        self._uow = uow
 
     async def execute(
         self,
@@ -52,24 +49,26 @@ class UpdateProjectUseCase:
             UserNotFound: If a labeler ID does not correspond to an existing user.
             Unauthorized: If a labeler ID belongs to a non-labeler user.
         """
-        project = await self.project_repository.get_by_id(project_id)
-        if project is None:
-            raise ProjectNotFound("Project not found")
+        async with self._uow as uow:
+            project = await uow.project_repository.get_by_id(project_id)
+            if project is None:
+                raise ProjectNotFound("Project not found")
 
-        if name is not None and name != project.name:
-            existing = await self.project_repository.get_by_name(name)
-            if existing is not None:
-                raise ProjectNameAlreadyExists("Project name already exists")
+            if name is not None and name != project.name:
+                existing = await uow.project_repository.get_by_name(name)
+                if existing is not None:
+                    raise ProjectNameAlreadyExists("Project name already exists")
 
-        project.update(name=name, description=description)
+            project.update(name=name, description=description)
 
-        if labeler_ids is not None:
-            users = await self.user_repository.get_by_ids(labeler_ids)
-            if len(users) != len(labeler_ids):
-                raise UserNotFound("Labeler not found")
-            if any(u.role != UserRole.LABELER for u in users):
-                raise Unauthorized("User is not a labeler")
-            project.set_labelers(labeler_ids)
+            if labeler_ids is not None:
+                users = await uow.user_repository.get_by_ids(labeler_ids)
+                if len(users) != len(labeler_ids):
+                    raise UserNotFound("Labeler not found")
+                if any(u.role != UserRole.LABELER for u in users):
+                    raise Unauthorized("User is not a labeler")
+                project.set_labelers(labeler_ids)
 
-        await self.project_repository.save(project)
-        return project
+            await uow.project_repository.save(project)
+            await uow.commit()
+            return project

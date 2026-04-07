@@ -3,6 +3,7 @@ from uuid import uuid4
 
 import pytest
 
+from tests.unit.conftest import make_uow
 from ulabel.application.expire_images_task import ExpireImagesTask
 from ulabel.domain.images import Image, ImageStatus
 from ulabel.infrastructure.repositories.in_memory.image_repository import InMemoryImageRepository
@@ -48,7 +49,7 @@ def repo(expired_image, recent_image, pending_image):
 @pytest.fixture
 def task(repo):
     return ExpireImagesTask(
-        image_repository=repo,
+        uow=make_uow(image_repository=repo),
         timeout=TIMEOUT,
         interval=timedelta(minutes=5),
         now=lambda: NOW,

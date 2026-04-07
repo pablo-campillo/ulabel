@@ -3,6 +3,7 @@ from uuid import uuid4
 import pytest
 from fastapi.testclient import TestClient
 
+from tests.unit.conftest import make_uow
 from ulabel.api.main import app
 from ulabel.domain.users import User, UserRole
 from ulabel.infrastructure.repositories.in_memory.user_repository import InMemoryUserRepository
@@ -15,8 +16,8 @@ def labeler():
 
 @pytest.fixture
 def client(labeler):
-    repo = InMemoryUserRepository(users=[labeler])
-    with app.container.user_repository.override(repo):
+    uow = make_uow(user_repository=InMemoryUserRepository(users=[labeler]))
+    with app.container.unit_of_work.override(uow):
         yield TestClient(app)
 
 

@@ -22,6 +22,10 @@ Abstract repository interfaces defining the contracts between the domain and inf
 
 ::: ulabel.domain.ports.stats_repository
 
+## Unit of Work
+
+::: ulabel.domain.ports.unit_of_work
+
 ## Storage Service
 
 ::: ulabel.domain.ports.storage_service

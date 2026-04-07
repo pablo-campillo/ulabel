@@ -8,7 +8,7 @@ from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from ulabel.domain.ports.user_repository import UserRepository
 from ulabel.domain.users import User
@@ -18,13 +18,13 @@ from ulabel.infrastructure.models.user import UserModel
 class SqlAlchemyUserRepository(UserRepository):
     """PostgreSQL-backed user repository using SQLAlchemy."""
 
-    def __init__(self, sessionmaker: async_sessionmaker[AsyncSession]):
-        """Initialize with an async session factory.
+    def __init__(self, session: AsyncSession):
+        """Initialize with a shared async session.
 
         Args:
-            sessionmaker: Factory for creating async database sessions.
+            session: The async database session managed by the Unit of Work.
         """
-        self._sessionmaker = sessionmaker
+        self._session = session
 
     async def get_by_username(self, username: str) -> User | None:
         """Retrieve a user by their unique username.
@@ -35,10 +35,11 @@ class SqlAlchemyUserRepository(UserRepository):
         Returns:
             The domain User if found, otherwise None.
         """
-        async with self._sessionmaker() as session:
-            result = await session.execute(select(UserModel).where(UserModel.username == username))
-            model = result.scalar_one_or_none()
-            return model.to_domain() if model else None
+        result = await self._session.execute(
+            select(UserModel).where(UserModel.username == username)
+        )
+        model = result.scalar_one_or_none()
+        return model.to_domain() if model else None
 
     async def get_by_id(self, user_id: UUID) -> User | None:
         """Retrieve a user by their unique ID.
@@ -49,10 +50,9 @@ class SqlAlchemyUserRepository(UserRepository):
         Returns:
             The domain User if found, otherwise None.
         """
-        async with self._sessionmaker() as session:
-            result = await session.execute(select(UserModel).where(UserModel.id == user_id))
-            model = result.scalar_one_or_none()
-            return model.to_domain() if model else None
+        result = await self._session.execute(select(UserModel).where(UserModel.id == user_id))
+        model = result.scalar_one_or_none()
+        return model.to_domain() if model else None
 
     async def get_by_ids(self, user_ids: set[UUID]) -> list[User]:
         """Retrieve multiple users by ID in a single query.
@@ -65,9 +65,8 @@ class SqlAlchemyUserRepository(UserRepository):
         """
         if not user_ids:
             return []
-        async with self._sessionmaker() as session:
-            result = await session.execute(select(UserModel).where(UserModel.id.in_(user_ids)))
-            return [row.to_domain() for row in result.scalars()]
+        result = await self._session.execute(select(UserModel).where(UserModel.id.in_(user_ids)))
+        return [row.to_domain() for row in result.scalars()]
 
     async def search_by_username_prefix(
         self, prefix: str, *, role: str | None = None, limit: int = 10
@@ -82,13 +81,12 @@ class SqlAlchemyUserRepository(UserRepository):
         Returns:
             A list of matching Users ordered by username.
         """
-        async with self._sessionmaker() as session:
-            stmt = select(UserModel).where(UserModel.username.ilike(f"{prefix}%"))
-            if role is not None:
-                stmt = stmt.where(UserModel.role == role)
-            stmt = stmt.order_by(UserModel.username).limit(limit)
-            result = await session.execute(stmt)
-            return [row.to_domain() for row in result.scalars()]
+        stmt = select(UserModel).where(UserModel.username.ilike(f"{prefix}%"))
+        if role is not None:
+            stmt = stmt.where(UserModel.role == role)
+        stmt = stmt.order_by(UserModel.username).limit(limit)
+        result = await self._session.execute(stmt)
+        return [row.to_domain() for row in result.scalars()]
 
     async def save(self, user: User) -> None:
         """Save or update a user using upsert semantics.
@@ -96,14 +94,12 @@ class SqlAlchemyUserRepository(UserRepository):
         Args:
             user: The domain User to persist.
         """
-        async with self._sessionmaker() as session:
-            stmt = (
-                insert(UserModel)
-                .values(id=user.id, username=user.username, role=user.role.value)
-                .on_conflict_do_update(
-                    index_elements=["id"],
-                    set_={"username": user.username, "role": user.role.value},
-                )
+        stmt = (
+            insert(UserModel)
+            .values(id=user.id, username=user.username, role=user.role.value)
+            .on_conflict_do_update(
+                index_elements=["id"],
+                set_={"username": user.username, "role": user.role.value},
             )
-            await session.execute(stmt)
-            await session.commit()
+        )
+        await self._session.execute(stmt)

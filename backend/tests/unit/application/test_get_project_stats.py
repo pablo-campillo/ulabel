@@ -2,6 +2,7 @@ from uuid import uuid4
 
 import pytest
 
+from tests.unit.conftest import make_uow
 from ulabel.application.get_project_stats import (
     GetProjectStatsUseCase,
     ProjectNotFound,
@@ -87,8 +88,12 @@ def use_case(project, images_and_labels, labeler_a, labeler_b):
     images, labels = images_and_labels
     usernames = {labeler_a.id: labeler_a.username, labeler_b.id: labeler_b.username}
     return GetProjectStatsUseCase(
-        project_repository=InMemoryProjectRepository(projects=[project]),
-        stats_repository=InMemoryStatsRepository(images=images, labels=labels, usernames=usernames),
+        uow=make_uow(
+            project_repository=InMemoryProjectRepository(projects=[project]),
+            stats_repository=InMemoryStatsRepository(
+                images=images, labels=labels, usernames=usernames
+            ),
+        ),
     )
 
 

@@ -4,6 +4,7 @@ from uuid import uuid4
 import pytest
 from fastapi.testclient import TestClient
 
+from tests.unit.conftest import make_uow
 from ulabel.api.main import app
 from ulabel.domain.images import Image
 from ulabel.domain.projects import Project
@@ -30,10 +31,12 @@ def pending_image(project):
 
 @pytest.fixture
 def client(project, pending_image):
-    image_repo = InMemoryImageRepository(images=[pending_image])
+    uow = make_uow(
+        project_repository=InMemoryProjectRepository(projects=[project]),
+        image_repository=InMemoryImageRepository(images=[pending_image]),
+    )
     with (
-        app.container.project_repository.override(InMemoryProjectRepository(projects=[project])),
-        app.container.image_repository.override(image_repo),
+        app.container.unit_of_work.override(uow),
         app.container.storage_service.override(FakeStorageService()),
     ):
         yield TestClient(app)
@@ -71,9 +74,12 @@ def test_create_assignment_returns_403_when_labeler_not_in_project(client, proje
 
 
 def test_create_assignment_returns_204_when_no_images_available(project, labeler):
+    uow = make_uow(
+        project_repository=InMemoryProjectRepository(projects=[project]),
+        image_repository=InMemoryImageRepository(images=[]),
+    )
     with (
-        app.container.project_repository.override(InMemoryProjectRepository(projects=[project])),
-        app.container.image_repository.override(InMemoryImageRepository(images=[])),
+        app.container.unit_of_work.override(uow),
         app.container.storage_service.override(FakeStorageService()),
     ):
         response = TestClient(app).post(

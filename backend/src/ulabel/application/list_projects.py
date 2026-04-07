@@ -1,20 +1,20 @@
 """Use case for listing labeling projects with pagination and optional filtering."""
 
 from ulabel.domain.pagination import PaginatedResult
-from ulabel.domain.ports.project_repository import ProjectRepository
+from ulabel.domain.ports.unit_of_work import UnitOfWork
 from ulabel.domain.projects import Project
 
 
 class ListProjectsUseCase:
     """Lists projects with pagination and optional name filtering."""
 
-    def __init__(self, project_repository: ProjectRepository):
+    def __init__(self, uow: UnitOfWork):
         """Initialize the use case.
 
         Args:
-            project_repository: Repository for project queries.
+            uow: Unit of Work for transactional repository access.
         """
-        self.project_repository = project_repository
+        self._uow = uow
 
     async def execute(
         self,
@@ -32,4 +32,5 @@ class ListProjectsUseCase:
         Returns:
             A paginated result containing the matching projects.
         """
-        return await self.project_repository.get_all(limit=limit, offset=offset, name=name)
+        async with self._uow as uow:
+            return await uow.project_repository.get_all(limit=limit, offset=offset, name=name)

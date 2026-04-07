@@ -4,6 +4,7 @@ from uuid import uuid4
 import pytest
 from fastapi.testclient import TestClient
 
+from tests.unit.conftest import make_uow
 from ulabel.api.main import app
 from ulabel.domain.images import Image
 from ulabel.domain.projects import Project
@@ -37,18 +38,17 @@ def assigned_image(project, labeler):
 def client(project, assigned_image, labeler):
     images = [assigned_image]
     labels = []
-    with (
-        app.container.project_repository.override(InMemoryProjectRepository(projects=[project])),
-        app.container.image_repository.override(InMemoryImageRepository(images=images)),
-        app.container.label_repository.override(InMemoryLabelRepository()),
-        app.container.stats_repository.override(
-            InMemoryStatsRepository(
-                images=images,
-                labels=labels,
-                usernames={labeler.id: labeler.username},
-            )
+    uow = make_uow(
+        project_repository=InMemoryProjectRepository(projects=[project]),
+        image_repository=InMemoryImageRepository(images=images),
+        label_repository=InMemoryLabelRepository(),
+        stats_repository=InMemoryStatsRepository(
+            images=images,
+            labels=labels,
+            usernames={labeler.id: labeler.username},
         ),
-    ):
+    )
+    with app.container.unit_of_work.override(uow):
         yield TestClient(app)
 
 
@@ -98,14 +98,13 @@ def test_submit_label_returns_404_when_image_not_found(client, project, labeler,
 
 def test_submit_label_returns_409_when_image_not_in_progress(project, labeler):
     pending_image = Image.create(id=uuid4(), project_id=project.id, storage_key="img2.jpg")
-    with (
-        app.container.project_repository.override(InMemoryProjectRepository(projects=[project])),
-        app.container.image_repository.override(InMemoryImageRepository(images=[pending_image])),
-        app.container.label_repository.override(InMemoryLabelRepository()),
-        app.container.stats_repository.override(
-            InMemoryStatsRepository(images=[pending_image], labels=[], usernames={})
-        ),
-    ):
+    uow = make_uow(
+        project_repository=InMemoryProjectRepository(projects=[project]),
+        image_repository=InMemoryImageRepository(images=[pending_image]),
+        label_repository=InMemoryLabelRepository(),
+        stats_repository=InMemoryStatsRepository(images=[pending_image], labels=[], usernames={}),
+    )
+    with app.container.unit_of_work.override(uow):
         response = TestClient(app).post(
             _url(project.id, pending_image.id),
             json=_payload(labeler.id, uuid4()),

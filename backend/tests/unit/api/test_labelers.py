@@ -3,6 +3,7 @@ from uuid import uuid4
 import pytest
 from fastapi.testclient import TestClient
 
+from tests.unit.conftest import make_uow
 from ulabel.api.main import app
 from ulabel.domain.projects import Project
 from ulabel.domain.users import User
@@ -27,10 +28,11 @@ def project(admin, labeler):
 
 @pytest.fixture
 def client(admin, labeler, project):
-    with (
-        app.container.user_repository.override(InMemoryUserRepository(users=[admin, labeler])),
-        app.container.project_repository.override(InMemoryProjectRepository(projects=[project])),
-    ):
+    uow = make_uow(
+        user_repository=InMemoryUserRepository(users=[admin, labeler]),
+        project_repository=InMemoryProjectRepository(projects=[project]),
+    )
+    with app.container.unit_of_work.override(uow):
         yield TestClient(app)
 
 
@@ -43,12 +45,11 @@ def test_get_labeler_projects_returns_200(client, labeler, project):
 
 def test_get_labeler_projects_returns_empty_list(client, admin, labeler):
     other_labeler = User.create_labeler(id=uuid4(), username="other")
-    with (
-        app.container.user_repository.override(
-            InMemoryUserRepository(users=[admin, labeler, other_labeler])
-        ),
-        app.container.project_repository.override(InMemoryProjectRepository(projects=[])),
-    ):
+    uow = make_uow(
+        user_repository=InMemoryUserRepository(users=[admin, labeler, other_labeler]),
+        project_repository=InMemoryProjectRepository(projects=[]),
+    )
+    with app.container.unit_of_work.override(uow):
         response = TestClient(app).get(f"/v1/labelers/{other_labeler.id}/projects")
     assert response.status_code == 200
     assert response.json() == []

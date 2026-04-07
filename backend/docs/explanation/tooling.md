@@ -181,7 +181,7 @@ Database migrations use Alembic with async support. The migration environment (`
 **Why:**
 
 - `DeclarativeContainer` pattern for centralized dependency wiring.
-- Lifecycle management: `Singleton` for expensive resources (DB engine, storage), `Factory` for per-request resources (repositories, use cases).
+- Lifecycle management: `Singleton` for expensive resources (DB engine, storage), `Factory` for per-request resources (Unit of Work, use cases).
 - YAML configuration loading with environment variable interpolation.
 - Integration with FastAPI via `Provide[]` and `@inject`.
 

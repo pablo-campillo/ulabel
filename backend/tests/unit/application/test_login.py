@@ -2,6 +2,7 @@ from uuid import uuid4
 
 import pytest
 
+from tests.unit.conftest import make_uow
 from ulabel.application.login import LoginUseCase, UserNotFound
 from ulabel.domain.users import User
 from ulabel.infrastructure.repositories.in_memory.user_repository import InMemoryUserRepository
@@ -14,7 +15,7 @@ def labeler():
 
 @pytest.fixture
 def use_case(labeler):
-    return LoginUseCase(InMemoryUserRepository(users=[labeler]))
+    return LoginUseCase(uow=make_uow(user_repository=InMemoryUserRepository(users=[labeler])))
 
 
 async def test_login_returns_user_when_username_exists(use_case, labeler):

@@ -30,17 +30,8 @@ from ulabel.application.upload_image_to_project import UploadImageToProjectUseCa
 from ulabel.infrastructure.database import build_engine, build_sessionmaker
 from ulabel.infrastructure.observability.logging import configure_logging
 from ulabel.infrastructure.observability.tracing import setup_tracing
-from ulabel.infrastructure.repositories.sql.image_repository import SqlAlchemyImageRepository
-from ulabel.infrastructure.repositories.sql.import_job_repository import (
-    SqlAlchemyImportJobRepository,
-)
-from ulabel.infrastructure.repositories.sql.label_repository import SqlAlchemyLabelRepository
-from ulabel.infrastructure.repositories.sql.project_repository import (
-    SqlAlchemyProjectRepository,
-)
-from ulabel.infrastructure.repositories.sql.stats_repository import SqlAlchemyStatsRepository
-from ulabel.infrastructure.repositories.sql.user_repository import SqlAlchemyUserRepository
 from ulabel.infrastructure.storage.s3_storage_service import S3StorageService
+from ulabel.infrastructure.unit_of_work import SqlAlchemyUnitOfWork
 
 CONFIG_PATH = Path(__file__).resolve().parent.parent.parent / "config.yml"
 
@@ -93,14 +84,7 @@ class Container(containers.DeclarativeContainer):
 
     sessionmaker = providers.Singleton(build_sessionmaker, engine=engine)
 
-    user_repository = providers.Factory(SqlAlchemyUserRepository, sessionmaker=sessionmaker)
-    project_repository = providers.Factory(SqlAlchemyProjectRepository, sessionmaker=sessionmaker)
-    image_repository = providers.Factory(SqlAlchemyImageRepository, sessionmaker=sessionmaker)
-    label_repository = providers.Factory(SqlAlchemyLabelRepository, sessionmaker=sessionmaker)
-    stats_repository = providers.Factory(SqlAlchemyStatsRepository, sessionmaker=sessionmaker)
-    import_job_repository = providers.Factory(
-        SqlAlchemyImportJobRepository, sessionmaker=sessionmaker
-    )
+    unit_of_work = providers.Factory(SqlAlchemyUnitOfWork, sessionmaker=sessionmaker)
 
     storage_service = providers.Singleton(
         S3StorageService,
@@ -112,107 +96,58 @@ class Container(containers.DeclarativeContainer):
         public_endpoint=config.storage.public_endpoint,
     )
 
-    login_use_case = providers.Factory(LoginUseCase, user_repository=user_repository)
+    login_use_case = providers.Factory(LoginUseCase, uow=unit_of_work)
 
-    create_project_use_case = providers.Factory(
-        CreateProjectUseCase,
-        user_repository=user_repository,
-        project_repository=project_repository,
-    )
+    create_project_use_case = providers.Factory(CreateProjectUseCase, uow=unit_of_work)
 
-    list_projects_use_case = providers.Factory(
-        ListProjectsUseCase,
-        project_repository=project_repository,
-    )
+    list_projects_use_case = providers.Factory(ListProjectsUseCase, uow=unit_of_work)
 
-    get_project_use_case = providers.Factory(
-        GetProjectUseCase,
-        project_repository=project_repository,
-        user_repository=user_repository,
-    )
+    get_project_use_case = providers.Factory(GetProjectUseCase, uow=unit_of_work)
 
     add_labeler_to_project_use_case = providers.Factory(
-        AddLabelerToProjectUseCase,
-        user_repository=user_repository,
-        project_repository=project_repository,
+        AddLabelerToProjectUseCase, uow=unit_of_work
     )
 
-    add_image_to_project_use_case = providers.Factory(
-        AddImageToProjectUseCase,
-        project_repository=project_repository,
-        image_repository=image_repository,
-    )
+    add_image_to_project_use_case = providers.Factory(AddImageToProjectUseCase, uow=unit_of_work)
 
     upload_image_to_project_use_case = providers.Factory(
         UploadImageToProjectUseCase,
-        project_repository=project_repository,
-        image_repository=image_repository,
+        uow=unit_of_work,
         storage_service=storage_service,
     )
 
-    get_labeler_projects_use_case = providers.Factory(
-        GetLabelerProjectsUseCase,
-        user_repository=user_repository,
-        project_repository=project_repository,
-    )
+    get_labeler_projects_use_case = providers.Factory(GetLabelerProjectsUseCase, uow=unit_of_work)
 
-    create_assignment_use_case = providers.Factory(
-        CreateAssignmentUseCase,
-        project_repository=project_repository,
-        image_repository=image_repository,
-    )
+    create_assignment_use_case = providers.Factory(CreateAssignmentUseCase, uow=unit_of_work)
 
     import_images_use_case = providers.Factory(
         ImportImagesFromStorageUseCase,
-        project_repository=project_repository,
-        image_repository=image_repository,
+        uow=unit_of_work,
         storage_service=storage_service,
-        import_job_repository=import_job_repository,
     )
 
-    get_import_job_use_case = providers.Factory(
-        GetImportJobUseCase,
-        import_job_repository=import_job_repository,
-    )
+    get_import_job_use_case = providers.Factory(GetImportJobUseCase, uow=unit_of_work)
 
-    submit_label_use_case = providers.Factory(
-        SubmitLabelUseCase,
-        project_repository=project_repository,
-        image_repository=image_repository,
-        label_repository=label_repository,
-        stats_repository=stats_repository,
-    )
+    submit_label_use_case = providers.Factory(SubmitLabelUseCase, uow=unit_of_work)
 
     export_labels_use_case = providers.Factory(
         ExportLabelsUseCase,
-        project_repository=project_repository,
-        label_repository=label_repository,
+        uow=unit_of_work,
         storage_service=storage_service,
         presigned_url_expiry=config.storage.presigned_url_expiry_seconds.as_(
             lambda s: timedelta(seconds=int(s))
         ),
     )
 
-    update_project_use_case = providers.Factory(
-        UpdateProjectUseCase,
-        user_repository=user_repository,
-        project_repository=project_repository,
-    )
+    update_project_use_case = providers.Factory(UpdateProjectUseCase, uow=unit_of_work)
 
-    search_labelers_use_case = providers.Factory(
-        SearchLabelersUseCase,
-        user_repository=user_repository,
-    )
+    search_labelers_use_case = providers.Factory(SearchLabelersUseCase, uow=unit_of_work)
 
-    get_project_stats_use_case = providers.Factory(
-        GetProjectStatsUseCase,
-        project_repository=project_repository,
-        stats_repository=stats_repository,
-    )
+    get_project_stats_use_case = providers.Factory(GetProjectStatsUseCase, uow=unit_of_work)
 
     expire_images_task = providers.Factory(
         ExpireImagesTask,
-        image_repository=image_repository,
+        uow=unit_of_work,
         timeout=config.tasks.image_assignment_timeout_seconds.as_(
             lambda s: timedelta(seconds=int(s))
         ),

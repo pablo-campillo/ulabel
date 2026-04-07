@@ -4,6 +4,7 @@ from uuid import uuid4
 
 import pytest
 
+from tests.unit.conftest import make_uow
 from ulabel.application.add_labeler_to_project import ProjectNotFound
 from ulabel.application.export_labels import ExportFormat, ExportLabelsUseCase, NoLabelsFound
 from ulabel.domain.labels import LabelRecord
@@ -59,8 +60,10 @@ def storage():
 @pytest.fixture
 def use_case(project, label_repo, storage):
     return ExportLabelsUseCase(
-        project_repository=InMemoryProjectRepository(projects=[project]),
-        label_repository=label_repo,
+        uow=make_uow(
+            project_repository=InMemoryProjectRepository(projects=[project]),
+            label_repository=label_repo,
+        ),
         storage_service=storage,
         presigned_url_expiry=timedelta(hours=1),
     )
@@ -102,8 +105,10 @@ async def test_export_cache_hit(use_case, project, storage, label_records):
 
 async def test_export_no_labels(project, storage):
     use_case = ExportLabelsUseCase(
-        project_repository=InMemoryProjectRepository(projects=[project]),
-        label_repository=InMemoryLabelRepository(),
+        uow=make_uow(
+            project_repository=InMemoryProjectRepository(projects=[project]),
+            label_repository=InMemoryLabelRepository(),
+        ),
         storage_service=storage,
         presigned_url_expiry=timedelta(hours=1),
     )
@@ -113,8 +118,10 @@ async def test_export_no_labels(project, storage):
 
 async def test_export_project_not_found(label_repo, storage):
     use_case = ExportLabelsUseCase(
-        project_repository=InMemoryProjectRepository(),
-        label_repository=label_repo,
+        uow=make_uow(
+            project_repository=InMemoryProjectRepository(),
+            label_repository=label_repo,
+        ),
         storage_service=storage,
         presigned_url_expiry=timedelta(hours=1),
     )

@@ -3,6 +3,7 @@ from uuid import uuid4
 
 import pytest
 
+from tests.unit.conftest import make_uow
 from ulabel.application.add_labeler_to_project import ProjectNotFound
 from ulabel.application.create_assignment import (
     CreateAssignmentUseCase,
@@ -34,8 +35,10 @@ def pending_image(project):
 @pytest.fixture
 def use_case(project, pending_image):
     return CreateAssignmentUseCase(
-        project_repository=InMemoryProjectRepository(projects=[project]),
-        image_repository=InMemoryImageRepository(images=[pending_image]),
+        uow=make_uow(
+            project_repository=InMemoryProjectRepository(projects=[project]),
+            image_repository=InMemoryImageRepository(images=[pending_image]),
+        ),
         now=lambda: FIXED_NOW,
     )
 
@@ -68,8 +71,10 @@ async def test_returns_pending_image_with_lowest_uuid(project, labeler):
     image_low = Image.create(id=low_id, project_id=project.id, storage_key="low.jpg")
 
     use_case = CreateAssignmentUseCase(
-        project_repository=InMemoryProjectRepository(projects=[project]),
-        image_repository=InMemoryImageRepository(images=[image_high, image_low]),
+        uow=make_uow(
+            project_repository=InMemoryProjectRepository(projects=[project]),
+            image_repository=InMemoryImageRepository(images=[image_high, image_low]),
+        ),
         now=lambda: FIXED_NOW,
     )
 
@@ -79,8 +84,10 @@ async def test_returns_pending_image_with_lowest_uuid(project, labeler):
 
 async def test_raises_when_no_pending_images(project, labeler):
     use_case = CreateAssignmentUseCase(
-        project_repository=InMemoryProjectRepository(projects=[project]),
-        image_repository=InMemoryImageRepository(),
+        uow=make_uow(
+            project_repository=InMemoryProjectRepository(projects=[project]),
+            image_repository=InMemoryImageRepository(),
+        ),
         now=lambda: FIXED_NOW,
     )
     with pytest.raises(NoImageAvailable):

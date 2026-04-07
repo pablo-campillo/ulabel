@@ -3,7 +3,7 @@
 from uuid import UUID
 
 from ulabel.domain.import_jobs import ImportJob, ImportJobNotFound
-from ulabel.domain.ports.import_job_repository import ImportJobRepository
+from ulabel.domain.ports.unit_of_work import UnitOfWork
 
 
 class GetImportJobUseCase:
@@ -13,13 +13,13 @@ class GetImportJobUseCase:
         ImportJobNotFound: If the job does not exist or belongs to a different project.
     """
 
-    def __init__(self, import_job_repository: ImportJobRepository):
+    def __init__(self, uow: UnitOfWork):
         """Initialize the use case.
 
         Args:
-            import_job_repository: Repository for import job lookups.
+            uow: Unit of Work for transactional repository access.
         """
-        self._import_job_repository = import_job_repository
+        self._uow = uow
 
     async def execute(self, import_id: UUID, project_id: UUID) -> ImportJob:
         """Retrieve an import job by its ID.
@@ -34,7 +34,8 @@ class GetImportJobUseCase:
         Raises:
             ImportJobNotFound: If the job does not exist or belongs to a different project.
         """
-        job = await self._import_job_repository.get_by_id(import_id)
-        if job is None or job.project_id != project_id:
-            raise ImportJobNotFound("Import job not found")
-        return job
+        async with self._uow as uow:
+            job = await uow.import_job_repository.get_by_id(import_id)
+            if job is None or job.project_id != project_id:
+                raise ImportJobNotFound("Import job not found")
+            return job

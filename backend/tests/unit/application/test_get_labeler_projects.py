@@ -2,6 +2,7 @@ from uuid import uuid4
 
 import pytest
 
+from tests.unit.conftest import make_uow
 from ulabel.application.create_project import Unauthorized
 from ulabel.application.get_labeler_projects import GetLabelerProjectsUseCase
 from ulabel.application.login import UserNotFound
@@ -45,9 +46,11 @@ def project_without_labeler(admin):
 @pytest.fixture
 def use_case(admin, labeler, other_labeler, project_with_labeler, project_without_labeler):
     return GetLabelerProjectsUseCase(
-        user_repository=InMemoryUserRepository(users=[admin, labeler, other_labeler]),
-        project_repository=InMemoryProjectRepository(
-            projects=[project_with_labeler, project_without_labeler]
+        uow=make_uow(
+            user_repository=InMemoryUserRepository(users=[admin, labeler, other_labeler]),
+            project_repository=InMemoryProjectRepository(
+                projects=[project_with_labeler, project_without_labeler]
+            ),
         ),
     )
 

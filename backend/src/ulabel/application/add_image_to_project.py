@@ -4,8 +4,7 @@ from uuid import UUID, uuid4
 
 from ulabel.application.add_labeler_to_project import ProjectNotFound
 from ulabel.domain.images import Image
-from ulabel.domain.ports.image_repository import ImageRepository
-from ulabel.domain.ports.project_repository import ProjectRepository
+from ulabel.domain.ports.unit_of_work import UnitOfWork
 
 
 class AddImageToProjectUseCase:
@@ -14,15 +13,13 @@ class AddImageToProjectUseCase:
     Validates that the target project exists before persisting the image.
     """
 
-    def __init__(self, project_repository: ProjectRepository, image_repository: ImageRepository):
+    def __init__(self, uow: UnitOfWork):
         """Initialize the use case.
 
         Args:
-            project_repository: Repository for project lookups.
-            image_repository: Repository for persisting images.
+            uow: Unit of Work for transactional repository access.
         """
-        self.project_repository = project_repository
-        self.image_repository = image_repository
+        self._uow = uow
 
     async def execute(self, project_id: UUID, storage_key: str) -> Image:
         """Add an image to a project.
@@ -37,10 +34,12 @@ class AddImageToProjectUseCase:
         Raises:
             ProjectNotFound: If the project does not exist.
         """
-        project = await self.project_repository.get_by_id(project_id)
-        if project is None:
-            raise ProjectNotFound(f"Project '{project_id}' not found")
+        async with self._uow as uow:
+            project = await uow.project_repository.get_by_id(project_id)
+            if project is None:
+                raise ProjectNotFound(f"Project '{project_id}' not found")
 
-        image = Image.create(id=uuid4(), project_id=project_id, storage_key=storage_key)
-        await self.image_repository.save(image)
-        return image
+            image = Image.create(id=uuid4(), project_id=project_id, storage_key=storage_key)
+            await uow.image_repository.save(image)
+            await uow.commit()
+            return image

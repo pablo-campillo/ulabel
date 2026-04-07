@@ -101,8 +101,8 @@ The domain has **zero external dependencies** — it defines contracts that othe
 Contains **use cases** that orchestrate business workflows:
 
 - Each use case is a single class in its own file with an `execute()` method (e.g., `CreateAssignmentUseCase`, `SubmitLabelUseCase`).
-- Use cases depend only on domain ports, injected via constructor.
-- They enforce business rules and coordinate between multiple repositories.
+- Use cases receive a `UnitOfWork` via constructor and open a transactional context (`async with self._uow as uow:`) to access repositories.
+- They enforce business rules and coordinate between multiple repositories within a single database transaction.
 - No logging or infrastructure concerns — the application layer stays pure.
 
 ### API Layer
@@ -123,32 +123,49 @@ Implements the domain ports:
 - **S3 Storage Service**: Image storage and presigned URL generation via aioboto3, compatible with AWS S3 and MinIO.
 - **Observability**: OpenTelemetry tracing, Prometheus metrics middleware, structured JSON logging.
 
-## Dependency Injection
+## Dependency Injection & Unit of Work
 
-uLabel uses [dependency-injector](https://python-dependency-injector.ets-labs.org/) with a `DeclarativeContainer` to wire everything together. The `Container` class in `container.py` defines:
+uLabel uses [dependency-injector](https://python-dependency-injector.ets-labs.org/) with a `DeclarativeContainer` to wire everything together, combined with the **Unit of Work** pattern for transactional database access.
+
+The `Container` class in `container.py` defines:
 
 - **Singletons** for expensive resources: database engine, session factory, storage service.
-- **Factories** for per-request resources: repositories and use cases.
+- **Factories** for per-request resources: `UnitOfWork` and use cases.
 - **Configuration** loaded from `config.yml` with environment variable interpolation.
-
-The container is wired to FastAPI router modules at startup, allowing route handlers to declare dependencies with `Depends(Provide[Container.xxx])` and the `@inject` decorator.
 
 ```mermaid
 graph LR
     Config[config.yml] --> Container
     Container -->|Singleton| Engine[SQLAlchemy Engine]
     Container -->|Singleton| StorageSvc[S3 Storage]
-    Container -->|Factory| Repos[Repositories]
+    Container -->|Factory| UoW[UnitOfWork]
+    UoW -->|creates| Repos[Repositories]
     Container -->|Factory| UseCases[Use Cases]
     UseCases --> Routers[FastAPI Routers]
 ```
 
+### Unit of Work Pattern
+
+Each use case receives a `UnitOfWork` that, when entered as an async context manager, opens a **single database session** shared by all repositories. This ensures:
+
+- **One connection per request** instead of one per repository method call.
+- **Atomicity**: all writes within a use case either commit together or roll back together.
+- **Reduced latency**: eliminates repeated connection acquire/release overhead.
+
+```python
+async with self._uow as uow:
+    project = await uow.project_repository.get_by_id(project_id)
+    await uow.label_repository.save(label_record)
+    await uow.image_repository.save(image)
+    await uow.commit()
+```
+
 This means:
 
-- **Production** uses real PostgreSQL repositories and S3 storage.
-- **Unit tests** swap in in-memory repositories and fake storage with no container changes needed — just construct use cases with test doubles directly.
+- **Production** uses `SqlAlchemyUnitOfWork` which creates a real `AsyncSession` shared by all SQL repositories.
+- **Unit tests** use `InMemoryUnitOfWork` wrapping in-memory repository doubles — just construct with `make_uow()` helper.
 - **Integration tests** use the real container pointed at a test database.
-- **E2E tests** use a test FastAPI app with the real container pointed at a test database, verifying the full HTTP → use case → repository → database flow.
+- **E2E tests** use a test FastAPI app with the real container pointed at a test database, verifying the full HTTP → use case → UoW → repository → database flow.
 
 ## Key Design Decisions
 
@@ -160,5 +177,6 @@ This means:
 | Domain ports as ABCs | Explicit contracts make it obvious what each layer expects |
 | In-memory test doubles | Fast unit tests (milliseconds) without infrastructure |
 | Logging only in API layer | Domain and application layers stay pure — see [Observability Design](observability.md) |
+| Unit of Work | One DB session per use case execution — atomicity and reduced connection overhead |
 | Dependency-injector | Declarative wiring with lifecycle management (singleton/factory), avoids manual DI boilerplate |
 | `config.yml` with env interpolation | Readable defaults with environment-specific overrides, no scattered `os.getenv()` calls |

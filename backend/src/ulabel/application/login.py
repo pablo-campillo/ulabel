@@ -1,7 +1,7 @@
 """Use case for authenticating a user by username."""
 
 from ulabel.domain.errors import DomainError
-from ulabel.domain.ports.user_repository import UserRepository
+from ulabel.domain.ports.unit_of_work import UnitOfWork
 from ulabel.domain.users import User
 
 
@@ -17,13 +17,13 @@ class LoginUseCase:
     Returns the user entity if found, otherwise raises an error.
     """
 
-    def __init__(self, user_repository: UserRepository):
+    def __init__(self, uow: UnitOfWork):
         """Initialize the use case.
 
         Args:
-            user_repository: Repository for user lookups.
+            uow: Unit of Work for transactional repository access.
         """
-        self.user_repository = user_repository
+        self._uow = uow
 
     async def execute(self, username: str) -> User:
         """Log in a user by username.
@@ -37,7 +37,8 @@ class LoginUseCase:
         Raises:
             UserNotFound: If no user with the given username exists.
         """
-        user = await self.user_repository.get_by_username(username)
-        if user is None:
-            raise UserNotFound("User not found")
-        return user
+        async with self._uow as uow:
+            user = await uow.user_repository.get_by_username(username)
+            if user is None:
+                raise UserNotFound("User not found")
+            return user

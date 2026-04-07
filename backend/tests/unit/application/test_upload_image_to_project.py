@@ -2,6 +2,7 @@ from uuid import uuid4
 
 import pytest
 
+from tests.unit.conftest import make_uow
 from ulabel.application.add_labeler_to_project import ProjectNotFound
 from ulabel.application.upload_image_to_project import UploadImageToProjectUseCase
 from ulabel.domain.images import ImageStatus
@@ -27,8 +28,10 @@ def project(admin):
 @pytest.fixture
 def use_case(project):
     return UploadImageToProjectUseCase(
-        project_repository=InMemoryProjectRepository(projects=[project]),
-        image_repository=InMemoryImageRepository(),
+        uow=make_uow(
+            project_repository=InMemoryProjectRepository(projects=[project]),
+            image_repository=InMemoryImageRepository(),
+        ),
         storage_service=FakeStorageService(),
     )
 

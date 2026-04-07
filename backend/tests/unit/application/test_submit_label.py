@@ -3,6 +3,7 @@ from uuid import uuid4
 
 import pytest
 
+from tests.unit.conftest import make_uow
 from ulabel.application.add_labeler_to_project import ProjectNotFound
 from ulabel.application.submit_label import (
     AssignmentMismatch,
@@ -45,13 +46,15 @@ def use_case(project, assigned_image, labeler):
     images = [assigned_image]
     labels = []
     return SubmitLabelUseCase(
-        project_repository=InMemoryProjectRepository(projects=[project]),
-        image_repository=InMemoryImageRepository(images=images),
-        label_repository=InMemoryLabelRepository(),
-        stats_repository=InMemoryStatsRepository(
-            images=images,
-            labels=labels,
-            usernames={labeler.id: labeler.username},
+        uow=make_uow(
+            project_repository=InMemoryProjectRepository(projects=[project]),
+            image_repository=InMemoryImageRepository(images=images),
+            label_repository=InMemoryLabelRepository(),
+            stats_repository=InMemoryStatsRepository(
+                images=images,
+                labels=labels,
+                usernames={labeler.id: labeler.username},
+            ),
         ),
     )
 
@@ -108,10 +111,12 @@ async def test_raises_when_image_not_in_project(project, labeler):
     other_image = Image.create(id=uuid4(), project_id=uuid4(), storage_key="other.jpg")
     other_image.assign(labeler_id=labeler.id, assigned_at=FIXED_NOW)
     use_case = SubmitLabelUseCase(
-        project_repository=InMemoryProjectRepository(projects=[project]),
-        image_repository=InMemoryImageRepository(images=[other_image]),
-        label_repository=InMemoryLabelRepository(),
-        stats_repository=InMemoryStatsRepository(images=[other_image], labels=[], usernames={}),
+        uow=make_uow(
+            project_repository=InMemoryProjectRepository(projects=[project]),
+            image_repository=InMemoryImageRepository(images=[other_image]),
+            label_repository=InMemoryLabelRepository(),
+            stats_repository=InMemoryStatsRepository(images=[other_image], labels=[], usernames={}),
+        ),
     )
     with pytest.raises(ImageNotFound):
         await use_case.execute(
@@ -126,10 +131,14 @@ async def test_raises_when_image_not_in_project(project, labeler):
 async def test_raises_when_image_is_pending(project, labeler):
     pending_image = Image.create(id=uuid4(), project_id=project.id, storage_key="img.jpg")
     use_case = SubmitLabelUseCase(
-        project_repository=InMemoryProjectRepository(projects=[project]),
-        image_repository=InMemoryImageRepository(images=[pending_image]),
-        label_repository=InMemoryLabelRepository(),
-        stats_repository=InMemoryStatsRepository(images=[pending_image], labels=[], usernames={}),
+        uow=make_uow(
+            project_repository=InMemoryProjectRepository(projects=[project]),
+            image_repository=InMemoryImageRepository(images=[pending_image]),
+            label_repository=InMemoryLabelRepository(),
+            stats_repository=InMemoryStatsRepository(
+                images=[pending_image], labels=[], usernames={}
+            ),
+        ),
     )
     with pytest.raises(ImageNotInProgress):
         await use_case.execute(
@@ -146,10 +155,12 @@ async def test_raises_when_image_already_done(project, labeler):
     done_image.assign(labeler_id=labeler.id, assigned_at=FIXED_NOW)
     done_image.complete()
     use_case = SubmitLabelUseCase(
-        project_repository=InMemoryProjectRepository(projects=[project]),
-        image_repository=InMemoryImageRepository(images=[done_image]),
-        label_repository=InMemoryLabelRepository(),
-        stats_repository=InMemoryStatsRepository(images=[done_image], labels=[], usernames={}),
+        uow=make_uow(
+            project_repository=InMemoryProjectRepository(projects=[project]),
+            image_repository=InMemoryImageRepository(images=[done_image]),
+            label_repository=InMemoryLabelRepository(),
+            stats_repository=InMemoryStatsRepository(images=[done_image], labels=[], usernames={}),
+        ),
     )
     with pytest.raises(ImageNotInProgress):
         await use_case.execute(

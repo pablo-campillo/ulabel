@@ -4,6 +4,7 @@ from uuid import uuid4
 import pytest
 from fastapi.testclient import TestClient
 
+from tests.unit.conftest import make_uow
 from ulabel.api.main import app
 from ulabel.domain.errors import StorageFull
 from ulabel.domain.labels import LabelRecord
@@ -58,9 +59,12 @@ def storage():
 
 @pytest.fixture
 def client(project, label_repo, storage):
+    uow = make_uow(
+        project_repository=InMemoryProjectRepository(projects=[project]),
+        label_repository=label_repo,
+    )
     with (
-        app.container.project_repository.override(InMemoryProjectRepository(projects=[project])),
-        app.container.label_repository.override(label_repo),
+        app.container.unit_of_work.override(uow),
         app.container.storage_service.override(storage),
     ):
         yield TestClient(app, follow_redirects=False)
@@ -85,9 +89,12 @@ def test_export_returns_404_when_project_not_found(client):
 
 
 def test_export_returns_404_when_no_labels(project, storage):
+    uow = make_uow(
+        project_repository=InMemoryProjectRepository(projects=[project]),
+        label_repository=InMemoryLabelRepository(),
+    )
     with (
-        app.container.project_repository.override(InMemoryProjectRepository(projects=[project])),
-        app.container.label_repository.override(InMemoryLabelRepository()),
+        app.container.unit_of_work.override(uow),
         app.container.storage_service.override(storage),
     ):
         client = TestClient(app, follow_redirects=False)
@@ -110,9 +117,12 @@ class FullStorageService(FakeStorageService):
 
 
 def test_export_returns_507_when_storage_full(project, label_repo):
+    uow = make_uow(
+        project_repository=InMemoryProjectRepository(projects=[project]),
+        label_repository=label_repo,
+    )
     with (
-        app.container.project_repository.override(InMemoryProjectRepository(projects=[project])),
-        app.container.label_repository.override(label_repo),
+        app.container.unit_of_work.override(uow),
         app.container.storage_service.override(FullStorageService()),
     ):
         client = TestClient(app, follow_redirects=False)

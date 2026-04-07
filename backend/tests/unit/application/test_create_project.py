@@ -2,6 +2,7 @@ from uuid import uuid4
 
 import pytest
 
+from tests.unit.conftest import make_uow
 from ulabel.application.create_project import CreateProjectUseCase, Unauthorized
 from ulabel.application.login import UserNotFound
 from ulabel.infrastructure.repositories.in_memory.project_repository import (
@@ -13,8 +14,10 @@ from ulabel.infrastructure.repositories.in_memory.user_repository import InMemor
 @pytest.fixture
 def use_case(admin, labeler):
     return CreateProjectUseCase(
-        user_repository=InMemoryUserRepository(users=[admin, labeler]),
-        project_repository=InMemoryProjectRepository(),
+        uow=make_uow(
+            user_repository=InMemoryUserRepository(users=[admin, labeler]),
+            project_repository=InMemoryProjectRepository(),
+        ),
     )
 
 

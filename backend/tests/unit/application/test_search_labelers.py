@@ -2,6 +2,7 @@ from uuid import uuid4
 
 import pytest
 
+from tests.unit.conftest import make_uow
 from ulabel.application.search_labelers import SearchLabelersUseCase
 from ulabel.domain.users import User
 from ulabel.infrastructure.repositories.in_memory.user_repository import InMemoryUserRepository
@@ -23,7 +24,9 @@ def admin():
 
 @pytest.fixture
 def use_case(labelers, admin):
-    return SearchLabelersUseCase(user_repository=InMemoryUserRepository(users=[*labelers, admin]))
+    return SearchLabelersUseCase(
+        uow=make_uow(user_repository=InMemoryUserRepository(users=[*labelers, admin]))
+    )
 
 
 async def test_returns_labelers_matching_prefix(use_case):

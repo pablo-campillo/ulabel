@@ -5,7 +5,7 @@ import logging
 from datetime import datetime, timedelta, timezone
 from typing import Callable
 
-from ulabel.domain.ports.image_repository import ImageRepository
+from ulabel.domain.ports.unit_of_work import UnitOfWork
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +19,7 @@ class ExpireImagesTask:
 
     def __init__(
         self,
-        image_repository: ImageRepository,
+        uow: UnitOfWork,
         timeout: timedelta,
         interval: timedelta,
         now: Callable[[], datetime] = lambda: datetime.now(timezone.utc),
@@ -27,12 +27,12 @@ class ExpireImagesTask:
         """Initialize the task.
 
         Args:
-            image_repository: Repository for image lookups and persistence.
+            uow: Unit of Work for transactional repository access.
             timeout: Duration after which an in-progress image is considered expired.
             interval: Time between expiration check cycles.
             now: Callable returning the current UTC datetime.
         """
-        self._image_repository = image_repository
+        self._uow = uow
         self._timeout = timeout
         self._interval = interval
         self._now = now
@@ -46,6 +46,8 @@ class ExpireImagesTask:
     async def tick(self) -> None:
         """Execute a single expiration cycle, expiring all overdue images."""
         cutoff = self._now() - self._timeout
-        expired = await self._image_repository.expire_in_progress(cutoff)
-        if expired:
-            logger.info("Expired %d stale assignments", len(expired))
+        async with self._uow as uow:
+            expired = await uow.image_repository.expire_in_progress(cutoff)
+            if expired:
+                logger.info("Expired %d stale assignments", len(expired))
+            await uow.commit()

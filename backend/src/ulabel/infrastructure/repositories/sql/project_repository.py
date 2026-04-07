@@ -8,7 +8,7 @@ from uuid import UUID
 
 from sqlalchemy import delete, func, select
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 from sqlalchemy.orm.strategy_options import _AbstractLoad
 
@@ -38,13 +38,13 @@ def _load_options() -> list[_AbstractLoad]:
 class SqlAlchemyProjectRepository(ProjectRepository):
     """PostgreSQL-backed project repository using SQLAlchemy."""
 
-    def __init__(self, sessionmaker: async_sessionmaker[AsyncSession]):
-        """Initialize with an async session factory.
+    def __init__(self, session: AsyncSession):
+        """Initialize with a shared async session.
 
         Args:
-            sessionmaker: Factory for creating async database sessions.
+            session: The async database session managed by the Unit of Work.
         """
-        self._sessionmaker = sessionmaker
+        self._session = session
 
     async def get_by_id(self, project_id: UUID) -> Project | None:
         """Retrieve a project by its ID with all relations loaded.
@@ -55,12 +55,11 @@ class SqlAlchemyProjectRepository(ProjectRepository):
         Returns:
             The domain Project if found, otherwise None.
         """
-        async with self._sessionmaker() as session:
-            result = await session.execute(
-                select(ProjectModel).where(ProjectModel.id == project_id).options(*_load_options())
-            )
-            model = result.unique().scalar_one_or_none()
-            return model.to_domain() if model else None
+        result = await self._session.execute(
+            select(ProjectModel).where(ProjectModel.id == project_id).options(*_load_options())
+        )
+        model = result.unique().scalar_one_or_none()
+        return model.to_domain() if model else None
 
     async def get_by_name(self, name: str) -> Project | None:
         """Retrieve a project by its unique name.
@@ -71,12 +70,11 @@ class SqlAlchemyProjectRepository(ProjectRepository):
         Returns:
             The domain Project if found, otherwise None.
         """
-        async with self._sessionmaker() as session:
-            result = await session.execute(
-                select(ProjectModel).where(ProjectModel.name == name).options(*_load_options())
-            )
-            model = result.unique().scalar_one_or_none()
-            return model.to_domain() if model else None
+        result = await self._session.execute(
+            select(ProjectModel).where(ProjectModel.name == name).options(*_load_options())
+        )
+        model = result.unique().scalar_one_or_none()
+        return model.to_domain() if model else None
 
     async def get_by_labeler_id(self, labeler_id: UUID) -> list[Project]:
         """Retrieve all projects that a labeler is assigned to.
@@ -87,14 +85,13 @@ class SqlAlchemyProjectRepository(ProjectRepository):
         Returns:
             A list of domain Projects the labeler belongs to.
         """
-        async with self._sessionmaker() as session:
-            result = await session.execute(
-                select(ProjectModel)
-                .join(ProjectLabelerModel, ProjectModel.id == ProjectLabelerModel.project_id)
-                .where(ProjectLabelerModel.labeler_id == labeler_id)
-                .options(*_load_options())
-            )
-            return [row.to_domain() for row in result.unique().scalars()]
+        result = await self._session.execute(
+            select(ProjectModel)
+            .join(ProjectLabelerModel, ProjectModel.id == ProjectLabelerModel.project_id)
+            .where(ProjectLabelerModel.labeler_id == labeler_id)
+            .options(*_load_options())
+        )
+        return [row.to_domain() for row in result.unique().scalars()]
 
     async def get_all(
         self, limit: int, offset: int, *, name: str | None = None
@@ -109,26 +106,25 @@ class SqlAlchemyProjectRepository(ProjectRepository):
         Returns:
             A PaginatedResult with projects ordered by creation date (newest first).
         """
-        async with self._sessionmaker() as session:
-            filters = []
-            if name is not None:
-                filters.append(ProjectModel.name.ilike(f"%{name}%"))
+        filters = []
+        if name is not None:
+            filters.append(ProjectModel.name.ilike(f"%{name}%"))
 
-            count_result = await session.execute(
-                select(func.count()).select_from(ProjectModel).where(*filters)
-            )
-            total = count_result.scalar_one()
+        count_result = await self._session.execute(
+            select(func.count()).select_from(ProjectModel).where(*filters)
+        )
+        total = count_result.scalar_one()
 
-            result = await session.execute(
-                select(ProjectModel)
-                .where(*filters)
-                .options(*_load_options())
-                .order_by(ProjectModel.created_at.desc())
-                .limit(limit)
-                .offset(offset)
-            )
-            items = [row.to_domain() for row in result.unique().scalars()]
-            return PaginatedResult(items=items, total=total)
+        result = await self._session.execute(
+            select(ProjectModel)
+            .where(*filters)
+            .options(*_load_options())
+            .order_by(ProjectModel.created_at.desc())
+            .limit(limit)
+            .offset(offset)
+        )
+        items = [row.to_domain() for row in result.unique().scalars()]
+        return PaginatedResult(items=items, total=total)
 
     async def save(self, project: Project) -> None:
         """Save or update a project with its labels and labelers.
@@ -139,40 +135,37 @@ class SqlAlchemyProjectRepository(ProjectRepository):
         Args:
             project: The domain Project to persist.
         """
-        async with self._sessionmaker() as session:
-            # Upsert project row
-            await session.execute(
-                insert(ProjectModel)
-                .values(
-                    id=project.id,
-                    owner_id=project.owner.id,
-                    name=project.name,
-                    description=project.description,
-                )
-                .on_conflict_do_update(
-                    index_elements=["id"],
-                    set_={"name": project.name, "description": project.description},
-                )
+        # Upsert project row
+        await self._session.execute(
+            insert(ProjectModel)
+            .values(
+                id=project.id,
+                owner_id=project.owner.id,
+                name=project.name,
+                description=project.description,
+            )
+            .on_conflict_do_update(
+                index_elements=["id"],
+                set_={"name": project.name, "description": project.description},
+            )
+        )
+
+        # Replace labels: delete existing, insert current
+        await self._session.execute(
+            delete(ProjectLabelModel).where(ProjectLabelModel.project_id == project.id)
+        )
+        if project.labels:
+            await self._session.execute(
+                insert(ProjectLabelModel),
+                [{"project_id": project.id, "label": label} for label in project.labels],
             )
 
-            # Replace labels: delete existing, insert current
-            await session.execute(
-                delete(ProjectLabelModel).where(ProjectLabelModel.project_id == project.id)
+        # Replace labelers: delete existing, insert current
+        await self._session.execute(
+            delete(ProjectLabelerModel).where(ProjectLabelerModel.project_id == project.id)
+        )
+        if project.labeler_ids:
+            await self._session.execute(
+                insert(ProjectLabelerModel),
+                [{"project_id": project.id, "labeler_id": lid} for lid in project.labeler_ids],
             )
-            if project.labels:
-                await session.execute(
-                    insert(ProjectLabelModel),
-                    [{"project_id": project.id, "label": label} for label in project.labels],
-                )
-
-            # Replace labelers: delete existing, insert current
-            await session.execute(
-                delete(ProjectLabelerModel).where(ProjectLabelerModel.project_id == project.id)
-            )
-            if project.labeler_ids:
-                await session.execute(
-                    insert(ProjectLabelerModel),
-                    [{"project_id": project.id, "labeler_id": lid} for lid in project.labeler_ids],
-                )
-
-            await session.commit()

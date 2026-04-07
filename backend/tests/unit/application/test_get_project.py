@@ -2,6 +2,7 @@ from uuid import uuid4
 
 import pytest
 
+from tests.unit.conftest import make_uow
 from ulabel.application.add_labeler_to_project import ProjectNotFound
 from ulabel.application.get_project import GetProjectUseCase
 from ulabel.domain.projects import Project
@@ -33,8 +34,10 @@ def project(admin, labeler, labeler2):
 @pytest.fixture
 def use_case(admin, labeler, labeler2, project):
     return GetProjectUseCase(
-        project_repository=InMemoryProjectRepository(projects=[project]),
-        user_repository=InMemoryUserRepository(users=[admin, labeler, labeler2]),
+        uow=make_uow(
+            project_repository=InMemoryProjectRepository(projects=[project]),
+            user_repository=InMemoryUserRepository(users=[admin, labeler, labeler2]),
+        ),
     )
 
 
@@ -57,8 +60,10 @@ async def test_handles_missing_labeler_user(admin, labeler):
     p.add_labeler(labeler.id)
     p.add_labeler(missing_id)
     use_case = GetProjectUseCase(
-        project_repository=InMemoryProjectRepository(projects=[p]),
-        user_repository=InMemoryUserRepository(users=[admin, labeler]),
+        uow=make_uow(
+            project_repository=InMemoryProjectRepository(projects=[p]),
+            user_repository=InMemoryUserRepository(users=[admin, labeler]),
+        ),
     )
     result = await use_case.execute(project_id=p.id)
     assert len(result.labelers) == 2
