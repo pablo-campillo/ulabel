@@ -6,23 +6,27 @@ Concrete implementations of the domain repository ports.
 
 ### Project Repository
 
-::: ulabel.infrastructure.repositories.sqlalchemy_project_repository
+::: ulabel.infrastructure.repositories.sql.project_repository
 
 ### Image Repository
 
-::: ulabel.infrastructure.repositories.sqlalchemy_image_repository
+::: ulabel.infrastructure.repositories.sql.image_repository
 
 ### Label Repository
 
-::: ulabel.infrastructure.repositories.sqlalchemy_label_repository
+::: ulabel.infrastructure.repositories.sql.label_repository
 
 ### User Repository
 
-::: ulabel.infrastructure.repositories.sqlalchemy_user_repository
+::: ulabel.infrastructure.repositories.sql.user_repository
 
 ### Stats Repository
 
-::: ulabel.infrastructure.repositories.sqlalchemy_stats_repository
+::: ulabel.infrastructure.repositories.sql.stats_repository
+
+### Import Job Repository
+
+::: ulabel.infrastructure.repositories.sql.import_job_repository
 
 ## In-Memory Repositories
 
@@ -30,20 +34,24 @@ Used for testing purposes.
 
 ### Project Repository
 
-::: ulabel.infrastructure.repositories.in_memory_project_repository
+::: ulabel.infrastructure.repositories.in_memory.project_repository
 
 ### Image Repository
 
-::: ulabel.infrastructure.repositories.in_memory_image_repository
+::: ulabel.infrastructure.repositories.in_memory.image_repository
 
 ### Label Repository
 
-::: ulabel.infrastructure.repositories.in_memory_label_repository
+::: ulabel.infrastructure.repositories.in_memory.label_repository
 
 ### User Repository
 
-::: ulabel.infrastructure.repositories.in_memory_user_repository
+::: ulabel.infrastructure.repositories.in_memory.user_repository
 
 ### Stats Repository
 
-::: ulabel.infrastructure.repositories.in_memory_stats_repository
+::: ulabel.infrastructure.repositories.in_memory.stats_repository
+
+### Import Job Repository
+
+::: ulabel.infrastructure.repositories.in_memory.import_job_repository
