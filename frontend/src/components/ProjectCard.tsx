@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router'
+import { CopyableUuid } from './CopyableUuid'
 
 interface ProjectCardProps {
   id: string
@@ -36,6 +37,7 @@ export function ProjectCard({
           <h3 className="text-lg font-semibold text-gray-900 group-hover:text-primary-700 transition-colors truncate">
             {name}
           </h3>
+          <CopyableUuid uuid={id} />
           <p className="text-sm text-gray-500 mt-1">{date}</p>
           <div className="mt-2 flex items-center gap-2">
             <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden max-w-[180px]">

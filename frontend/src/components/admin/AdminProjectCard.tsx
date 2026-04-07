@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router'
 import type { ProjectSummary } from '../../types/api'
+import { CopyableUuid } from '../CopyableUuid'
 
 interface Props {
   project: ProjectSummary
@@ -20,6 +21,7 @@ export function AdminProjectCard({ project, onEdit, completionPct }: Props) {
           <h3 className="text-lg font-semibold text-gray-900 group-hover:text-primary-600 transition-colors truncate">
             {project.name}
           </h3>
+          <CopyableUuid uuid={project.id} />
           <p className="text-sm text-gray-500 mt-1 line-clamp-2">
             {project.description}
           </p>

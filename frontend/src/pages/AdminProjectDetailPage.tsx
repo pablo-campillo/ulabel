@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router'
 import { Header } from '../components/Header'
+import { CopyableUuid } from '../components/CopyableUuid'
 import { ProjectFormDialog } from '../components/admin/ProjectFormDialog'
 import { RefreshControl } from '../components/admin/RefreshControl'
 import { DailyProgressChart } from '../components/admin/charts/DailyProgressChart'
@@ -119,6 +120,7 @@ export function AdminProjectDetailPage() {
           <div className="flex items-start justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">{project.name}</h1>
+              <CopyableUuid uuid={project.id} />
               <p className="text-gray-600 mt-2">{project.description}</p>
             </div>
             <button

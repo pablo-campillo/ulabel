@@ -322,6 +322,26 @@ Chronological record of all features implemented and design decisions made durin
 
 ---
 
+## Day 8 (cont.) - April 7, 2026: Load testing with Locust
+
+### Labeling load test
+
+**Need identified**: No way to simulate realistic concurrent labeling activity against a running instance. Useful for validating performance after changes (new indexes, pool size tuning, code optimizations) and stress-testing the assignment flow under contention (`SELECT ... FOR UPDATE SKIP LOCKED` with many concurrent labelers).
+
+**Solution**: Locust-based load test in `benchmarks/locustfile.py` with two components:
+- `on_test_start` listener fetches project details (labels + labelers) via `GET /v1/projects/{id}`
+- `LabelerUser` simulates the labeling loop: `POST /assignments` &rarr; `POST /label` (random label from project). Stops on `204 No Content` (no more pending images)
+
+Auto-detection of labeler count is handled in the Makefile: when `BENCHMARK_USERS=0` (default), it queries the project API and passes the count as `--users` to Locust.
+
+**Design decisions**:
+- **Locust over alternatives (k6, wrk, ab)**: Python-native (consistent with the project), supports custom user behavior (not just URL hammering), built-in web UI for real-time monitoring
+- **Auto-detect in Makefile, not LoadTestShape**: An initial implementation used a custom `LoadTestShape` to auto-detect the labeler count, but `LoadTestShape.tick()` runs before `on_test_start` (where project data is fetched), causing the shape to see zero labelers and stop immediately. It also silently ignores `--run-time`. Moving auto-detection to the Makefile (via `curl` + `python3`) is simpler and works with Locust's standard `--users`/`--run-time` flags
+- **`itertools.cycle` for labeler assignment**: Each spawned Locust user picks the next labeler from a cycle, distributing work evenly across all project labelers
+- **`catch_response=True` with explicit success/failure**: `204 No Content` on assignments is a valid response (no more images), not an error. Locust's default would count it as a failure, so explicit response validation is needed
+
+---
+
 ## Cross-cutting sessions
 
 ### Unified make bootstrap and Docker Compose
@@ -356,3 +376,4 @@ Chronological record of all features implemented and design decisions made durin
 | Composite indexes for hot queries | Individual indexes don't cover multi-column WHERE/ORDER BY; composites eliminate sequential scans |
 | E2E flow tests, not per-endpoint | Unit tests cover endpoints individually; E2E tests verify layer integration through real workflows |
 | Volume mounts in test targets | Avoid rebuilding Docker image after every code change |
+| Locust for load testing | Python-native, custom user behaviors, auto-detect labeler count via LoadTestShape |

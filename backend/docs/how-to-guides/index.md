@@ -63,6 +63,16 @@ curl -X POST http://localhost:8000/api/v1/assignments/{assignment_id}/labels \
 curl http://localhost:8000/api/v1/projects/{project_id}/exports
 ```
 
+## Load Testing
+
+### Run a labeling benchmark
+
+```bash
+make benchmark PROJECT_ID=<uuid>
+```
+
+Spawns one concurrent user per labeler and loops `assign → label (random)` for 60 seconds. See [Load Testing](load-testing.md) for configuration options and web UI mode.
+
 ## Observability
 
 - [Grafana Dashboards](grafana-dashboards.md) — How to use the monitoring dashboards

@@ -62,6 +62,7 @@ nav:
       - Getting Started: tutorials/getting-started.md
   - How-To Guides:
       - How-To Guides: how-to-guides/index.md
+      - Load Testing: how-to-guides/load-testing.md
       - Grafana Dashboards: how-to-guides/grafana-dashboards.md
       - Adding Observability: how-to-guides/adding-observability.md
   - Reference:

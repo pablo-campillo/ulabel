@@ -95,6 +95,7 @@ export function LabelingPage() {
       }
     } catch {
       setError('Failed to load next image.')
+      setPhase('error')
     } finally {
       setLoading(false)
     }
@@ -118,13 +119,20 @@ export function LabelingPage() {
         onLabelSubmitted(result)
         setImage(null)
       } catch {
-        setError('Failed to submit label.')
+        setError('Failed to submit label. The assignment may have expired.')
+        setImage(null)
+        setPhase('error')
       } finally {
         setSubmitting(false)
       }
     },
     [projectId, image, user.id, submitting, onLabelSubmitted, setImage],
   )
+
+  const handleContinue = useCallback(() => {
+    setError('')
+    fetchNextImage()
+  }, [fetchNextImage])
 
   const handleNext = useCallback(() => {
     fetchNextImage()
@@ -157,6 +165,9 @@ export function LabelingPage() {
       map['Escape'] = handleFinish
     } else if (phase === 'no_more_images') {
       map['Escape'] = handleFinish
+    } else if (phase === 'error') {
+      map['Enter'] = handleContinue
+      map['Escape'] = handleFinish
     }
 
     return map
@@ -167,6 +178,7 @@ export function LabelingPage() {
     handleLabelSelect,
     handleNext,
     handleFinish,
+    handleContinue,
   ])
 
   useKeyboardShortcuts(shortcuts, !loading && !submitting)
@@ -237,12 +249,6 @@ export function LabelingPage() {
             />
           </div>
 
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3 mb-4">
-              {error}
-            </div>
-          )}
-
           {/* Main content area */}
           <div className="flex-1 flex gap-6">
             {/* Sidebar */}
@@ -259,9 +265,11 @@ export function LabelingPage() {
                 image={image}
                 loading={loading}
                 submitting={submitting}
+                error={error}
                 onStart={handleStart}
                 onNext={handleNext}
                 onFinish={handleFinish}
+                onContinue={handleContinue}
               />
             </div>
           </div>
@@ -276,17 +284,21 @@ function CenterContent({
   image,
   loading,
   submitting,
+  error,
   onStart,
   onNext,
   onFinish,
+  onContinue,
 }: {
   phase: LabelingPhase
   image: ReturnType<typeof useLabelingStore.getState>['image']
   loading: boolean
   submitting: boolean
+  error: string
   onStart: () => void
   onNext: () => void
   onFinish: () => void
+  onContinue: () => void
 }) {
   if (loading) {
     return (
@@ -397,6 +409,52 @@ function CenterContent({
           variant="secondary"
           onClick={onFinish}
         />
+      </div>
+    )
+  }
+
+  if (phase === 'error') {
+    return (
+      <div className="text-center max-w-md">
+        <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
+          <svg
+            className="w-10 h-10 text-red-500"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={1.5}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z"
+            />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 15.75h.007v.008H12v-.008z"
+            />
+          </svg>
+        </div>
+        <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3 mb-6">
+          {error}
+        </div>
+        <p className="text-gray-500 text-sm mb-6">
+          Would you like to continue labeling or go back to projects?
+        </p>
+        <div className="flex items-center gap-3 justify-center">
+          <ActionButton
+            label="Continue"
+            shortcutHint="Enter"
+            onClick={onContinue}
+          />
+          <ActionButton
+            label="Back to Projects"
+            shortcutHint="Esc"
+            variant="secondary"
+            onClick={onFinish}
+          />
+        </div>
       </div>
     )
   }

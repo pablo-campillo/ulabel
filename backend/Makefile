@@ -14,7 +14,7 @@ STORAGE_SECRET_KEY ?= minioadmin
 STORAGE_BUCKET     ?= ulabel
 TEST_DATABASE_URL  ?= postgresql+asyncpg://ulabel:secret@localhost:5432/ulabel
 
-.PHONY: help setup install pre-commit-install test test-integration format lint lint-fix typecheck check build run dev shell migrate migrate-create migrate-down seed-dataset docs docs-build
+.PHONY: help setup install pre-commit-install test test-integration format lint lint-fix typecheck check build run dev shell migrate migrate-create migrate-down seed-dataset docs docs-build benchmark
 
 help:                ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*##"}; {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
@@ -138,6 +138,44 @@ migrate-down:        ## Rollback the last migration
 	docker compose exec app alembic downgrade -1
 
 # ── Dataset ───────────────────────────────────────────────────────────────────
+
+BENCHMARK_DURATION ?= 60s
+BENCHMARK_USERS    ?= 0
+BENCHMARK_URL      ?= http://localhost:8000
+
+# Resolve user count: if BENCHMARK_USERS=0, query the project API for the labeler count
+_BENCHMARK_USERS = $(shell \
+	if [ "$(BENCHMARK_USERS)" = "0" ]; then \
+		curl -s $(BENCHMARK_URL)/v1/projects/$(PROJECT_ID) | python3 -c "import sys,json; print(len(json.load(sys.stdin).get('labelers',[])))"; \
+	else \
+		echo $(BENCHMARK_USERS); \
+	fi)
+
+benchmark:           ## Run labeling load test (usage: make benchmark PROJECT_ID=<uuid> [BENCHMARK_DURATION=60s])
+	@test -n "$(PROJECT_ID)" || { echo "ERROR: PROJECT_ID is required"; exit 1; }
+	@echo "→ Spawning $(_BENCHMARK_USERS) users for $(BENCHMARK_DURATION)..."
+	docker run --rm \
+		--network host \
+		-e PROJECT_ID=$(PROJECT_ID) \
+		-v $(PWD)/benchmarks:/app/benchmarks:ro \
+		$(DEV_IMAGE) uv run --group dev \
+		locust -f benchmarks/locustfile.py \
+			--host $(BENCHMARK_URL) \
+			--headless \
+			--users $(_BENCHMARK_USERS) \
+			--spawn-rate $(_BENCHMARK_USERS) \
+			--run-time $(BENCHMARK_DURATION) \
+			--only-summary
+
+benchmark-ui:        ## Run load test with Locust web UI at http://localhost:8089
+	@test -n "$(PROJECT_ID)" || { echo "ERROR: PROJECT_ID is required"; exit 1; }
+	docker run --rm \
+		--network host \
+		-e PROJECT_ID=$(PROJECT_ID) \
+		-v $(PWD)/benchmarks:/app/benchmarks:ro \
+		$(DEV_IMAGE) uv run --group dev \
+		locust -f benchmarks/locustfile.py \
+			--host $(BENCHMARK_URL)
 
 seed-dataset:        ## Download dogs-vs-cats dataset and upload to MinIO under datasets/
 	@echo "→ Downloading and extracting dataset..."

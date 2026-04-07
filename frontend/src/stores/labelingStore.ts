@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import type { ProjectSummary, AssignedImage, SubmitLabelResult } from '../types/api'
 
-export type LabelingPhase = 'idle' | 'labeling' | 'submitted' | 'no_more_images'
+export type LabelingPhase = 'idle' | 'labeling' | 'submitted' | 'no_more_images' | 'error'
 
 interface LabelingState {
   project: ProjectSummary | null

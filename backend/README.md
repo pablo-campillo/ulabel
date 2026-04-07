@@ -211,6 +211,8 @@ make help
 | `make migrate` | Apply pending migrations |
 | `make migrate-create msg="..."` | Create a new auto-generated migration |
 | `make migrate-down` | Roll back the last migration |
+| `make benchmark PROJECT_ID=<uuid>` | Run labeling load test with Locust |
+| `make benchmark-ui PROJECT_ID=<uuid>` | Load test with Locust web UI at `localhost:8089` |
 | `make seed-dataset` | Download and upload the Dogs vs. Cats dataset to MinIO |
 | `make docs` | Serve documentation locally with hot reload |
 | `make docs-build` | Build documentation as a static site |
@@ -240,6 +242,27 @@ make test-cov
 Unit and API tests use in-memory repositories and a `FakeStorageService`, so they do not require a real database or object storage.
 
 E2E tests exercise full API workflows (HTTP → use case → database) with a real PostgreSQL and `FakeStorageService`.
+
+---
+
+## Benchmarking
+
+Simulate concurrent labelers using [Locust](https://locust.io/). The test auto-detects the project's labelers and labels, spawning one user per labeler:
+
+```bash
+# Run for 60 seconds (default)
+make benchmark PROJECT_ID=<uuid>
+
+# Custom duration and user count
+make benchmark PROJECT_ID=<uuid> BENCHMARK_DURATION=120s BENCHMARK_USERS=50
+```
+
+For real-time charts, run Locust with the web UI:
+
+```bash
+PROJECT_ID=<uuid> locust -f benchmarks/locustfile.py --host http://localhost:8000
+# Open http://localhost:8089
+```
 
 ---
 
