@@ -78,7 +78,7 @@ export function ProjectFormDialog({ project, onClose }: Props) {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="absolute inset-0 bg-black/40"
-          onClick={() => onClose()}
+          onClick={() => onClose(saved)}
         />
 
         <motion.div
@@ -93,7 +93,7 @@ export function ProjectFormDialog({ project, onClose }: Props) {
                 {isEdit ? 'Edit Project' : 'New Project'}
               </h2>
               <button
-                onClick={() => onClose()}
+                onClick={() => onClose(saved)}
                 className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg cursor-pointer transition-colors"
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
