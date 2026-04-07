@@ -137,9 +137,9 @@ class GetProjectStatsUseCase:
         )
         labeler_usernames: dict[UUID, str] = {}
         for daily_row in daily_rows:
-            daily_by_labeler[daily_row.labeler_id][daily_row.day][
-                daily_row.label
-            ] += daily_row.count
+            daily_by_labeler[daily_row.labeler_id][daily_row.day][daily_row.label] += (
+                daily_row.count
+            )
             labeler_usernames[daily_row.labeler_id] = daily_row.username
 
         labeler_daily_activity = [
