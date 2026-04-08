@@ -1,0 +1,3372 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation for the uLabel image labeling platform backend API.">
+      
+      
+      
+      
+        <link rel="prev" href="../observability/">
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Development Log - uLabel API Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#development-log" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="uLabel API Documentation" class="md-header__button md-logo" aria-label="uLabel API Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            uLabel API Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Development Log
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../tutorials/quick-start/" class="md-tabs__link">
+          
+  
+  
+  Tutorials
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../how-to-guides/" class="md-tabs__link">
+          
+  
+  
+  How-To Guides
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../reference/" class="md-tabs__link">
+          
+  
+  
+  Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../architecture/" class="md-tabs__link">
+          
+  
+  
+  Explanation
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="uLabel API Documentation" class="md-nav__button md-logo" aria-label="uLabel API Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    uLabel API Documentation
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tutorials
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Tutorials
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/quick-start/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quick Start
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    How-To Guides
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    How-To Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../how-to-guides/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    How-To Guides
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../how-to-guides/load-testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Load Testing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../how-to-guides/grafana-dashboards/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Grafana Dashboards
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../how-to-guides/adding-observability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Adding Observability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Domain
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Domain
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/domain/entities/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Entities
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/domain/ports/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ports
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/domain/errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Errors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Application
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Application
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/application/use-cases/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Use Cases
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_4" id="__nav_4_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/api/routers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Routers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/api/schemas/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Schemas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_5" id="__nav_4_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Infrastructure
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Infrastructure
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/infrastructure/repositories/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Repositories
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/infrastructure/storage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Storage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/infrastructure/observability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Observability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Explanation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Explanation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../database/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Database Design
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api-design/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Design
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../image-ingestion/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Image Ingestion
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tooling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tooling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../observability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Observability Design
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development Log
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development Log
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#day-1-march-27-2026-full-backend" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Day 1 - March 27, 2026: Full Backend
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Day 1 - March 27, 2026: Full Backend">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#commit-a33272e-first-version-of-all-backend-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit a33272e - First version of all backend features
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#commit-bf462e0-labeler-submit-stats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit bf462e0 - Labeler submit stats
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#commit-e8efd23-project-listing-with-pagination" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit e8efd23 - Project listing with pagination
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#day-2-march-28-2026-backend-improvements-frontend-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Day 2 - March 28, 2026: Backend improvements + Frontend + Configuration
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Day 2 - March 28, 2026: Backend improvements + Frontend + Configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#commit-4be4701-fix-alembic-in-docker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit 4be4701 - Fix: Alembic in Docker
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#commit-7f1d060-labeler-autocomplete" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit 7f1d060 - Labeler autocomplete
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#commit-8f64e01-add-labelers-to-projects" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit 8f64e01 - Add labelers to projects
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#commit-dde0456-filter-by-name-in-project-listing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit dde0456 - Filter by name in project listing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#commit-4c51917-unique-project-name" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit 4c51917 - Unique project name
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#commit-1953371-initial-frontend" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit 1953371 - Initial frontend
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#commit-9d9cd7b-yaml-configuration-with-dependency-injector" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit 9d9cd7b - YAML configuration with dependency-injector
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#day-3-march-29-2026-api-refactoring-observability-frontend-merge" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Day 3 - March 29, 2026: API Refactoring + Observability + Frontend merge
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Day 3 - March 29, 2026: API Refactoring + Observability + Frontend merge">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#commit-6830ed2-changed-get-to-post-for-assignments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit 6830ed2 - Changed GET to POST for assignments
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#commit-f2112db-global-error-handler-and-unified-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit f2112db - Global error handler and unified format
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#commit-a077233-observability-3-pillars" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit a077233 - Observability (3 pillars)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#commits-4307962-487b007-merge-featfrontend-into-main" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commits 4307962, 487b007 - Merge feat/frontend into main
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#commit-5267307-uvloop" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit 5267307 - uvloop
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#session-frontend-update-for-new-assignments-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Session: Frontend update for new assignments API
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#day-4-march-30-2026-observability-fixes-documentation-ux" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Day 4 - March 30, 2026: Observability fixes + Documentation + UX
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Day 4 - March 30, 2026: Observability fixes + Documentation + UX">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#commit-35679ea-fix-observability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit 35679ea - Fix observability
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#promtail-migration-to-docker_sd_configs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Promtail migration to docker_sd_configs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#commit-4203401-mkdocs-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit 4203401 - MkDocs documentation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#commits-ce38556-c5bb5eb-documentation-cicd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commits ce38556 - c5bb5eb - Documentation CI/CD
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#commit-bc1edb6-extended-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit bc1edb6 - Extended documentation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#commit-23207b6-interactive-chart-zoom" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit 23207b6 - Interactive chart zoom
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#day-5-march-31-2026-final-documentation-fixes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Day 5 - March 31, 2026: Final documentation + Fixes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Day 5 - March 31, 2026: Final documentation + Fixes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#commit-e7e3f41-readmemd-and-quick-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit e7e3f41 - README.md and Quick Start
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#commit-0e4463b-documentation-site-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit 0e4463b - Documentation site reference
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#commit-23b6a22-fix-missing-mkdocsyml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit 23b6a22 - Fix missing mkdocs.yml
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#commit-b6856f3-fix-observability-and-grafana" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit b6856f3 - Fix observability and Grafana
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#commit-09405b0-fix-frontend" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit 09405b0 - Fix frontend
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#day-6-april-4-2026-project-listing-redesign" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Day 6 - April 4, 2026: Project listing redesign
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Day 6 - April 4, 2026: Project listing redesign">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fix-race-condition-in-createassignmentusecase" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fix: Race condition in CreateAssignmentUseCase
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fix-race-condition-in-expireimagestask" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fix: Race condition in ExpireImagesTask
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#removed-hardcoded-assignment_timeout-in-favor-of-config" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Removed hardcoded ASSIGNMENT_TIMEOUT in favor of config
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#refactor-importjob-as-domain-entity-restore-execute-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Refactor: ImportJob as domain entity + restore execute pattern
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#planned-refactor-separate-projectsummary-vs-projectdetail" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Planned refactor: Separate ProjectSummary vs ProjectDetail
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#streaming-export-to-minio" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Streaming export to MinIO
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#refactor-batch-labeler-validation-in-updateprojectusecase" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Refactor: Batch labeler validation in UpdateProjectUseCase
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#removed-hardcoded-presigned_url_expiry-in-favor-of-config" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Removed hardcoded PRESIGNED_URL_EXPIRY in favor of config
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#performance-indexes-for-query-optimization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance indexes for query optimization
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#day-7-april-5-2026-observability-gap-fix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Day 7 - April 5, 2026: Observability gap fix
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Day 7 - April 5, 2026: Observability gap fix">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fix-unhandled-exceptions-invisible-in-grafana" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fix: Unhandled exceptions invisible in Grafana
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fix-export-fails-with-500-when-minio-storage-is-full" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fix: Export fails with 500 when MinIO storage is full
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#api-level-tests-for-export-endpoint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        API-level tests for export endpoint
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#day-8-april-7-2026-end-to-end-api-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Day 8 - April 7, 2026: End-to-end API tests
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Day 8 - April 7, 2026: End-to-end API tests">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#e2e-test-infrastructure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        E2E test infrastructure
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#makefile-improvements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Makefile improvements
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#day-8-cont-april-7-2026-load-testing-with-locust" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Day 8 (cont.) - April 7, 2026: Load testing with Locust
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Day 8 (cont.) - April 7, 2026: Load testing with Locust">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#labeling-load-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Labeling load test
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cross-cutting-sessions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cross-cutting sessions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Cross-cutting sessions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#unified-make-bootstrap-and-docker-compose" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unified make bootstrap and Docker Compose
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#assignment-expiration-investigation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Assignment expiration investigation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary-of-key-design-decisions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary of key design decisions
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#day-1-march-27-2026-full-backend" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Day 1 - March 27, 2026: Full Backend
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Day 1 - March 27, 2026: Full Backend">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#commit-a33272e-first-version-of-all-backend-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit a33272e - First version of all backend features
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#commit-bf462e0-labeler-submit-stats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit bf462e0 - Labeler submit stats
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#commit-e8efd23-project-listing-with-pagination" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit e8efd23 - Project listing with pagination
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#day-2-march-28-2026-backend-improvements-frontend-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Day 2 - March 28, 2026: Backend improvements + Frontend + Configuration
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Day 2 - March 28, 2026: Backend improvements + Frontend + Configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#commit-4be4701-fix-alembic-in-docker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit 4be4701 - Fix: Alembic in Docker
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#commit-7f1d060-labeler-autocomplete" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit 7f1d060 - Labeler autocomplete
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#commit-8f64e01-add-labelers-to-projects" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit 8f64e01 - Add labelers to projects
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#commit-dde0456-filter-by-name-in-project-listing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit dde0456 - Filter by name in project listing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#commit-4c51917-unique-project-name" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit 4c51917 - Unique project name
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#commit-1953371-initial-frontend" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit 1953371 - Initial frontend
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#commit-9d9cd7b-yaml-configuration-with-dependency-injector" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit 9d9cd7b - YAML configuration with dependency-injector
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#day-3-march-29-2026-api-refactoring-observability-frontend-merge" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Day 3 - March 29, 2026: API Refactoring + Observability + Frontend merge
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Day 3 - March 29, 2026: API Refactoring + Observability + Frontend merge">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#commit-6830ed2-changed-get-to-post-for-assignments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit 6830ed2 - Changed GET to POST for assignments
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#commit-f2112db-global-error-handler-and-unified-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit f2112db - Global error handler and unified format
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#commit-a077233-observability-3-pillars" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit a077233 - Observability (3 pillars)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#commits-4307962-487b007-merge-featfrontend-into-main" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commits 4307962, 487b007 - Merge feat/frontend into main
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#commit-5267307-uvloop" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit 5267307 - uvloop
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#session-frontend-update-for-new-assignments-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Session: Frontend update for new assignments API
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#day-4-march-30-2026-observability-fixes-documentation-ux" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Day 4 - March 30, 2026: Observability fixes + Documentation + UX
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Day 4 - March 30, 2026: Observability fixes + Documentation + UX">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#commit-35679ea-fix-observability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit 35679ea - Fix observability
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#promtail-migration-to-docker_sd_configs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Promtail migration to docker_sd_configs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#commit-4203401-mkdocs-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit 4203401 - MkDocs documentation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#commits-ce38556-c5bb5eb-documentation-cicd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commits ce38556 - c5bb5eb - Documentation CI/CD
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#commit-bc1edb6-extended-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit bc1edb6 - Extended documentation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#commit-23207b6-interactive-chart-zoom" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit 23207b6 - Interactive chart zoom
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#day-5-march-31-2026-final-documentation-fixes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Day 5 - March 31, 2026: Final documentation + Fixes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Day 5 - March 31, 2026: Final documentation + Fixes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#commit-e7e3f41-readmemd-and-quick-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit e7e3f41 - README.md and Quick Start
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#commit-0e4463b-documentation-site-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit 0e4463b - Documentation site reference
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#commit-23b6a22-fix-missing-mkdocsyml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit 23b6a22 - Fix missing mkdocs.yml
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#commit-b6856f3-fix-observability-and-grafana" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit b6856f3 - Fix observability and Grafana
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#commit-09405b0-fix-frontend" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit 09405b0 - Fix frontend
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#day-6-april-4-2026-project-listing-redesign" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Day 6 - April 4, 2026: Project listing redesign
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Day 6 - April 4, 2026: Project listing redesign">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fix-race-condition-in-createassignmentusecase" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fix: Race condition in CreateAssignmentUseCase
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fix-race-condition-in-expireimagestask" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fix: Race condition in ExpireImagesTask
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#removed-hardcoded-assignment_timeout-in-favor-of-config" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Removed hardcoded ASSIGNMENT_TIMEOUT in favor of config
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#refactor-importjob-as-domain-entity-restore-execute-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Refactor: ImportJob as domain entity + restore execute pattern
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#planned-refactor-separate-projectsummary-vs-projectdetail" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Planned refactor: Separate ProjectSummary vs ProjectDetail
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#streaming-export-to-minio" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Streaming export to MinIO
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#refactor-batch-labeler-validation-in-updateprojectusecase" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Refactor: Batch labeler validation in UpdateProjectUseCase
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#removed-hardcoded-presigned_url_expiry-in-favor-of-config" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Removed hardcoded PRESIGNED_URL_EXPIRY in favor of config
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#performance-indexes-for-query-optimization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance indexes for query optimization
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#day-7-april-5-2026-observability-gap-fix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Day 7 - April 5, 2026: Observability gap fix
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Day 7 - April 5, 2026: Observability gap fix">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fix-unhandled-exceptions-invisible-in-grafana" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fix: Unhandled exceptions invisible in Grafana
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fix-export-fails-with-500-when-minio-storage-is-full" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fix: Export fails with 500 when MinIO storage is full
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#api-level-tests-for-export-endpoint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        API-level tests for export endpoint
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#day-8-april-7-2026-end-to-end-api-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Day 8 - April 7, 2026: End-to-end API tests
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Day 8 - April 7, 2026: End-to-end API tests">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#e2e-test-infrastructure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        E2E test infrastructure
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#makefile-improvements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Makefile improvements
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#day-8-cont-april-7-2026-load-testing-with-locust" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Day 8 (cont.) - April 7, 2026: Load testing with Locust
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Day 8 (cont.) - April 7, 2026: Load testing with Locust">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#labeling-load-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Labeling load test
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cross-cutting-sessions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cross-cutting sessions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Cross-cutting sessions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#unified-make-bootstrap-and-docker-compose" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unified make bootstrap and Docker Compose
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#assignment-expiration-investigation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Assignment expiration investigation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary-of-key-design-decisions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary of key design decisions
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="development-log">Development Log<a class="headerlink" href="#development-log" title="Permanent link">&para;</a></h1>
+<p>Chronological record of all features implemented and design decisions made during the development of uLabel, an image labeling platform. The project was built between March 27-31, 2026 across 20 Claude Code sessions and 28 commits.</p>
+<hr />
+<h2 id="day-1-march-27-2026-full-backend">Day 1 - March 27, 2026: Full Backend<a class="headerlink" href="#day-1-march-27-2026-full-backend" title="Permanent link">&para;</a></h2>
+<h3 id="commit-a33272e-first-version-of-all-backend-features">Commit <code>a33272e</code> - First version of all backend features<a class="headerlink" href="#commit-a33272e-first-version-of-all-backend-features" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Complete hexagonal architecture: domain, application (use cases), API (FastAPI), infrastructure</li>
+<li>Entities: Project, Image, Labeler, Assignment, Label</li>
+<li>Ports and adapters for repositories and storage</li>
+<li>Dependency injection with <code>dependency-injector</code></li>
+<li>PostgreSQL database with SQLAlchemy async + Alembic migrations</li>
+<li>MinIO as object storage (images)</li>
+<li>Basic token authentication</li>
+</ul>
+<h3 id="commit-bf462e0-labeler-submit-stats">Commit <code>bf462e0</code> - Labeler submit stats<a class="headerlink" href="#commit-bf462e0-labeler-submit-stats" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Statistics endpoint per labeler (submissions count)</li>
+</ul>
+<h3 id="commit-e8efd23-project-listing-with-pagination">Commit <code>e8efd23</code> - Project listing with pagination<a class="headerlink" href="#commit-e8efd23-project-listing-with-pagination" title="Permanent link">&para;</a></h3>
+<hr />
+<h2 id="day-2-march-28-2026-backend-improvements-frontend-configuration">Day 2 - March 28, 2026: Backend improvements + Frontend + Configuration<a class="headerlink" href="#day-2-march-28-2026-backend-improvements-frontend-configuration" title="Permanent link">&para;</a></h2>
+<h3 id="commit-4be4701-fix-alembic-in-docker">Commit <code>4be4701</code> - Fix: Alembic in Docker<a class="headerlink" href="#commit-4be4701-fix-alembic-in-docker" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Dockerfile fix to copy Alembic migrations into the container</li>
+</ul>
+<h3 id="commit-7f1d060-labeler-autocomplete">Commit <code>7f1d060</code> - Labeler autocomplete<a class="headerlink" href="#commit-7f1d060-labeler-autocomplete" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Labeler search by username with autocomplete</li>
+</ul>
+<h3 id="commit-8f64e01-add-labelers-to-projects">Commit <code>8f64e01</code> - Add labelers to projects<a class="headerlink" href="#commit-8f64e01-add-labelers-to-projects" title="Permanent link">&para;</a></h3>
+<h3 id="commit-dde0456-filter-by-name-in-project-listing">Commit <code>dde0456</code> - Filter by name in project listing<a class="headerlink" href="#commit-dde0456-filter-by-name-in-project-listing" title="Permanent link">&para;</a></h3>
+<h3 id="commit-4c51917-unique-project-name">Commit <code>4c51917</code> - Unique project name<a class="headerlink" href="#commit-4c51917-unique-project-name" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Uniqueness constraint on the name field</li>
+</ul>
+<h3 id="commit-1953371-initial-frontend">Commit <code>1953371</code> - Initial frontend<a class="headerlink" href="#commit-1953371-initial-frontend" title="Permanent link">&para;</a></h3>
+<ul>
+<li>React + TypeScript + Vite application</li>
+<li>Admin dashboard: project CRUD, labeler assignment, statistics with charts (Recharts)</li>
+<li>Labeler dashboard: image labeling interface, image loading from presigned URLs</li>
+<li>Dockerized with nginx</li>
+</ul>
+<h3 id="commit-9d9cd7b-yaml-configuration-with-dependency-injector">Commit <code>9d9cd7b</code> - YAML configuration with dependency-injector<a class="headerlink" href="#commit-9d9cd7b-yaml-configuration-with-dependency-injector" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Design decision</strong>: Migrated from environment variables to <code>config.yml</code> file using the <code>Configuration</code> provider from dependency-injector</li>
+</ul>
+<hr />
+<h2 id="day-3-march-29-2026-api-refactoring-observability-frontend-merge">Day 3 - March 29, 2026: API Refactoring + Observability + Frontend merge<a class="headerlink" href="#day-3-march-29-2026-api-refactoring-observability-frontend-merge" title="Permanent link">&para;</a></h2>
+<h3 id="commit-6830ed2-changed-get-to-post-for-assignments">Commit <code>6830ed2</code> - Changed GET to POST for assignments<a class="headerlink" href="#commit-6830ed2-changed-get-to-post-for-assignments" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Design decision</strong>: The "next image" endpoint changed from <code>GET /images/next?labeler_id=...</code> to <code>POST /assignments</code> with JSON body, because creating an assignment is an action with side-effects, not a query</li>
+</ul>
+<h3 id="commit-f2112db-global-error-handler-and-unified-format">Commit <code>f2112db</code> - Global error handler and unified format<a class="headerlink" href="#commit-f2112db-global-error-handler-and-unified-format" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Error response refactoring with centralized handler</li>
+<li>Unified response format across the entire API</li>
+</ul>
+<h3 id="commit-a077233-observability-3-pillars">Commit <code>a077233</code> - Observability (3 pillars)<a class="headerlink" href="#commit-a077233-observability-3-pillars" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Metrics</strong>: Prometheus with histograms and counters, <code>/metrics</code> endpoint with OpenMetrics + exemplars with TraceID</li>
+<li><strong>Traces</strong>: OpenTelemetry with Tempo, FastAPI and SQLAlchemy instrumentation</li>
+<li><strong>Logs</strong>: Structured JSON logging, trace_id correlation via LoggingInstrumentor</li>
+<li><strong>Grafana dashboards</strong> (3):<ul>
+<li>uLabel Overview: req/s, error rate, P99 latency</li>
+<li>uLabel Labeling Activity: labels/min, uploads/min, assignments/min</li>
+<li>uLabel Traces &amp; Logs: metrics-traces-logs correlation</li>
+</ul>
+</li>
+<li><strong>Design decision</strong>: Business logging in routers (API layer), NOT in use cases, because in hexagonal architecture the domain/application layers should remain pure</li>
+<li><strong>Design decision</strong>: Logger via <code>logging.getLogger(__name__)</code> (stdlib), not injected via DI container, because OTel LoggingInstrumentor injects trace/span IDs globally</li>
+<li>Stack: Prometheus + Grafana + Tempo + Loki + Promtail</li>
+</ul>
+<h3 id="commits-4307962-487b007-merge-featfrontend-into-main">Commits <code>4307962</code>, <code>487b007</code> - Merge feat/frontend into main<a class="headerlink" href="#commits-4307962-487b007-merge-featfrontend-into-main" title="Permanent link">&para;</a></h3>
+<h3 id="commit-5267307-uvloop">Commit <code>5267307</code> - uvloop<a class="headerlink" href="#commit-5267307-uvloop" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Design decision</strong>: uvloop as high-performance event loop (2-4x improvement), configured via <code>--loop uvloop</code> in uvicorn</li>
+</ul>
+<h3 id="session-frontend-update-for-new-assignments-api">Session: Frontend update for new assignments API<a class="headerlink" href="#session-frontend-update-for-new-assignments-api" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Renamed <code>getNextImage()</code> to <code>createAssignment()</code> to align with the new POST endpoint</li>
+<li>"Back" button in the labeling interface (disabled during active labeling)</li>
+</ul>
+<hr />
+<h2 id="day-4-march-30-2026-observability-fixes-documentation-ux">Day 4 - March 30, 2026: Observability fixes + Documentation + UX<a class="headerlink" href="#day-4-march-30-2026-observability-fixes-documentation-ux" title="Permanent link">&para;</a></h2>
+<h3 id="commit-35679ea-fix-observability">Commit <code>35679ea</code> - Fix observability<a class="headerlink" href="#commit-35679ea-fix-observability" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Critical bug</strong>: Promtail crashing due to multiple configuration errors:<ul>
+<li><code>docker: {}</code> stage incompatible with <code>docker_sd_configs</code></li>
+<li>Incorrect meta-label for compose service</li>
+<li><code>trace_id</code> as Loki label (high cardinality, 1 stream per request)</li>
+</ul>
+</li>
+<li><strong>Bug</strong>: <code>generate_latest()</code> called without <code>registry</code> argument causing <code>/metrics</code> to return 500</li>
+<li><strong>Bug</strong>: <code>FastAPIInstrumentor.instrument_app()</code> inside the lifespan handler was too late (middleware stack already built), resulting in trace_id always being "0"</li>
+<li><strong>Fix</strong>: Split instrumentation: <code>setup_tracing()</code> in lifespan, <code>instrument_app()</code> at module level</li>
+<li><strong>Bug</strong>: <code>await</code> on synchronous container resources (<code>configure_logging</code>, tracer provider) causing crash</li>
+<li><strong>Design decision</strong>: "Recent Traces" panel changed from Tempo query to Loki query, because Grafana 10.4.1 Tempo plugin only supports traceId lookups, not search queries</li>
+</ul>
+<h3 id="promtail-migration-to-docker_sd_configs">Promtail migration to docker_sd_configs<a class="headerlink" href="#promtail-migration-to-docker_sd_configs" title="Permanent link">&para;</a></h3>
+<ul>
+<li>From <code>static_configs</code> (path-based scraping) to <code>docker_sd_configs</code> (automatic container discovery via Docker socket)</li>
+<li><strong>Design decision</strong>: Do NOT use Loki Docker driver plugin (it's an alternative to Promtail, not a complement)</li>
+</ul>
+<h3 id="commit-4203401-mkdocs-documentation">Commit <code>4203401</code> - MkDocs documentation<a class="headerlink" href="#commit-4203401-mkdocs-documentation" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Design decision</strong>: Diataxis framework (Tutorials, How-To Guides, Reference, Explanation)</li>
+<li>MkDocs with Material theme + mkdocstrings (auto-generation from Google-style docstrings)</li>
+<li>Google-style docstrings added to ~67 Python files</li>
+<li>14 documentation pages</li>
+<li><strong>Design decision</strong>: All Makefile targets containerized (only Docker required on host)</li>
+<li><code>make docs</code> on port 8080 (avoids conflict with backend on 8000)</li>
+</ul>
+<h3 id="commits-ce38556-c5bb5eb-documentation-cicd">Commits <code>ce38556</code> - <code>c5bb5eb</code> - Documentation CI/CD<a class="headerlink" href="#commits-ce38556-c5bb5eb-documentation-cicd" title="Permanent link">&para;</a></h3>
+<ul>
+<li>GitHub Actions workflow for automatic docs deployment to GitHub Pages</li>
+<li>Repository made public for free GitHub Pages hosting</li>
+<li><strong>Bug</strong>: <code>uv sync --extra docs</code> incorrect; fix: <code>uv sync --group docs</code> (dependency-groups vs optional-dependencies)</li>
+</ul>
+<h3 id="commit-bc1edb6-extended-documentation">Commit <code>bc1edb6</code> - Extended documentation<a class="headerlink" href="#commit-bc1edb6-extended-documentation" title="Permanent link">&para;</a></h3>
+<ul>
+<li>5 explanation pages:<ul>
+<li><code>architecture.md</code>: Mermaid diagrams (platform, hexagonal, DI)</li>
+<li><code>database.md</code>: ER diagram, decisions (async, upsert, skip_locked, eager loading)</li>
+<li><code>api-design.md</code>: endpoint map, schemas, error handling, middleware stack</li>
+<li><code>image-ingestion.md</code>: image lifecycle (statechart), bulk ingestion, implicit shuffle via UUID v4</li>
+<li><code>tooling.md</code>: Python toolchain</li>
+</ul>
+</li>
+<li><strong>Documented design decision</strong>: UUID v4s are random by nature, so ordering by <code>id</code> acts as an implicit shuffle -- no need for explicit randomization</li>
+</ul>
+<h3 id="commit-23207b6-interactive-chart-zoom">Commit <code>23207b6</code> - Interactive chart zoom<a class="headerlink" href="#commit-23207b6-interactive-chart-zoom" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Click-drag to select area + automatic zoom + "Reset Zoom" button on Daily Labeling Progress</li>
+<li>Optional <code>isZoomed</code>/<code>onResetZoom</code> props on <code>ChartContainer.tsx</code> for reusability</li>
+</ul>
+<hr />
+<h2 id="day-5-march-31-2026-final-documentation-fixes">Day 5 - March 31, 2026: Final documentation + Fixes<a class="headerlink" href="#day-5-march-31-2026-final-documentation-fixes" title="Permanent link">&para;</a></h2>
+<h3 id="commit-e7e3f41-readmemd-and-quick-start">Commit <code>e7e3f41</code> - README.md and Quick Start<a class="headerlink" href="#commit-e7e3f41-readmemd-and-quick-start" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Complete README: description, prerequisites, <code>make bootstrap</code>, service URL/credentials table, user guide with screenshots</li>
+<li>Quick-start tutorial in MkDocs with 6 screenshots</li>
+<li>Content duplicated (README for GitHub, docs for MkDocs site) and adapted to each format</li>
+</ul>
+<h3 id="commit-0e4463b-documentation-site-reference">Commit <code>0e4463b</code> - Documentation site reference<a class="headerlink" href="#commit-0e4463b-documentation-site-reference" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Link to <code>https://pablo-campillo.github.io/ulabel/</code> in README</li>
+</ul>
+<h3 id="commit-23b6a22-fix-missing-mkdocsyml">Commit <code>23b6a22</code> - Fix missing mkdocs.yml<a class="headerlink" href="#commit-23b6a22-fix-missing-mkdocsyml" title="Permanent link">&para;</a></h3>
+<h3 id="commit-b6856f3-fix-observability-and-grafana">Commit <code>b6856f3</code> - Fix observability and Grafana<a class="headerlink" href="#commit-b6856f3-fix-observability-and-grafana" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Final adjustments to datasources and Grafana dashboards</li>
+</ul>
+<h3 id="commit-09405b0-fix-frontend">Commit <code>09405b0</code> - Fix frontend<a class="headerlink" href="#commit-09405b0-fix-frontend" title="Permanent link">&para;</a></h3>
+<ul>
+<li>TypeScript error in Recharts: <code>activeLabel</code> type <code>string | number</code> not accepted by handlers expecting <code>string</code></li>
+</ul>
+<hr />
+<h2 id="day-6-april-4-2026-project-listing-redesign">Day 6 - April 4, 2026: Project listing redesign<a class="headerlink" href="#day-6-april-4-2026-project-listing-redesign" title="Permanent link">&para;</a></h2>
+<h3 id="fix-race-condition-in-createassignmentusecase">Fix: Race condition in CreateAssignmentUseCase<a class="headerlink" href="#fix-race-condition-in-createassignmentusecase" title="Permanent link">&para;</a></h3>
+<p><strong>Bug identified</strong>: <code>CreateAssignmentUseCase</code> called <code>get_next_pending()</code> and <code>save()</code> in <strong>separate database sessions</strong>. The <code>FOR UPDATE SKIP LOCKED</code> lock acquired during <code>get_next_pending</code> was released when its session closed, before <code>save</code> opened a new session. In the gap between the two transactions, a concurrent request could select and assign the same image to a different labeler.</p>
+<p><strong>Design decision</strong>: Atomic <code>assign_next_pending</code> repository method instead of full Unit of Work pattern
+- New <code>ImageRepository.assign_next_pending(project_id, labeler_id, assigned_at)</code> method that performs SELECT FOR UPDATE SKIP LOCKED + domain mutation + UPDATE within a single transaction
+- The use case now calls one method instead of three (<code>get_next_pending</code> + <code>image.assign()</code> + <code>save</code>)
+- <strong>Rationale</strong>: Only one confirmed race condition. A full Unit of Work would touch 20+ files across all repositories and use cases. The atomic method is surgically targeted (5 files), does not block a future UoW migration, and <code>assign_next_pending</code> is a legitimate domain operation ("atomically claim the next available image")</p>
+<h3 id="fix-race-condition-in-expireimagestask">Fix: Race condition in ExpireImagesTask<a class="headerlink" href="#fix-race-condition-in-expireimagestask" title="Permanent link">&para;</a></h3>
+<p><strong>Bug identified</strong>: <code>ExpireImagesTask.tick()</code> had a classic read-modify-write race condition. It called <code>get_expired_in_progress()</code> (a simple SELECT without row locking), mutated images in memory with <code>image.expire()</code>, and saved each one in a <strong>separate transaction</strong> via <code>save()</code>. Between the read and write, a concurrent <code>SubmitLabelUseCase</code> could complete the image (transition to DONE), and the expire task would overwrite it back to PENDING — losing the user's label.</p>
+<p><strong>Design decision</strong>: Atomic <code>expire_in_progress</code> repository method (same pattern as <code>assign_next_pending</code>)
+- New <code>ImageRepository.expire_in_progress(cutoff)</code> method that performs <code>SELECT ... FOR UPDATE SKIP LOCKED</code> + domain <code>expire()</code> + upsert within a <strong>single transaction</strong>
+- The row-level lock prevents concurrent operations from modifying the same images between select and update
+- <code>SKIP LOCKED</code> ensures multiple instances of the expire task don't block each other
+- <code>ExpireImagesTask.tick()</code> simplified to a single repository call
+- <strong>Rationale</strong>: Follows the precedent established by <code>assign_next_pending</code> — surgical atomic method in the repository rather than a full Unit of Work pattern</p>
+<h3 id="removed-hardcoded-assignment_timeout-in-favor-of-config">Removed hardcoded ASSIGNMENT_TIMEOUT in favor of config<a class="headerlink" href="#removed-hardcoded-assignment_timeout-in-favor-of-config" title="Permanent link">&para;</a></h3>
+<p><strong>Problem</strong>: <code>ASSIGNMENT_TIMEOUT = timedelta(minutes=30)</code> was hardcoded in the <code>create_assignment</code> router, while <code>config.yml</code> already had <code>tasks.image_assignment_timeout_seconds: 60</code>. The two values diverged (30 min vs 60 s) and the presigned URL expiry was not configurable.</p>
+<p><strong>Solution</strong>: Removed the <code>ASSIGNMENT_TIMEOUT</code> constant and injected <code>config.tasks.image_assignment_timeout_seconds</code> via dependency-injector's <code>Provide[Container.config.tasks.image_assignment_timeout_seconds.as_int()]</code> directly into the endpoint function. Updated all documentation references from "30 minutes" / "1800" to reference the config file value (60 seconds).</p>
+<p><strong>Design decision</strong>: Used <code>Provide[Container.config...]</code> injection (option B) instead of creating a new provider in the container — follows the existing pattern and requires fewer changes.</p>
+<h3 id="refactor-importjob-as-domain-entity-restore-execute-pattern">Refactor: ImportJob as domain entity + restore execute pattern<a class="headerlink" href="#refactor-importjob-as-domain-entity-restore-execute-pattern" title="Permanent link">&para;</a></h3>
+<p><strong>Problem identified</strong>: <code>ImportImagesFromStorageUseCase</code> broke two project conventions:
+1. Used <code>start()</code>/<code>run()</code>/<code>get_job()</code> instead of the standard <code>execute()</code> pattern used by all other use cases
+2. <code>ImportJob</code> was a plain dataclass stored in a module-level <code>dict</code> in memory — not a domain entity, not persisted to database, lost on restart</p>
+<p><strong>Design decision</strong>: Promote <code>ImportJob</code> to a proper domain entity with database persistence
+- <code>ImportJob</code> domain entity in <code>domain/import_jobs.py</code> with factory method <code>create()</code> and state-transition methods (<code>mark_progress</code>, <code>mark_done</code>, <code>mark_failed</code>)
+- <code>ImportJobRepository</code> port with SQLAlchemy implementation (upsert semantics) and in-memory implementation for tests
+- New <code>import_jobs</code> table via Alembic migration
+- <code>ImportImagesFromStorageUseCase</code> refactored to use <code>execute()</code> (creates and persists the job, returns immediately) + <code>run_import()</code> (background execution, updates job in DB after each chunk)
+- Polling extracted to a separate <code>GetImportJobUseCase</code> with its own <code>execute()</code> method
+- <strong>Rationale</strong>: Aligns with the hexagonal architecture (domain entities with ports and adapters), ensures job state survives restarts, and maintains consistency with the <code>execute</code> pattern across all use cases. The async background nature of the import does not justify breaking the pattern — the router orchestrates the background task, not the use case</p>
+<h3 id="planned-refactor-separate-projectsummary-vs-projectdetail">Planned refactor: Separate ProjectSummary vs ProjectDetail<a class="headerlink" href="#planned-refactor-separate-projectsummary-vs-projectdetail" title="Permanent link">&para;</a></h3>
+<p><strong>Problem identified</strong>: The <code>GET /projects</code> list endpoint resolves labeler usernames by making N individual queries to <code>UserRepository</code> from the API layer (<code>_resolve_labelers</code>). However:</p>
+<ul>
+<li>The admin list frontend only uses <code>labelers.length</code> (count) — never the usernames</li>
+<li>The labeler list frontend doesn't show labelers at all</li>
+<li>Only the admin detail view needs resolved labeler usernames</li>
+<li>No <code>GET /projects/{id}</code> endpoint exists — the detail page fetches ALL projects (<code>getProjects(100, 0)</code>) and filters client-side</li>
+<li>Labeler resolution happens in the API layer (router) instead of the use case, violating the hexagonal architecture</li>
+</ul>
+<p><strong>Design decisions</strong>:</p>
+<ul>
+<li><strong>Two response schemas</strong>: <code>ProjectSummary</code> (with <code>labeler_count: int</code>) for listings and <code>ProjectDetail</code> (with <code>labelers: list[LabelerInfo]</code>) for detail/mutation responses</li>
+<li><strong>New <code>GET /projects/{id}</code> endpoint</strong>: Returns <code>ProjectDetail</code> with resolved labelers, eliminates the client-side fetch-all-and-filter antipattern</li>
+<li><strong>Batch user resolution</strong>: New <code>UserRepository.get_by_ids(ids: set[UUID]) -&gt; list[User]</code> method with a single <code>WHERE id IN (...)</code> query instead of N individual lookups</li>
+<li><strong>New <code>GetProjectUseCase</code></strong>: Centralizes labeler resolution in the application layer (not the API router), receiving both <code>ProjectRepository</code> and <code>UserRepository</code></li>
+<li><strong>Application DTOs</strong>: <code>ProjectWithLabelers</code> dataclass in the application layer to carry the resolved data without polluting the domain model</li>
+</ul>
+<p><strong>Rationale</strong>: The list endpoint was doing unnecessary work (resolving usernames nobody displays) and the resolution was architecturally misplaced (API layer calling repositories directly). The summary/detail split follows the principle of not fetching data you don't need, and moving business logic to the application layer respects the hexagonal architecture boundaries.</p>
+<h3 id="streaming-export-to-minio">Streaming export to MinIO<a class="headerlink" href="#streaming-export-to-minio" title="Permanent link">&para;</a></h3>
+<p><strong>Problem</strong>: <code>ExportLabelsUseCase</code> loaded all label rows into memory (<code>list[LabelExportRow]</code>), built the entire CSV/JSON file as <code>bytes</code>, and uploaded it with a single <code>put_object</code>. For large projects this consumed excessive memory proportional to the number of labels.</p>
+<p><strong>Solution</strong>: End-to-end streaming pipeline across three layers:
+1. <strong>Database</strong>: <code>get_export_data</code> changed from <code>list</code> return to <code>AsyncIterator</code> using SQLAlchemy's <code>session.stream()</code> for server-side cursoring
+2. <strong>Formatters</strong>: <code>_generate_csv</code> and <code>_generate_json</code> converted to async generators yielding byte chunks (CSV: one chunk per row; JSON: manual array framing with <code>[</code>, <code>,</code>, <code>]</code>)
+3. <strong>Storage</strong>: New <code>upload_file_streaming</code> method using S3 multipart upload with a 5MB <code>bytearray</code> buffer per part</p>
+<p><strong>Design decisions</strong>:
+- <strong>New <code>upload_file_streaming</code> method instead of modifying <code>upload_file</code></strong>: The existing <code>upload_file(data: bytes)</code> is still used by image upload and other callers that have the full data in memory. Adding a separate streaming method avoids breaking existing contracts
+- <strong>5MB buffer for multipart parts</strong>: S3 requires a minimum of 5MB per part (except the last). The implementation accumulates chunks in a <code>bytearray</code> and flushes when the threshold is reached
+- <strong><code>try/except</code> with <code>abort_multipart_upload</code></strong>: On any error during streaming, orphaned multipart parts are cleaned up to avoid storage leaks
+- <strong>Metadata preserved</strong>: <code>label_count</code> metadata is passed via <code>create_multipart_upload</code>, so the caching mechanism (head_object + label_count comparison) works unchanged</p>
+<h3 id="refactor-batch-labeler-validation-in-updateprojectusecase">Refactor: Batch labeler validation in UpdateProjectUseCase<a class="headerlink" href="#refactor-batch-labeler-validation-in-updateprojectusecase" title="Permanent link">&para;</a></h3>
+<p><strong>Problem</strong>: <code>UpdateProjectUseCase</code> validated labeler IDs by calling <code>get_by_id</code> in a loop — one database query per labeler. This was the same N+1 query antipattern that was already solved in <code>GetProjectUseCase</code> with the batch <code>get_by_ids</code> method.</p>
+<p><strong>Solution</strong>: Replaced the <code>for labeler_id in labeler_ids</code> loop with a single <code>get_by_ids(labeler_ids)</code> call. Validation logic (existence check via length comparison, role check via <code>any()</code>) preserved with equivalent semantics.</p>
+<p><strong>Rationale</strong>: <code>UserRepository.get_by_ids</code> already existed in the port and both implementations (SQLAlchemy and in-memory). This is a one-line change that follows the established pattern from <code>GetProjectUseCase</code>.</p>
+<h3 id="removed-hardcoded-presigned_url_expiry-in-favor-of-config">Removed hardcoded PRESIGNED_URL_EXPIRY in favor of config<a class="headerlink" href="#removed-hardcoded-presigned_url_expiry-in-favor-of-config" title="Permanent link">&para;</a></h3>
+<p><strong>Problem</strong>: <code>PRESIGNED_URL_EXPIRY = timedelta(hours=1)</code> was hardcoded in <code>ExportLabelsUseCase</code>, inconsistent with the established pattern where durations are managed from <code>config.yml</code> and injected via <code>dependency-injector</code>.</p>
+<p><strong>Solution</strong>: Moved the value to <code>config.yml</code> as <code>storage.presigned_url_expiry_seconds: 3600</code> and injected it into the use case constructor via the container's <code>providers.Factory</code>, using <code>.as_(lambda s: timedelta(seconds=int(s)))</code> — the same pattern already used by <code>expire_images_task</code>.</p>
+<p><strong>Design decision</strong>: Injected via constructor (not router endpoint) because the presigned URL expiry is an internal concern of the use case, unlike <code>image_assignment_timeout_seconds</code> which is used directly in the router.</p>
+<h3 id="performance-indexes-for-query-optimization">Performance indexes for query optimization<a class="headerlink" href="#performance-indexes-for-query-optimization" title="Permanent link">&para;</a></h3>
+<p><strong>Problem identified</strong>: Several critical queries relied on individual column indexes that couldn't efficiently serve multi-column <code>WHERE</code>, <code>ORDER BY</code>, or <code>GROUP BY</code> clauses. The most impactful case was <code>assign_next_pending</code> — the core image assignment query using <code>SELECT ... FOR UPDATE SKIP LOCKED</code> — which filters on both <code>project_id</code> and <code>status</code> but only had separate indexes on each column, forcing PostgreSQL to pick one index and scan-filter the rest.</p>
+<p><strong>Solution</strong>: Added 6 composite indexes via Alembic migration <code>0005_add_performance_indexes</code>, targeting the application's hottest query patterns:</p>
+<ul>
+<li><code>ix_images_project_status</code> (project_id, status) — covers <code>assign_next_pending</code> and <code>get_next_pending</code></li>
+<li><code>ix_images_status_assigned_at</code> (status, assigned_at) — covers <code>expire_in_progress</code></li>
+<li><code>ix_project_labelers_labeler_id</code> (labeler_id) — the PK <code>(project_id, labeler_id)</code> can't serve <code>WHERE labeler_id = ?</code> lookups</li>
+<li><code>ix_label_records_project_image</code> (project_id, image_id) — covers <code>get_export_data</code> with <code>ORDER BY image_id</code></li>
+<li><code>ix_label_records_project_labeler</code> (project_id, labeler_id) — covers stats queries grouping by labeler within a project</li>
+<li><code>ix_projects_created_at</code> (created_at DESC) — covers paginated project listing</li>
+</ul>
+<p><strong>Design decision</strong>: Composite indexes instead of relying on individual column indexes. B-tree indexes only satisfy multi-column predicates efficiently when the columns appear together in index order. The existing individual indexes on <code>images.project_id</code> and <code>images.status</code> are retained for single-column queries. Also updated <code>database.md</code> with the <code>import_jobs</code> table (missing from the ER diagram) and a new "Indexing Strategy" section.</p>
+<hr />
+<h2 id="day-7-april-5-2026-observability-gap-fix">Day 7 - April 5, 2026: Observability gap fix<a class="headerlink" href="#day-7-april-5-2026-observability-gap-fix" title="Permanent link">&para;</a></h2>
+<h3 id="fix-unhandled-exceptions-invisible-in-grafana">Fix: Unhandled exceptions invisible in Grafana<a class="headerlink" href="#fix-unhandled-exceptions-invisible-in-grafana" title="Permanent link">&para;</a></h3>
+<p><strong>Bug identified</strong>: Both JSON and CSV exports (<code>GET /v1/projects/{project_id}/export</code>) returned 500 Internal Server Error, but no error logs appeared in Grafana and no entries showed in the "Error Rate by Endpoint &amp; Status" dashboard panel. The issue affected all endpoints, not just exports — any non-<code>DomainError</code> exception was invisible.</p>
+<p><strong>Root cause</strong> (two gaps in the observability chain):
+1. <strong>No structured error log</strong>: Only <code>DomainError</code> had a registered exception handler (<code>domain_error_handler</code>). Non-domain exceptions (S3 failures, DB streaming errors) hit FastAPI's default 500 handler, which produces no structured JSON log entry — so nothing reached Loki/Grafana
+2. <strong>No 500 in <code>http_requests_total</code> metric</strong>: In <code>PrometheusMiddleware.dispatch()</code>, when an exception was thrown, execution jumped to the <code>except</code> block which incremented <code>http_exceptions_total</code> and re-raised. The <code>REQUESTS_TOTAL.labels(..., status=response.status_code).inc()</code> line was never reached. The "Error Rate by Endpoint &amp; Status" panel queries <code>http_requests_total{status=~"5.."}</code>, so it always showed zero for unhandled exceptions</p>
+<p><strong>Solution</strong>:
+- Added catch-all <code>Exception</code> handler (<code>unhandled_error_handler</code>) with <code>logger.exception()</code> for full traceback in structured logs, returning a JSON 500 response
+- Added <code>REQUESTS_TOTAL.labels(status=500).inc()</code> in the middleware's <code>except</code> block so unhandled exceptions are counted in the same metric the dashboard queries</p>
+<p><strong>Design decision</strong>: Logging in the catch-all handler (API layer) follows the existing convention established in commit <code>a077233</code> — business logging in routers/API, not in use cases or domain layer</p>
+<h3 id="fix-export-fails-with-500-when-minio-storage-is-full">Fix: Export fails with 500 when MinIO storage is full<a class="headerlink" href="#fix-export-fails-with-500-when-minio-storage-is-full" title="Permanent link">&para;</a></h3>
+<p><strong>Bug identified</strong>: Clicking "Export JSON" or "Export CSV" produced an unhandled <code>botocore.exceptions.ClientError: An error occurred (XMinioStorageFull) when calling the UploadPart operation</code>. The error appeared as a raw 500 in a new browser tab with no user-friendly message.</p>
+<p><strong>Root cause</strong>: The MinIO Docker volume reached its minimum free drive threshold. The <code>upload_file_streaming</code> multipart upload in <code>S3StorageService</code> re-raised the <code>ClientError</code> as-is, which was not a <code>DomainError</code> and therefore got caught only by the generic <code>unhandled_error_handler</code>.</p>
+<p><strong>Solution</strong> (three layers):
+1. <strong>Domain</strong>: New <code>StorageFull(DomainError)</code> exception in <code>domain/errors.py</code>
+2. <strong>Infrastructure</strong>: <code>S3StorageService.upload_file_streaming</code> now catches <code>ClientError</code> with <code>XMinioStorageFull</code> code and raises <code>StorageFull</code> instead, translating the S3-specific error into a domain concept
+3. <strong>API</strong>: <code>StorageFull</code> mapped to HTTP 507 (Insufficient Storage) with code <code>STORAGE_FULL</code> in the error handler
+4. <strong>Frontend</strong>: <code>exportProject</code> replaced <code>window.open</code> with <code>fetch</code> + error handling. Export errors now display inline in the project detail page instead of opening a blank tab with raw JSON</p>
+<p><strong>Design decisions</strong>:
+- <strong>HTTP 507 (Insufficient Storage)</strong>: Standard status code for this exact scenario (RFC 4918), more informative than a generic 500
+- <strong>Translation at infrastructure layer</strong>: The <code>S3StorageService</code> catches the S3-specific <code>ClientError</code> and raises a domain <code>StorageFull</code>. This keeps the domain layer S3-agnostic (hexagonal boundary) while providing specific error information
+- <strong><code>fetch</code> instead of <code>window.open</code></strong>: Allows the frontend to inspect the response status before acting — errors show inline, success triggers a file download via blob URL</p>
+<h3 id="api-level-tests-for-export-endpoint">API-level tests for export endpoint<a class="headerlink" href="#api-level-tests-for-export-endpoint" title="Permanent link">&para;</a></h3>
+<p><strong>Gap identified</strong>: Every other endpoint had API-level tests using <code>TestClient</code> + container overrides, but exports only had application-level tests with fakes. Added <code>tests/api/test_exports.py</code> covering:
+- Happy path: JSON and CSV export return 307 redirect
+- Error: project not found returns 404
+- Error: no labels returns 404
+- Error: storage full returns 507</p>
+<hr />
+<h2 id="day-8-april-7-2026-end-to-end-api-tests">Day 8 - April 7, 2026: End-to-end API tests<a class="headerlink" href="#day-8-april-7-2026-end-to-end-api-tests" title="Permanent link">&para;</a></h2>
+<h3 id="e2e-test-infrastructure">E2E test infrastructure<a class="headerlink" href="#e2e-test-infrastructure" title="Permanent link">&para;</a></h3>
+<p><strong>Gap identified</strong>: Unit tests used in-memory repositories (mocks) and integration tests only verified individual SQLAlchemy repositories against PostgreSQL. No test exercised the full HTTP → use case → repository → database flow. A bug in DI wiring, SQLAlchemy mapping, or layer interaction would go undetected.</p>
+<p><strong>Solution</strong>: New <code>tests/e2e/</code> directory with a test FastAPI app that shares the real DI container but overrides its config to point at a test database:
+- <code>conftest.py</code>: Container config override via <code>from_dict()</code>, singleton reset (<code>engine.reset()</code>, <code>sessionmaker.reset()</code>), <code>FakeStorageService</code> for storage, simplified lifespan (no tracing, metrics, or background tasks), <code>httpx.AsyncClient</code> with <code>ASGITransport</code>
+- <code>test_labeling_workflow.py</code>: Single sequential test covering the complete labeling flow — login → create project → add labeler → register image → create assignment → submit label → verify stats → confirm no pending images</p>
+<p><strong>Design decisions</strong>:
+- <strong>Separate test app instead of importing the production <code>app</code></strong>: The production app has <code>PrometheusMiddleware</code> and <code>instrument_fastapi</code> baked in at module level, which would fail or produce side effects during tests
+- <strong><code>FakeStorageService</code> instead of real MinIO</strong>: The goal is testing HTTP-to-DB flow; storage is not the layer under test. Keeps test infrastructure to just PostgreSQL
+- <strong>Flow-based tests, not per-endpoint</strong>: Unit tests already cover individual endpoints exhaustively. E2E tests verify the integration between layers through real workflows</p>
+<h3 id="makefile-improvements">Makefile improvements<a class="headerlink" href="#makefile-improvements" title="Permanent link">&para;</a></h3>
+<ul>
+<li>All test targets (<code>test-unit</code>, <code>test-integration</code>, <code>test-cov</code>, <code>test-e2e</code>) now mount <code>src</code> and <code>tests</code> as volumes — no <code>make setup</code> needed after code changes</li>
+<li><code>TEST_DATABASE_URL</code> default value added (<code>?=</code>) matching the docker-compose PostgreSQL config</li>
+</ul>
+<hr />
+<h2 id="day-8-cont-april-7-2026-load-testing-with-locust">Day 8 (cont.) - April 7, 2026: Load testing with Locust<a class="headerlink" href="#day-8-cont-april-7-2026-load-testing-with-locust" title="Permanent link">&para;</a></h2>
+<h3 id="labeling-load-test">Labeling load test<a class="headerlink" href="#labeling-load-test" title="Permanent link">&para;</a></h3>
+<p><strong>Need identified</strong>: No way to simulate realistic concurrent labeling activity against a running instance. Useful for validating performance after changes (new indexes, pool size tuning, code optimizations) and stress-testing the assignment flow under contention (<code>SELECT ... FOR UPDATE SKIP LOCKED</code> with many concurrent labelers).</p>
+<p><strong>Solution</strong>: Locust-based load test in <code>benchmarks/locustfile.py</code> with two components:
+- <code>on_test_start</code> listener fetches project details (labels + labelers) via <code>GET /v1/projects/{id}</code>
+- <code>LabelerUser</code> simulates the labeling loop: <code>POST /assignments</code> &rarr; <code>POST /label</code> (random label from project). Stops on <code>204 No Content</code> (no more pending images)</p>
+<p>Auto-detection of labeler count is handled in the Makefile: when <code>BENCHMARK_USERS=0</code> (default), it queries the project API and passes the count as <code>--users</code> to Locust.</p>
+<p><strong>Design decisions</strong>:
+- <strong>Locust over alternatives (k6, wrk, ab)</strong>: Python-native (consistent with the project), supports custom user behavior (not just URL hammering), built-in web UI for real-time monitoring
+- <strong>Auto-detect in Makefile, not LoadTestShape</strong>: An initial implementation used a custom <code>LoadTestShape</code> to auto-detect the labeler count, but <code>LoadTestShape.tick()</code> runs before <code>on_test_start</code> (where project data is fetched), causing the shape to see zero labelers and stop immediately. It also silently ignores <code>--run-time</code>. Moving auto-detection to the Makefile (via <code>curl</code> + <code>python3</code>) is simpler and works with Locust's standard <code>--users</code>/<code>--run-time</code> flags
+- <strong><code>itertools.cycle</code> for labeler assignment</strong>: Each spawned Locust user picks the next labeler from a cycle, distributing work evenly across all project labelers
+- <strong><code>catch_response=True</code> with explicit success/failure</strong>: <code>204 No Content</code> on assignments is a valid response (no more images), not an error. Locust's default would count it as a failure, so explicit response validation is needed</p>
+<hr />
+<h2 id="cross-cutting-sessions">Cross-cutting sessions<a class="headerlink" href="#cross-cutting-sessions" title="Permanent link">&para;</a></h2>
+<h3 id="unified-make-bootstrap-and-docker-compose">Unified make bootstrap and Docker Compose<a class="headerlink" href="#unified-make-bootstrap-and-docker-compose" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Design decision</strong>: Root <code>docker-compose.yaml</code> uses <code>include:</code> to compose backend and frontend (Docker Compose v2.20+)</li>
+<li>Each sub-compose is independently usable</li>
+<li><code>make bootstrap</code>: single command to bring up everything, initialize data, and display a banner with URLs</li>
+<li>Hot reload on backend via volume mounts <code>./src:/app/src</code></li>
+</ul>
+<h3 id="assignment-expiration-investigation">Assignment expiration investigation<a class="headerlink" href="#assignment-expiration-investigation" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Identified timing gap: <code>image_assignment_timeout_seconds: 60</code> but the expiration job runs every 5 min (<code>image_expiry_interval_seconds: 300</code>), so expiration is not instantaneous</li>
+<li>~~Tests use <code>TIMEOUT = 30 min</code> vs production <code>60s</code> (discrepancy noted)~~ — resolved: both now use <code>config.tasks.image_assignment_timeout_seconds</code></li>
+</ul>
+<hr />
+<h2 id="summary-of-key-design-decisions">Summary of key design decisions<a class="headerlink" href="#summary-of-key-design-decisions" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Decision</th>
+<th>Rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Hexagonal architecture</td>
+<td>Separation of concerns, testability, framework independence</td>
+</tr>
+<tr>
+<td><code>config.yml</code> with dependency-injector</td>
+<td>Centralized and typed configuration, better than scattered env vars</td>
+</tr>
+<tr>
+<td>POST for creating assignments (not GET)</td>
+<td>Side-effects require POST method</td>
+</tr>
+<tr>
+<td>Logging in routers, not in use cases</td>
+<td>Domain/application layers should remain pure (hexagonal)</td>
+</tr>
+<tr>
+<td>uvloop</td>
+<td>2-4x performance improvement with no code changes</td>
+</tr>
+<tr>
+<td>Promtail + docker_sd_configs</td>
+<td>Automatic container discovery, better than static paths</td>
+</tr>
+<tr>
+<td>Diataxis for documentation</td>
+<td>Proven framework for technical documentation</td>
+</tr>
+<tr>
+<td>Containerized Makefile targets</td>
+<td>Only Docker required on host, reproducible environment</td>
+</tr>
+<tr>
+<td>Docker Compose <code>include:</code></td>
+<td>Each service with its own independent compose, clean composition</td>
+</tr>
+<tr>
+<td>UUID v4 as implicit shuffle</td>
+<td>No need for explicit randomization for image ordering</td>
+</tr>
+<tr>
+<td>ProjectSummary vs ProjectDetail schemas</td>
+<td>Don't fetch data you don't need; list vs detail have different requirements</td>
+</tr>
+<tr>
+<td>Batch <code>get_by_ids</code> in UserRepository</td>
+<td>Single <code>WHERE IN</code> query instead of N individual lookups</td>
+</tr>
+<tr>
+<td>Labeler resolution in use case, not API</td>
+<td>Hexagonal: business logic belongs in application layer, not routers</td>
+</tr>
+<tr>
+<td>Composite indexes for hot queries</td>
+<td>Individual indexes don't cover multi-column WHERE/ORDER BY; composites eliminate sequential scans</td>
+</tr>
+<tr>
+<td>E2E flow tests, not per-endpoint</td>
+<td>Unit tests cover endpoints individually; E2E tests verify layer integration through real workflows</td>
+</tr>
+<tr>
+<td>Volume mounts in test targets</td>
+<td>Avoid rebuilding Docker image after every code change</td>
+</tr>
+<tr>
+<td>Locust for load testing</td>
+<td>Python-native, custom user behaviors, auto-detect labeler count via LoadTestShape</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
