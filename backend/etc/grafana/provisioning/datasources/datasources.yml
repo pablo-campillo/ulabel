@@ -20,8 +20,15 @@ datasources:
     jsonData:
       tracesToMetrics:
         datasourceUid: prometheus
+      serviceMap:
+        datasourceUid: prometheus
+      search:
+        hide: false
       nodeGraph:
         enabled: true
+      tracesToLogsV2:
+        datasourceUid: loki
+        filterByTraceID: true
 
   - name: Loki
     uid: loki

@@ -124,9 +124,66 @@
       "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } }
     },
     {
+      "title": "Trace Search",
+      "description": "Search traces by endpoint and minimum duration. Click a trace to view its full span waterfall in Tempo.",
+      "type": "traces",
+      "gridPos": { "h": 14, "w": 24, "x": 0, "y": 4 },
+      "datasource": { "type": "tempo", "uid": "tempo" },
+      "targets": [
+        {
+          "refId": "A",
+          "queryType": "traceqlSearch",
+          "filters": [
+            {
+              "id": "service-name",
+              "tag": "resource.service.name",
+              "operator": "=",
+              "value": ["ulabel-backend"],
+              "scope": "resource"
+            },
+            {
+              "id": "min-duration",
+              "tag": "duration",
+              "operator": ">",
+              "value": ["$min_duration"]
+            }
+          ],
+          "limit": 50
+        }
+      ],
+      "options": {}
+    },
+    {
+      "title": "Trace Duration by Endpoint",
+      "description": "P95 and P50 latency per endpoint, filtered by the selected endpoints.",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 18 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{path=~\"$endpoint\"}[1m])) by (le, path))",
+          "legendFormat": "P95 {{ path }}",
+          "exemplar": true,
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket{path=~\"$endpoint\"}[1m])) by (le, path))",
+          "legendFormat": "P50 {{ path }}",
+          "exemplar": true,
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": { "fillOpacity": 10 }
+        }
+      }
+    },
+    {
       "title": "Recent Traces",
       "type": "logs",
-      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 4 },
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 26 },
       "datasource": { "type": "loki", "uid": "loki" },
       "targets": [
         {
@@ -144,7 +201,7 @@
     {
       "title": "Error & Warning Rate",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 14 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 36 },
       "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
       "targets": [
         {
@@ -176,7 +233,7 @@
     {
       "title": "Log Volume by Logger",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 14 },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 36 },
       "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
       "targets": [
         {
@@ -194,7 +251,7 @@
     {
       "title": "Error Logs",
       "type": "logs",
-      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 22 },
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 44 },
       "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
       "targets": [
         {
@@ -211,7 +268,7 @@
     {
       "title": "Full Log Stream",
       "type": "logs",
-      "gridPos": { "h": 12, "w": 24, "x": 0, "y": 32 },
+      "gridPos": { "h": 12, "w": 24, "x": 0, "y": 54 },
       "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
       "targets": [
         {
@@ -230,10 +287,35 @@
   "templating": {
     "list": [
       {
+        "name": "DS_PROMETHEUS",
+        "type": "datasource",
+        "query": "prometheus",
+        "current": { "text": "Prometheus", "value": "prometheus" }
+      },
+      {
         "name": "DS_LOKI",
         "type": "datasource",
         "query": "loki",
         "current": { "text": "Loki", "value": "loki" }
+      },
+      {
+        "name": "endpoint",
+        "label": "Endpoint",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+        "query": "label_values(http_requests_total, path)",
+        "includeAll": true,
+        "allValue": ".*",
+        "current": { "text": "All", "value": "$__all" },
+        "multi": true,
+        "refresh": 2
+      },
+      {
+        "name": "min_duration",
+        "label": "Min Duration",
+        "type": "custom",
+        "query": "0s,100ms,250ms,500ms,1s,2s,5s",
+        "current": { "text": "0s", "value": "0s" }
       },
       {
         "name": "level",
@@ -260,5 +342,5 @@
   "timezone": "browser",
   "title": "uLabel Traces & Logs",
   "uid": "ulabel-traces-logs",
-  "version": 2
+  "version": 3
 }

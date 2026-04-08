@@ -102,22 +102,34 @@ This is the primary mechanism for going from "I see a latency spike" to "here is
 
 ### Panels
 
-| Panel                | What it shows                                       |
-|----------------------|-----------------------------------------------------|
-| Errors/min (stat)    | Rate of ERROR-level log entries                     |
-| Warnings/min (stat)  | Rate of WARNING-level log entries                   |
-| Domain Errors/min    | Rate of domain error log entries                    |
-| Expired/min (stat)   | Rate of expired stale assignments                   |
-| Recent Traces        | Trace list from Tempo (TraceQL search)              |
-| Error & Warning Rate | ERROR vs WARNING counts over time                   |
-| Log Volume by Logger | Log entries per Python logger module                |
-| Error Logs           | Filtered log stream (ERROR + WARNING only)          |
-| Full Log Stream      | Complete log stream with level/logger filters       |
+| Panel                        | What it shows                                              |
+|------------------------------|------------------------------------------------------------|
+| Errors/min (stat)            | Rate of ERROR-level log entries                            |
+| Warnings/min (stat)          | Rate of WARNING-level log entries                          |
+| Domain Errors/min            | Rate of domain error log entries                           |
+| Expired/min (stat)           | Rate of expired stale assignments                          |
+| Trace Search                 | Individual traces from Tempo, filterable by endpoint and duration |
+| Trace Duration by Endpoint   | P95 and P50 latency per endpoint with exemplar links       |
+| Recent Traces                | Log entries with trace IDs (click to open in Tempo)        |
+| Error & Warning Rate         | ERROR vs WARNING counts over time                          |
+| Log Volume by Logger         | Log entries per Python logger module                       |
+| Error Logs                   | Filtered log stream (ERROR + WARNING only)                 |
+| Full Log Stream              | Complete log stream with level/logger filters              |
 
 ### Using Variables
 
+- **endpoint** — Filter trace search and latency panels by route (e.g., `/v1/projects/{project_id}/images/upload`). Select multiple or "All".
+- **min_duration** — Filter the Trace Search panel to only show traces slower than this threshold (e.g., `500ms`, `1s`).
 - **level** — Filter the Full Log Stream by log level (DEBUG, INFO, WARNING, ERROR). Select multiple.
 - **logger** — Filter by Python logger module (e.g., `ulabel.api.routers.images`).
+
+### Investigating Slow Requests
+
+1. Select the endpoint(s) of interest in the **endpoint** dropdown
+2. Set **min_duration** to filter out fast requests (e.g., `500ms` or `1s`)
+3. The **Trace Search** panel shows individual traces matching the filters — each row shows trace ID, duration, and timestamp
+4. Click a trace row to open the full span waterfall in Tempo, showing the duration of each operation (HTTP handling, SQL queries, external calls)
+5. Use the **Trace Duration by Endpoint** panel below to see P95 and P50 latency trends — click an exemplar diamond to jump to the specific trace
 
 ### Investigating an Error
 

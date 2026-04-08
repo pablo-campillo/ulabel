@@ -9,6 +9,7 @@ graph LR
     App[uLabel API] -->|OTLP gRPC| Tempo[(Tempo)]
     App -->|stdout JSON| Loki[(Loki)]
     Prometheus[(Prometheus)] -->|scrape /metrics| App
+    Tempo -->|remote write span metrics| Prometheus
     Tempo --> Grafana[Grafana]
     Loki --> Grafana
     Prometheus --> Grafana
@@ -95,6 +96,8 @@ OpenTelemetry distributed tracing with automatic instrumentation:
 
 Traces are exported via **OTLP gRPC** to Tempo using `BatchSpanProcessor` for efficient batching.
 
+**Metrics from traces:** Tempo's `metrics_generator` automatically derives RED (Rate, Errors, Duration) metrics from ingested spans and writes them to Prometheus via remote write. This enables TraceQL search in Grafana dashboards — querying individual traces by endpoint and duration — without additional application-side instrumentation. The generated span metrics include dimensions for `http.method`, `http.route`, and `http.status_code`.
+
 ### Metrics
 
 Prometheus metrics collected by `PrometheusMiddleware`:
@@ -120,11 +123,12 @@ graph LR
     Logs -->|derived field regex| Traces
 ```
 
-| From    | To     | Mechanism                                                        |
-|---------|--------|------------------------------------------------------------------|
-| Metrics | Traces | Exemplars: click a data point in Grafana to jump to its trace    |
-| Logs    | Traces | Loki derived field extracts `trace_id` from JSON and links to Tempo |
-| Traces  | Logs   | Tempo shows `service.name`, searchable in Loki by trace_id       |
+| From    | To      | Mechanism                                                         |
+|---------|---------|-------------------------------------------------------------------|
+| Metrics | Traces  | Exemplars: click a data point in Grafana to jump to its trace     |
+| Logs    | Traces  | Loki derived field extracts `trace_id` from JSON and links to Tempo |
+| Traces  | Logs    | Tempo `tracesToLogsV2` links to Loki, filterable by trace_id      |
+| Traces  | Metrics | Tempo `metrics_generator` writes span metrics to Prometheus via remote write |
 
 This is configured in `etc/grafana/provisioning/datasources/datasources.yml`:
 

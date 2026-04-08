@@ -184,7 +184,40 @@ Dashboard JSON files live in `etc/grafana/provisioning/dashboards/`.
     ```
 
 3. For Loki log panels, use `"type": "logs"` and datasource `${DS_LOKI}`.
-4. For Tempo trace panels, use `"type": "traces"` and datasource uid `tempo`.
+4. For Tempo trace panels, use `"type": "traces"` and datasource uid `tempo`. Example with TraceQL search:
+
+    ```json
+    {
+      "title": "Trace Search",
+      "type": "traces",
+      "gridPos": { "h": 14, "w": 24, "x": 0, "y": 0 },
+      "datasource": { "type": "tempo", "uid": "tempo" },
+      "targets": [
+        {
+          "refId": "A",
+          "queryType": "traceqlSearch",
+          "filters": [
+            {
+              "id": "service-name",
+              "tag": "resource.service.name",
+              "operator": "=",
+              "value": ["ulabel-backend"],
+              "scope": "resource"
+            },
+            {
+              "id": "min-duration",
+              "tag": "duration",
+              "operator": ">",
+              "value": ["500ms"]
+            }
+          ],
+          "limit": 50
+        }
+      ]
+    }
+    ```
+
+    Tempo's `metrics_generator` enables TraceQL metrics queries, so span metrics (rate, duration, errors) are available in Prometheus and can be used in `timeseries` panels as well.
 
 ### Conventions
 
