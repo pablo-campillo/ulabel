@@ -16,14 +16,14 @@ NOW = datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
 
 
 @pytest.fixture
-def repo(sessionmaker):
-    return SqlAlchemyImageRepository(sessionmaker)
+def repo(session):
+    return SqlAlchemyImageRepository(session)
 
 
 @pytest.fixture
-async def project(sessionmaker) -> Project:
-    user_repo = SqlAlchemyUserRepository(sessionmaker)
-    project_repo = SqlAlchemyProjectRepository(sessionmaker)
+async def project(session) -> Project:
+    user_repo = SqlAlchemyUserRepository(session)
+    project_repo = SqlAlchemyProjectRepository(session)
     admin = User.create_admin(id=uuid4(), username="admin")
     await user_repo.save(admin)
     p = Project.create(id=uuid4(), owner=admin, name="Project", description="desc", labels={"cat"})
@@ -133,18 +133,24 @@ async def test_expire_in_progress_excludes_recent(repo, pending_image):
     assert found.status == ImageStatus.IN_PROGRESS
 
 
-async def test_assign_next_pending_concurrent_single_image(sessionmaker, pending_image, project):
+async def test_assign_next_pending_concurrent_single_image(
+    session, sessionmaker, pending_image, project
+):
     """Two concurrent assign_next_pending on the same image: only one wins."""
     import asyncio
 
-    repo1 = SqlAlchemyImageRepository(sessionmaker)
-    repo2 = SqlAlchemyImageRepository(sessionmaker)
-    labeler_a, labeler_b = uuid4(), uuid4()
+    # Commit so separate sessions can see the fixture data
+    await session.commit()
 
-    results = await asyncio.gather(
-        repo1.assign_next_pending(project.id, labeler_a, NOW),
-        repo2.assign_next_pending(project.id, labeler_b, NOW),
-    )
+    async with sessionmaker() as s1, sessionmaker() as s2:
+        repo1 = SqlAlchemyImageRepository(s1)
+        repo2 = SqlAlchemyImageRepository(s2)
+        labeler_a, labeler_b = uuid4(), uuid4()
+
+        results = await asyncio.gather(
+            repo1.assign_next_pending(project.id, labeler_a, NOW),
+            repo2.assign_next_pending(project.id, labeler_b, NOW),
+        )
 
     assigned = [r for r in results if r is not None]
     assert len(assigned) == 1

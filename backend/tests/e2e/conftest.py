@@ -122,3 +122,15 @@ async def seed_users(engine, create_tables):
         session.add(UserModel(id=labeler_id, username="labeler1", role="labeler"))
         await session.commit()
     return {"admin_id": admin_id, "labeler_id": labeler_id}
+
+
+@pytest.fixture
+async def seed_multiple_labelers(engine, create_tables):
+    admin_id = uuid4()
+    labeler_ids = [uuid4() for _ in range(5)]
+    async with async_sessionmaker(engine, expire_on_commit=False)() as session:
+        session.add(UserModel(id=admin_id, username="admin_multi", role="admin"))
+        for i, lid in enumerate(labeler_ids):
+            session.add(UserModel(id=lid, username=f"labeler_{i}", role="labeler"))
+        await session.commit()
+    return {"admin_id": admin_id, "labeler_ids": labeler_ids}

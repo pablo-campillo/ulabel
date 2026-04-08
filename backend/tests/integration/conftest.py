@@ -38,6 +38,12 @@ async def sessionmaker(engine, create_tables):
     return async_sessionmaker(engine, expire_on_commit=False)
 
 
+@pytest.fixture
+async def session(sessionmaker):
+    async with sessionmaker() as s:
+        yield s
+
+
 @pytest.fixture(autouse=True)
 async def clean_tables(engine, create_tables):
     async with engine.begin() as conn:

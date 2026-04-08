@@ -20,34 +20,34 @@ DAY2 = datetime(2026, 3, 21, 14, 0, 0, tzinfo=timezone.utc)
 
 
 @pytest.fixture
-def repo(sessionmaker):
-    return SqlAlchemyStatsRepository(sessionmaker)
+def repo(session):
+    return SqlAlchemyStatsRepository(session)
 
 
 @pytest.fixture
-async def admin(sessionmaker):
+async def admin(session):
     user = User.create_admin(id=uuid4(), username="admin")
-    await SqlAlchemyUserRepository(sessionmaker).save(user)
+    await SqlAlchemyUserRepository(session).save(user)
     return user
 
 
 @pytest.fixture
-async def labeler_ana(sessionmaker):
+async def labeler_ana(session):
     user = User.create_labeler(id=uuid4(), username="ana")
-    await SqlAlchemyUserRepository(sessionmaker).save(user)
+    await SqlAlchemyUserRepository(session).save(user)
     return user
 
 
 @pytest.fixture
-async def labeler_pedro(sessionmaker):
+async def labeler_pedro(session):
     user = User.create_labeler(id=uuid4(), username="pedro")
-    await SqlAlchemyUserRepository(sessionmaker).save(user)
+    await SqlAlchemyUserRepository(session).save(user)
     return user
 
 
 @pytest.fixture
-async def project(sessionmaker, admin, labeler_ana, labeler_pedro):
-    proj_repo = SqlAlchemyProjectRepository(sessionmaker)
+async def project(session, admin, labeler_ana, labeler_pedro):
+    proj_repo = SqlAlchemyProjectRepository(session)
     p = Project.create(
         id=uuid4(), owner=admin, name="Animals", description="desc", labels={"cat", "dog"}
     )
@@ -57,24 +57,22 @@ async def project(sessionmaker, admin, labeler_ana, labeler_pedro):
     return p
 
 
-async def _insert_label(sessionmaker, *, project_id, image_id, labeler_id, label, created_at):
-    async with sessionmaker() as session:
-        stmt = insert(LabelRecordModel).values(
-            id=uuid4(),
-            project_id=project_id,
-            image_id=image_id,
-            labeler_id=labeler_id,
-            label=label,
-            created_at=created_at,
-        )
-        await session.execute(stmt)
-        await session.commit()
+async def _insert_label(session, *, project_id, image_id, labeler_id, label, created_at):
+    stmt = insert(LabelRecordModel).values(
+        id=uuid4(),
+        project_id=project_id,
+        image_id=image_id,
+        labeler_id=labeler_id,
+        label=label,
+        created_at=created_at,
+    )
+    await session.execute(stmt)
 
 
 @pytest.fixture
-async def seeded_data(sessionmaker, project, labeler_ana, labeler_pedro):
+async def seeded_data(session, project, labeler_ana, labeler_pedro):
     """Create 5 images: 3 done (with labels), 2 pending."""
-    img_repo = SqlAlchemyImageRepository(sessionmaker)
+    img_repo = SqlAlchemyImageRepository(session)
 
     done_images = []
     for i in range(3):
@@ -89,7 +87,7 @@ async def seeded_data(sessionmaker, project, labeler_ana, labeler_pedro):
 
     # ana: 2 labels on day1 (cat, dog), 1 label on day2 (cat)
     await _insert_label(
-        sessionmaker,
+        session,
         project_id=project.id,
         image_id=done_images[0].id,
         labeler_id=labeler_ana.id,
@@ -97,7 +95,7 @@ async def seeded_data(sessionmaker, project, labeler_ana, labeler_pedro):
         created_at=DAY1,
     )
     await _insert_label(
-        sessionmaker,
+        session,
         project_id=project.id,
         image_id=done_images[1].id,
         labeler_id=labeler_ana.id,
@@ -105,7 +103,7 @@ async def seeded_data(sessionmaker, project, labeler_ana, labeler_pedro):
         created_at=DAY1,
     )
     await _insert_label(
-        sessionmaker,
+        session,
         project_id=project.id,
         image_id=done_images[2].id,
         labeler_id=labeler_pedro.id,
@@ -149,8 +147,8 @@ async def test_daily_rows_include_username(repo, project, seeded_data, labeler_a
     assert all(r.username == "ana" for r in ana_rows)
 
 
-async def test_empty_project_returns_zeros(repo, sessionmaker, admin):
-    proj_repo = SqlAlchemyProjectRepository(sessionmaker)
+async def test_empty_project_returns_zeros(repo, session, admin):
+    proj_repo = SqlAlchemyProjectRepository(session)
     empty = Project.create(id=uuid4(), owner=admin, name="Empty", description="", labels={"x"})
     await proj_repo.save(empty)
 

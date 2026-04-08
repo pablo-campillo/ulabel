@@ -94,3 +94,46 @@ async def test_full_labeling_workflow(client, seed_users):
         },
     )
     assert resp.status_code == 204
+
+
+async def test_update_project_with_multiple_labelers(client, seed_multiple_labelers):
+    """Updating a project with multiple labelers should persist all of them."""
+    admin_id = seed_multiple_labelers["admin_id"]
+    labeler_ids = seed_multiple_labelers["labeler_ids"]
+
+    # 1. Create project
+    resp = await client.post(
+        "/v1/projects",
+        json={
+            "owner_id": str(admin_id),
+            "name": "Multi Labeler Test",
+            "description": "Test assigning multiple labelers",
+            "labels": ["a", "b"],
+        },
+    )
+    assert resp.status_code == 201
+    project_id = resp.json()["id"]
+
+    # 2. Update project with 5 labelers (same flow as the frontend)
+    resp = await client.patch(
+        f"/v1/projects/{project_id}",
+        json={
+            "labeler_ids": [str(lid) for lid in labeler_ids],
+        },
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert len(data["labelers"]) == len(labeler_ids), (
+        f"Expected {len(labeler_ids)} labelers but got {len(data['labelers'])}: {data['labelers']}"
+    )
+
+    # 3. Verify by fetching the project again
+    resp = await client.get(f"/v1/projects/{project_id}")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert len(data["labelers"]) == len(labeler_ids), (
+        f"After re-fetch: expected {len(labeler_ids)} labelers but got {len(data['labelers'])}"
+    )
+    returned_ids = {lab["id"] for lab in data["labelers"]}
+    expected_ids = {str(lid) for lid in labeler_ids}
+    assert returned_ids == expected_ids

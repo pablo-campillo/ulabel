@@ -7,8 +7,8 @@ from ulabel.infrastructure.repositories.sql.user_repository import SqlAlchemyUse
 
 
 @pytest.fixture
-def repo(sessionmaker):
-    return SqlAlchemyUserRepository(sessionmaker)
+def repo(session):
+    return SqlAlchemyUserRepository(session)
 
 
 async def test_search_by_username_prefix_returns_matches(repo):

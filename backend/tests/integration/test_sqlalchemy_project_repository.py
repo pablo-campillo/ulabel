@@ -11,13 +11,13 @@ from ulabel.infrastructure.repositories.sql.user_repository import SqlAlchemyUse
 
 
 @pytest.fixture
-def user_repo(sessionmaker):
-    return SqlAlchemyUserRepository(sessionmaker)
+def user_repo(session):
+    return SqlAlchemyUserRepository(session)
 
 
 @pytest.fixture
-def repo(sessionmaker):
-    return SqlAlchemyProjectRepository(sessionmaker)
+def repo(session):
+    return SqlAlchemyProjectRepository(session)
 
 
 @pytest.fixture
@@ -79,3 +79,18 @@ async def test_add_labeler_and_query_by_labeler(repo, saved_project, labeler):
 async def test_get_by_labeler_id_returns_empty_when_no_projects(repo, labeler):
     projects = await repo.get_by_labeler_id(labeler.id)
     assert projects == []
+
+
+async def test_save_multiple_labelers(repo, user_repo, saved_project):
+    """Saving a project with multiple labelers persists all of them."""
+    labeler_ids = set()
+    for i in range(5):
+        labeler = User.create_labeler(id=uuid4(), username=f"labeler_{i}")
+        await user_repo.save(labeler)
+        labeler_ids.add(labeler.id)
+
+    saved_project.set_labelers(labeler_ids)
+    await repo.save(saved_project)
+
+    found = await repo.get_by_id(saved_project.id)
+    assert found.labeler_ids == labeler_ids
