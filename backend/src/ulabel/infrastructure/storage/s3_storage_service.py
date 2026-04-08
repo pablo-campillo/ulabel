@@ -57,16 +57,39 @@ class S3StorageService(StorageService):
         else:
             self._public_endpoint_url = self._endpoint_url
         self._bucket = bucket
+        self._internal_client: Any = None
+        self._public_client: Any = None
+
+    async def _get_internal_client(self) -> Any:
+        """Return the cached internal S3 client, creating it on first use."""
+        if self._internal_client is None:
+            ctx = self._session.client("s3", endpoint_url=self._endpoint_url)
+            self._internal_client = await ctx.__aenter__()
+        return self._internal_client
+
+    async def _get_public_client(self) -> Any:
+        """Return the cached public S3 client, creating it on first use."""
+        if self._public_client is None:
+            ctx = self._session.client("s3", endpoint_url=self._public_endpoint_url)
+            self._public_client = await ctx.__aenter__()
+        return self._public_client
+
+    async def close(self) -> None:
+        """Close cached S3 clients."""
+        for client in (self._internal_client, self._public_client):
+            if client is not None:
+                await client.close()
+        self._internal_client = None
+        self._public_client = None
 
     @asynccontextmanager
     async def _client(self) -> Any:
-        """Create an async S3 client context manager.
+        """Return the cached internal S3 client.
 
         Yields:
             An aioboto3 S3 client connected to the internal endpoint.
         """
-        async with self._session.client("s3", endpoint_url=self._endpoint_url) as client:
-            yield client
+        yield await self._get_internal_client()
 
     async def get_presigned_url(self, storage_key: str, expires_in: timedelta) -> str:
         """Generate a presigned GET URL for an object.
@@ -78,13 +101,13 @@ class S3StorageService(StorageService):
         Returns:
             A presigned URL string.
         """
-        async with self._session.client("s3", endpoint_url=self._public_endpoint_url) as client:
-            url: str = await client.generate_presigned_url(
-                "get_object",
-                Params={"Bucket": self._bucket, "Key": storage_key},
-                ExpiresIn=int(expires_in.total_seconds()),
-            )
-            return url
+        client = await self._get_public_client()
+        url: str = await client.generate_presigned_url(
+            "get_object",
+            Params={"Bucket": self._bucket, "Key": storage_key},
+            ExpiresIn=int(expires_in.total_seconds()),
+        )
+        return url
 
     async def upload_file(
         self,

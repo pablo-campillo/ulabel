@@ -50,6 +50,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         await task
     except asyncio.CancelledError:
         pass
+    await container.storage_service().close()
     shutdown_tracing(container.tracer_provider())
 
 
